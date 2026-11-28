@@ -156,3 +156,36 @@ test('spoofed/stale/missing trace cannot resurrect strategic context after offic
  assert.equal(by(kompasHorizonStatusRows({compass,view:expired,strategic:fake,
   trace:strategicTrace}).rows,'H21_30D').status,'SOURCE_UNAVAILABLE');
 });
+
+
+test('verified NO_EDGE is an explicit abstention, not missing source or directional authority',()=>{
+  for(const [id,key] of [['H1_3D','NEXT_1_3D'],['H5_7D','NEXT_5_7D'],['H2_3W','NEXT_2_3W']]){
+    const source={...compass,horizons:{...compass.horizons,[key]:{expected_direction:'NO_EDGE'}}};
+    for(const lang of ['da','en']){
+      const row=by(kompasHorizonStatusRows({compass:source,view,lang}).rows,id);
+      assert.equal(row.status,'NONBINDING_CONTEXT');
+      assert.equal(row.sourceStatus,'OFFICIAL_SOURCE_NO_EDGE');
+      assert.equal(row.tone,'missing');
+      assert.equal(row.value,lang==='da'?'Ingen påvist edge':'No proven edge');
+      assert.match(row.priceLabel,lang==='da'?/Ingen retningsprognose/:/No directional forecast/);
+      for(const bad of [
+        {...view,compass:{...view.compass,state:'EXPIRED'}},
+        {...view,compass:{...view.compass,compass_id:'OTHER'}},
+        {...view,compass:{...view.compass,permit_path_live_gates:false}}
+      ])assert.equal(by(kompasHorizonStatusRows({compass:source,view:bad,lang}).rows,id).status,'SOURCE_UNAVAILABLE');
+      const corrupt={...source,horizons:{...source.horizons,[key]:{expected_direction:'UNKNOWN'}}};
+      assert.equal(by(kompasHorizonStatusRows({compass:corrupt,view,lang}).rows,id).status,'SOURCE_UNAVAILABLE');
+    }
+  }
+});
+
+test('verified 5-7d NO_EDGE retains independently frozen price readback without implying direction',()=>{
+  const source={...compass,horizons:{...compass.horizons,NEXT_5_7D:{expected_direction:'NO_EDGE'}}};
+  const originalWeekPrice={status:'SOURCE_ISSUED_BOTH',forecast_week:'2026-W47',
+    BTC:{expected_last_daily_close:65000,week_daily_low_min:60000,week_daily_high_max:70000},
+    ETH:{expected_last_daily_close:2000}};
+  const r=by(kompasHorizonStatusRows({compass:source,view,originalWeekPrice}).rows,'H5_7D');
+  assert.equal(r.status,'NONBINDING_CONTEXT');
+  assert.equal(r.sourceStatus,'OFFICIAL_SOURCE_NO_EDGE');
+  assert.match(r.priceLabel,/Oprindeligt frosset 2026-W47/);
+});

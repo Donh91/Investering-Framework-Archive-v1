@@ -103,7 +103,7 @@ test('unavailable producer, asset, contract and stale tab are calm states withou
  assert.match(eth.unavailable.text,/Der mangler timekurser/);
  assert.equal(liveViewModel(fixture(),{nowMs:NOW+181*60e3}).reason,'STALE_IN_BROWSER');
  assert.equal(liveViewModel(fixture(),{nowMs:NOW+179*60e3}).state,'OK');
- for(const [flag,value] of [['official_forecast',true],['compass_probability_claim',true],['trading',true],['research_only',false]]){
+ for(const [flag,value] of [['official_forecast',true],['compass_probability_claim',true],['trading',true],['promotion',true],['site_synthesis',true],['research_only',false]]){
   const forged=fixture();forged.authority[flag]=value;
   assert.equal(liveViewModel(forged,{nowMs:NOW}).reason,'SOURCE','authority '+flag);
  }
@@ -275,7 +275,8 @@ function withFallback(doc){
  const fb={};
  for(const [k,a] of Object.entries(doc.assets)){
   const u=asset(a.p0,{down:false});delete u.challenger_b;
-  for(const h of ['1','3','7'])u.headline[h]={...u.headline[h],direction:'NONE',reason:'NO_VIEW',strength:null,tilting_views:[]};
+  u.drift_per_day={g13:0,g57:0};
+  for(const h of ['1','3','7'])u.headline[h]={...u.headline[h],direction:'NONE',reason:'NO_VIEW',strength:null,balance:null,tilting_views:[],official_direction:{'1_3d':null,'5_7d':null}};
   fb[k]=u;
  }
  return {...doc,kompas_view_state:{status:'VERIFIED',reason:null,valid_until_utc:doc.official_source_valid_until_utc},
@@ -320,4 +321,109 @@ test('fallback is fail-closed: wrong marker, invalid block or stale hourly still
  const bad=JSON.parse(JSON.stringify(base));bad.no_kompas_view.assets.BTC.days[0].lo=-1;
  assert.equal(liveViewModel(bad,{nowMs:NOW}).reason,'SOURCE');
  assert.equal(liveViewModel(base,{nowMs:NOW+4*H}).reason,'STALE_IN_BROWSER');
+});
+
+
+test('live source clock refuses future, naive, stale-at-issue and extended policy clocks',()=>{
+ const cases=[d=>d.generated_at_utc=iso(NOW+1*H),
+  d=>d.assets.BTC.as_of_utc=iso(NOW+H),
+  d=>d.generated_at_utc='2026-11-13T18:00:00',
+  d=>d.assets.BTC.as_of_utc=iso(NOW-91*60e3),
+  d=>d.display_rules.client_stale_after_minutes=9999,
+  d=>d.display_rules.freshness_sla_minutes=9999,
+  d=>delete d.display_rules];
+ for(const mutate of cases){const d=fixture();mutate(d);const m=liveViewModel(d,{nowMs:NOW});
+  assert.equal(m.reason,'SOURCE_CLOCK_INVALID');assert.equal(m.chart,null);}
+ assert.equal(liveViewModel(fixture(),{nowMs:NaN}).reason,'SOURCE_CLOCK_INVALID');
+ const valid=fixture();valid.assets.BTC.as_of_utc=iso(NOW-90*60e3);
+ valid.assets.BTC.points=valid.assets.BTC.points.map(([ts,v])=>[iso(Date.parse(ts)-90*60e3),v]);
+ assert.equal(liveViewModel(valid,{nowMs:NOW}).state,'OK');
+ const da=liveViewModel(fixture(),{nowMs:NOW}),en=liveViewModel(fixture(),{nowMs:NOW,lang:'en'});
+ assert.match(da.footer,/nominelt 50 % modelinterval.*00\.00 UTC/);
+ assert.match(en.footer,/nominal 50% model interval.*00:00 UTC/);
+});
+
+test('invalid calendar deadlines never prolong a tilted view; valid fractional UTC is accepted',()=>{
+ for(const deadline of ['2026-11-31T00:00:00Z','2026-11-13T24:00:00Z','2027-02-29T00:00:00Z']){
+  const d=withFallback({...fixture(),official_source_valid_until_utc:deadline});
+  const m=liveViewModel(d,{nowMs:NOW});
+  assert.equal(m.state,'OK');
+  assert.equal(m.kompas.view,'NONE');
+  assert.ok(m.chart.days.every(day=>day.centre===d.no_kompas_view.assets.BTC.p0));
+  assert.doesNotMatch(m.headline.source,/Faldende|Falling|Challenger B/);
+  assert.equal(liveViewModel({...fixture(),official_source_valid_until_utc:deadline},{nowMs:NOW}).state,'UNAVAILABLE');
+ }
+ const good=fixture();
+ good.generated_at_utc='2026-11-13T18:00:00.0Z';
+ good.assets.BTC.as_of_utc='2026-11-13T18:00:00.00Z';
+ good.official_source_valid_until_utc='2026-11-13T22:00:00.000Z';
+ assert.equal(liveViewModel(good,{nowMs:NOW}).state,'OK');
+});
+
+
+test('expired source rejects a forged untilted marker with residual tilt',()=>{
+ const make=()=>withFallback({...fixture(),official_source_valid_until_utc:iso(NOW-1)});
+ const attacks=[a=>a.days[0].centre+=1,
+  a=>a.days[0].log_shift=0.01,
+  a=>a.drift_per_day.g13=0.01,
+  a=>a.headline['3'].direction='DOWN',
+  a=>a.headline['3'].target+=1,
+  a=>a.headline['3'].pct=1,
+  a=>a.headline['7'].official_direction['5_7d']='DOWN',
+  a=>a.headline['1'].tilting_views=['1_3d']];
+ for(const mutate of attacks){const d=make();mutate(d.no_kompas_view.assets.BTC);
+  const m=liveViewModel(d,{nowMs:NOW});assert.equal(m.state,'UNAVAILABLE');assert.equal(m.chart,null);}
+ const rounded=make();const a=rounded.no_kompas_view.assets.BTC;a.p0+=0.003;a.points.at(-1)[1]=a.p0;
+ assert.equal(liveViewModel(rounded,{nowMs:NOW}).state,'OK');
+});
+
+
+test('actual price observations are strictly ordered and bound to source as-of and raw p0',()=>{
+ const attacks=[a=>a.points.push([iso(NOW+H),a.p0]),
+  a=>a.points[2][0]=a.points[1][0],
+  a=>[a.points[1],a.points[2]]=[a.points[2],a.points[1]],
+  a=>a.points[2][0]='2026-11-31T00:00:00Z',
+  a=>a.points[2][1]=0,
+  a=>a.points[2]=null,
+  a=>a.points.pop(),
+  a=>a.points.at(-1)[1]+=1];
+ for(const asset of ['BTC','ETH'])for(const expired of [false,true]){
+  const make=()=>expired?withFallback({...fixture(),official_source_valid_until_utc:iso(NOW-1)}):fixture();
+  for(const mutate of attacks){const d=make();mutate((expired?d.no_kompas_view.assets:d.assets)[asset]);
+   const m=liveViewModel(d,{asset,nowMs:NOW});assert.equal(m.state,'UNAVAILABLE');assert.equal(m.chart,null);}
+  const good=make();const a=(expired?good.no_kompas_view.assets:good.assets)[asset];a.points.splice(40,2);
+  assert.equal(liveViewModel(good,{asset,nowMs:NOW}).state,'OK');
+ }
+});
+
+
+test('bounded viewer clock skew does not relax producer clocks or expiry',()=>{
+ for(const asset of ['BTC','ETH']){
+  for(const minutes of [3,5]){
+   assert.equal(liveViewModel(fixture(),{asset,nowMs:NOW-minutes*60e3}).state,'OK');
+  }
+  const tooEarly=liveViewModel(fixture(),{asset,nowMs:NOW-5*60e3-1});
+  assert.equal(tooEarly.reason,'SOURCE_CLOCK_INVALID');
+  assert.equal(tooEarly.chart,null);
+  const invalid=fixture();invalid.assets[asset].as_of_utc=iso(NOW+60e3);
+  assert.equal(liveViewModel(invalid,{asset,nowMs:NOW}).reason,'SOURCE_CLOCK_INVALID');
+  const expired=withFallback({...fixture(),official_source_valid_until_utc:iso(NOW)});
+  assert.equal(liveViewModel(expired,{asset,nowMs:NOW}).kompas.view,'NONE');
+ }
+});
+
+test('isolated tail clock and untilted strength and balance guards',()=>{
+ for(const asset of ['BTC','ETH']){
+  const d=fixture();d.assets[asset].points.at(-1)[0]=iso(NOW-60e3);
+  const m=liveViewModel(d,{asset,nowMs:NOW});
+  assert.equal(m.state,'UNAVAILABLE');assert.equal(m.chart,null);
+  for(const [key,value] of [['strength','moderat'],['balance',{horizon:'1_3d',bull:5,bear:5}]]){
+   for(const hz of [1,3,7]){
+    const e=withFallback({...fixture(),official_source_valid_until_utc:iso(NOW)});
+    e.no_kompas_view.assets[asset].headline[String(hz)][key]=value;
+    const v=liveViewModel(e,{asset,hz,nowMs:NOW});
+    assert.equal(v.state,'UNAVAILABLE');assert.equal(v.chart,null);
+   }
+  }
+ }
 });

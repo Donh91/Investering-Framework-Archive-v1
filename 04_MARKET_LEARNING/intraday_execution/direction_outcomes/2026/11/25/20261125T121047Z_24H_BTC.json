@@ -1,0 +1,91 @@
+{
+  "actual_direction": "UP",
+  "adjudication_delay_hours": 0.192824,
+  "authority": {
+    "automatic_rule_changes": false,
+    "portfolio_execution": false,
+    "shadow_only": true
+  },
+  "brier_score": 0.36,
+  "calibration_group": "BTC:24H:DOWN:6_of_6",
+  "calibration_key": "6_of_6",
+  "contract": "INTRADAY_DIRECTION_OUTCOME_v1",
+  "due_at_utc": "2026-11-26T12:00:00Z",
+  "end_value": 60714.01,
+  "evidence_candle_open_utc": "2026-11-26T11:00:00Z",
+  "evidence_deadline_utc": "2026-11-26T13:30:00Z",
+  "evidence_horizon_error_hours": 0.0,
+  "evidence_observation_utc": "2026-11-26T12:00:00Z",
+  "evidence_semantics": "EXACT_DUE_CLOSED_1H_OWNER_CANDLE",
+  "evidence_source_binding_sha256": "cfb957647d67f404af2415e13e398c11722196a91a6ddd33865d5edaa922b720",
+  "evidence_source_commit_sha": "88c360cfffe02e8ffa966a9b609210b70b5ee366",
+  "evidence_source_path": "03_DAILY_CAPTURE_LOGS/hourly/2026/11/2026-11-26.csv",
+  "evidence_source_snapshot_utc": "2026-11-26T12:10:38Z",
+  "frozen_calibrated_probability_pct": 60.0,
+  "horizon_hours": 24,
+  "issued_at_utc": "2026-11-25T12:10:47.640510Z",
+  "measured_at_utc": "2026-11-26T12:11:34.165116Z",
+  "miss_analysis": {
+    "families_aligned_with_actual": [],
+    "families_opposed_to_actual": [
+      "return_1h",
+      "return_4h",
+      "session_vwap",
+      "momentum_acceleration",
+      "taker_balance",
+      "taker_change"
+    ]
+  },
+  "predicted_direction": "DOWN",
+  "prediction_path": "04_MARKET_LEARNING/intraday_execution/direction_predictions/2026/11/25/20261125T121047Z.json",
+  "prediction_sha256": "0821ef800c579c97060260c00d723b9184dab697574dcff540ffea802606cb43",
+  "production_context": {
+    "commit_sha": "88c360cfffe02e8ffa966a9b609210b70b5ee366",
+    "event": "workflow_dispatch",
+    "ref": "refs/heads/main",
+    "repository": "Donh91/Investering-Framework-Archive-v1",
+    "run_attempt": "1",
+    "run_id": "45817069761"
+  },
+  "registered_test_id": "INTRADAY_DIRECTION_CONFIDENCE_V1",
+  "registration_receipt_sha256": "a61938f9b772f204ab0d5bc1e11798e51ee313bf1e1857f3d6bafd7b6bdf66d2",
+  "result": "MISS",
+  "return_pct": 3.53625167,
+  "source_candle_open_utc": "2026-11-25T11:00:00+00:00",
+  "source_price_observation_utc": "2026-11-25T12:00:00Z",
+  "start_value": 58640.34,
+  "status": "MATURED",
+  "target": "BTC",
+  "votes": [
+    {
+      "direction": "DOWN",
+      "family": "return_1h",
+      "value": -0.440848896435
+    },
+    {
+      "direction": "DOWN",
+      "family": "return_4h",
+      "value": -0.16682462712168666
+    },
+    {
+      "direction": "DOWN",
+      "family": "session_vwap",
+      "value": -0.801048647635938
+    },
+    {
+      "direction": "DOWN",
+      "family": "momentum_acceleration",
+      "value": -0.535510379736
+    },
+    {
+      "direction": "DOWN",
+      "family": "taker_balance",
+      "value": 0.429851677397
+    },
+    {
+      "direction": "DOWN",
+      "family": "taker_change",
+      "value": -0.06090086575533338
+    }
+  ]
+}

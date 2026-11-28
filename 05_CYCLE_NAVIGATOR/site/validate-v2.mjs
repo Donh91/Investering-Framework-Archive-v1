@@ -1,5 +1,6 @@
 import './tests/full-stack-readback.test.mjs';
 import './vnext-live/validate.mjs';
+import './premium-v2/kompas-pro-public-v1.test.mjs';
 import { readFile } from 'node:fs/promises';
 import { createHash } from 'node:crypto';
 import { resolveInternalPrecision } from './internal-precision-gate.mjs';

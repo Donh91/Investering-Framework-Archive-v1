@@ -1,0 +1,56 @@
+{
+  "authority": {
+    "automatic_promotion": false,
+    "automatic_repository_write": false,
+    "automatic_skill_activation": false,
+    "canonical_effect": false,
+    "portfolio_execution": false
+  },
+  "changed_paths": [
+    ".github/workflows/s1-executor.yml",
+    "00_FMOS/S1/BOOTSTRAP.txt",
+    "00_FMOS/S1/REVIEWED_MERGE_LANE.json",
+    "00_FMOS/S1/RUNTIME_CONTRACT.json",
+    "AGENTS.md",
+    "scripts/governance/s1_executor_v1.py",
+    "scripts/governance/s1_tick_brief_v1.py",
+    "scripts/orchestration/framework_metronome_v1.py",
+    "tests/governance/test_s1_decision_v1.py",
+    "tests/governance/test_s1_executor_trigger_v1.py",
+    "tests/governance/test_s1_executor_v1.py",
+    "tests/governance/test_s1_reviewed_merge_lane_v1.py"
+  ],
+  "contract": "OPERATIONAL_EPISODE_v1",
+  "dominant_path_prefix": "tests",
+  "episode_id": "OE-0f11c7dfa62a57fd",
+  "evidence_limits": [
+    "Merged commit proves accepted repository change, not causal effectiveness by itself.",
+    "No failed approach is inferred unless separately evidenced.",
+    "No chain-of-thought or raw prompt is stored."
+  ],
+  "failed_approaches": [],
+  "failure_signature": "s1-trigger-shadow-executor-metronome-dispatched-briefs-high",
+  "operation_type": "FIX",
+  "outcome": "MERGED_TO_MAIN",
+  "resolution_summary": "* fix(s1): trigger the SHADOW executor for metronome-dispatched briefs GitHub creates no workflow_run event for a run started with GITHUB_TOKEN, and the metronome dispatches the S1 tick brief with it, so since #2337 the executor ran once (skipped) and recorded no SHADOW decision (pre-LIVE gate 3). - s1-executor.yml: + workflow_dispatch (no inputs). A dispatched run resolves the brief's main from the published brief (step output: a SHA only) and checks out exactly that commit. Job permissions (read-only), the execute step and its env, and the concurrency group are unchanged. - s1_executor_v1.py",
+  "reusable_pattern": null,
+  "source_blob_shas": {
+    ".github/workflows/s1-executor.yml": "562b641bde8466c584d746013ac733255c366bd3",
+    "00_FMOS/S1/BOOTSTRAP.txt": "0269ddf9089b36e01ea5ccf3679168f571f6f625",
+    "00_FMOS/S1/REVIEWED_MERGE_LANE.json": "f312ac0a009beabdea5d1412da6235fd1510e2d5",
+    "00_FMOS/S1/RUNTIME_CONTRACT.json": "a1bbe19917d29b22e5339b27f41f7486385e2e2e",
+    "AGENTS.md": "3c4f5de24771532735a1042ad55de356d200c453",
+    "scripts/governance/s1_executor_v1.py": "b256a64b9a869f912d6a3425e47538279991c389",
+    "scripts/governance/s1_tick_brief_v1.py": "2849ab0210b007222f62d56adc9fc16d1b9ec7d6",
+    "scripts/orchestration/framework_metronome_v1.py": "de53bced29c1f33a71c68d1737df3a1d56c6ff52",
+    "tests/governance/test_s1_decision_v1.py": "0f6818f7d7bb94399ae05abb7c2738890abd6035",
+    "tests/governance/test_s1_executor_trigger_v1.py": "836c2a7407505ef241965cb9beb839d4e7f32a67",
+    "tests/governance/test_s1_executor_v1.py": "2d4eaba5819f35a91016215f61da15ceed03910d",
+    "tests/governance/test_s1_reviewed_merge_lane_v1.py": "ca58f46f630ae3523696aa05c740a3bff7225b8d"
+  },
+  "source_commit_sha": "0f11c7dfa62a57fdf2d784a529910a03ad28e747",
+  "source_kind": "MERGED_MAIN_COMMIT",
+  "source_timestamp": "2026-11-27T11:50:37+01:00",
+  "task_class": "AUTOMATION_REMEDIATION",
+  "task_summary": "fix(s1): trigger the SHADOW executor for metronome-dispatched briefs [HIGH_IMPACT, owner paste] (#2371)"
+}

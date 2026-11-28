@@ -1,3 +1,4 @@
+import {bindNativeParticipation,bindNativeAltseason,t6ObservationPath,bindT6Observation} from '../cycle-participation.mjs';
 import assert from 'node:assert/strict';
 import vm from 'node:vm';
 import {readFile} from 'node:fs/promises';
@@ -39,7 +40,7 @@ function fixture(){
  const forecastPath='04_MARKET_LEARNING/handlekompas/shadow_v2/forecasts/f.json';
  const forecast={contract:'SHADOW_COMPASS_V2_FORECAST_v1',forecast_id:'f',issued_at_utc:now,source_fingerprint:'fp',authority:{automatic_promotion:false},source_bindings:{auto_market_state:{packet_path:autoPath,packet_sha256:auto.hash,packet_generated_at_utc:now},cycle_navigator:{iso_year:2026,iso_week:41,issue_number:29,machine_package_sha256:wp.machine_package_sha256}},model_output:{horizons:{'12h':{direction:'UP'}}}};
  const installForecast=()=>{const f=signed(forecast,'forecast_sha256');files.set(resolve(root,forecastPath),f.raw);pointers.set('shadow',{contract:'SHADOW_COMPASS_V2_LATEST_POINTER_v1',forecast_path:forecastPath,forecast_sha256:f.hash,forecast_id:'f',source_fingerprint:'fp'});};installForecast();
- const context={resolve,relative,createHash,Date,hourlyFloorReadback,inheritedProtectionOrigin,kompasTruthReadback,repoRoot:root,COMPASS_POINTER_PATH:'public',INTERNAL_COMPASS_POINTER_PATH:'official',AUTO_MARKET_STATE_POINTER_PATH:'auto',NATIVE_COMPASS_POINTER_PATH:'native',SHADOW_COMPASS_V2_POINTER_PATH:'shadow',STRATEGIC_COMPASS_POINTER_PATH:'strategic',MASTER_MONDAY_HANDOFF_PATH:'handoff',readJson:async p=>pointers.get(p),readFile:async(p,encoding)=>{if(!files.has(p))throw Error('missing');return encoding?files.get(p):Buffer.from(files.get(p));}};
+ const context={resolve,relative,createHash,Date,bindNativeParticipation,bindNativeAltseason,t6ObservationPath,bindT6Observation,hourlyFloorReadback,inheritedProtectionOrigin,kompasTruthReadback,repoRoot:root,COMPASS_POINTER_PATH:'public',INTERNAL_COMPASS_POINTER_PATH:'official',AUTO_MARKET_STATE_POINTER_PATH:'auto',NATIVE_COMPASS_POINTER_PATH:'native',SHADOW_COMPASS_V2_POINTER_PATH:'shadow',STRATEGIC_COMPASS_POINTER_PATH:'strategic',MASTER_MONDAY_HANDOFF_PATH:'handoff',readJson:async p=>pointers.get(p),readFile:async(p,encoding)=>{if(!files.has(p))throw Error('missing');return encoding?files.get(p):Buffer.from(files.get(p));}};
  vm.createContext(context);vm.runInContext(source.slice(source.indexOf('function verifiedRelative'),source.indexOf('\nasync function buildCompassEventSnapshot'))+';globalThis.run=buildFullStackReadback;globalThis.digest=verifiedRawDigest;',context);
  return {root,files,pointers,forecast,installForecast,autoPath,officialPath,projectionPath,weeklyPath,weeklyPointer:wp,context,run:()=>context.run({compass_id:'c',issued_at_utc:now,data_status:'OK',action_now:'HOLD'},wp,{issue_number:29})};
 }
@@ -167,6 +168,42 @@ for(const mode of ['valid','valid-degraded','health','time','scalar-health','mis
  result=await f.run();assert.equal(result.source_status.native,['valid','valid-degraded'].includes(mode)?'SOURCE_ALIGNED':'UNVERIFIED','Producer native health schema: '+mode);
  if(['valid','valid-degraded'].includes(mode)){assert.equal(result.native.data_health,mode==='valid-degraded'?'DEGRADED':'PASS');assert.equal(result.native.now,'HOLD_WAIT');}
  assert.doesNotMatch(JSON.stringify(result.native),/MUST_NOT_BE_PUBLISHED|PRIVATE_UNKNOWN_STATUS/);
+}
+// Both live fields use the real builder and do not borrow a weekly or Official source.
+for(const mode of ['valid','tampered-native','wrong-auto','missing-native','weekly-mismatch','official-mismatch']){
+ const f=fixture(),auto=f.pointers.get('auto'),now=auto.packet_generated_at_utc;
+ const path='04_MARKET_LEARNING/handlekompas/runs/live.json';
+ const expiry=hours=>new Date(Date.parse(now)+hours*3600000).toISOString();
+ const row={state:'OBSERVED_PROXY',coverage:'TOP100_FULL_RANK_WINDOW',advancing:'MAJORITY',outperforming_btc:'MAJORITY',outperforming_eth:'HALF'};
+ const run={contract:'NATIVE_HANDLEKOMPAS_v1',action:{NOW:'HOLD_WAIT'},source:{packet_sha256:mode==='wrong-auto'?'b'.repeat(64):auto.packet_sha256},DATA_HEALTH:{status:'DEGRADED'},generated_at_utc:now,
+  cycle_participation:{contract:'CN_CYCLE_PARTICIPATION_READBACK_v1',semantics:'OBSERVED_24H_RELATIVE_PERFORMANCE_NOT_CAPITAL_FLOW',authority:'DESCRIPTIVE_ONLY_NO_ACTION_OR_FORECAST',status:'OBSERVED_PARTICIPATION',observed_at_utc:now,valid_until_utc:expiry(8),relative_leader:'ETH',phase:'UNAVAILABLE',rotation_confirmed:false,buckets:{LARGE_ALT_PROXY:row,MID_ALT_PROXY:row,SMALL_ALT_PROXY:{...row,coverage:'TOP100_TAIL_ONLY_NOT_FULL_SMALL_CAP_UNIVERSE'},MICROCAP_PROXY:{state:'UNAVAILABLE'},MEMES:{state:'UNAVAILABLE'}}},
+  altseason_readback:{contract:'CN_ALTSEASON_OBSERVATION_v1',source:'BLOCKCHAINCENTER_90D',authority:'CONTEXT_ONLY_NO_TRANSITION_OR_ETA',status:'OBSERVED',state:'ALTCOIN_SEASON',observed_at_utc:now,valid_until_utc:expiry(24)}};
+ const n=signed(run,'handlekompas_sha256');
+ if(mode!=='missing-native')f.files.set(resolve(f.root,path),mode==='tampered-native'?n.raw.replace('ALTCOIN_SEASON','BITCOIN_SEASON'):n.raw);
+ f.pointers.set('native',{handlekompas_path:path,handlekompas_sha256:n.hash,source_packet_sha256:auto.packet_sha256,NOW:'HOLD_WAIT',data_health:'DEGRADED',generated_at_utc:now});
+ if(mode==='weekly-mismatch')f.weeklyPointer.machine_package_sha256='a'.repeat(64);
+ if(mode==='official-mismatch')f.pointers.get('official').source_packet_sha256='b'.repeat(64);
+ const result=await f.run(),valid=['valid','weekly-mismatch','official-mismatch'].includes(mode);
+ assert.equal(result.native_cycle_participation_binding?.readback.relative_leader,valid?'ETH':undefined,mode);
+ assert.equal(result.native_altseason_binding?.readback.state,valid?'ALTCOIN_SEASON':undefined,mode);
+}
+// T6 research pointer is independently checked against exact observation bytes.
+for(const mode of ['valid','tampered','missing','wrong-path','wrong-event','authority']){
+ const f=fixture(),at=f.pointers.get('auto').packet_generated_at_utc;
+ const root='research/framework_memory/rotation_survival_forward_rows/';
+ const path=root+'observations/'+at.slice(0,10)+'_'+'a'.repeat(20)+'.json';
+ const authority={binding:false,market_interpretation:'NONE',canonical_acceptance:false,state_change:false,portfolio_action:false,market_threshold_change:false,model_weight_change:false,research_only:true};
+ const o={contract:'ROTATION_SURVIVAL_OBSERVATION_v1',authority:{...authority},event:'NO_ELIGIBLE_FIRST_CROSS',observed_at_utc:at,
+  source_packet_sha256:'b'.repeat(64),retrospective_creation:false,active_sequence_id_before:null,first_cross_detected:false,right_censored:true,
+  axes:{private:'DO_NOT_PUBLISH'}};
+ if(mode==='authority')o.authority.portfolio_action=true;
+ const raw=JSON.stringify(sort(o))+'\n';
+ f.pointers.set(resolve(f.root,root+'LATEST.json'),{contract:'ROTATION_SURVIVAL_LATEST_v1',authority,event:mode==='wrong-event'?'FIRST_CROSS_FROZEN':o.event,
+  observation_path:mode==='wrong-path'?root+'observations/../secret.json':path,observation_sha256:hash(raw),observed_at_utc:at,active_sequence_id:null});
+ if(mode!=='missing')f.files.set(resolve(f.root,path),mode==='tampered'?raw.replace('DO_NOT_PUBLISH','ALTERED'):raw);
+ const r=await f.run();
+ assert.equal(r.t6_research_observation?.event,mode==='valid'?'NO_ELIGIBLE_FIRST_CROSS':undefined,mode);
+ assert.doesNotMatch(JSON.stringify(r.t6_research_observation),/DO_NOT_PUBLISH|ALTERED/);
 }
 // Preserve Python integral-float bytes rather than parse/stringify reconstruction.
 f=fixture();const raw='{"contract":"FLOAT_TEST","number":1.0}';const digest=hash(raw),withDigest='{"contract":"FLOAT_TEST","number":1.0,"z_sha256":"'+digest+'"}';assert.equal(f.context.digest(withDigest,JSON.parse(withDigest),'z_sha256',digest),true);assert.equal(f.context.digest(withDigest.replace('1.0','2.0'),JSON.parse(withDigest.replace('1.0','2.0')),'z_sha256',digest),false);

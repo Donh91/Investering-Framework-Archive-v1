@@ -5,6 +5,7 @@
  * verifier. Unknown/missing source never becomes an affirmative direction.
  */
 import {originalWeekPriceLabel} from './original-week-price-readback.mjs';
+import {verifiedLiveMomentum} from './compass-overview.mjs';
 
 export const KOMPAS_HORIZONS=Object.freeze([
   ['NOW','Nu','Now','OBSERVED'],
@@ -57,8 +58,9 @@ function trustedStrategicContext(trace,strategic){
     strategic.status==='FROZEN_CONTEXT_ONLY'&&
     strategic.strategic?.available===true;
 }
-export function kompasHorizonStatusRows({compass,view,lang='da',observationCurrent=false,strategic=null,trace=null,originalWeekPrice=null}={}){
+export function kompasHorizonStatusRows({compass,view,lang='da',observationCurrent=false,strategic=null,trace=null,originalWeekPrice=null,now=Date.now()}={}){
   const verified=validOfficial(compass,view);
+  const independent=verifiedLiveMomentum({compass,view,now});
   const weekPriceText=originalWeekPriceLabel(originalWeekPrice,{lang});
   const weekOnly=(row)=>({...row,status:'SOURCE_ISSUED_WEEK_PRICE_ONLY',
     tone:'mixed',sourceStatus:'ORIGINAL_WEEK_PRICE_NOT_DAILY_ACTION',
@@ -97,6 +99,15 @@ export function kompasHorizonStatusRows({compass,view,lang='da',observationCurre
             'Previously issued strategic context · nonbinding'),
           priceLabel:tr(lang,'BTC-retning · ikke kursmål','BTC direction · not a price target')};
     }
+    if(kind==='OBSERVED'&&(verified||independent)){
+      const info=independent?directions[independent.direction]:observationCurrent&&verified?directions[compass.market_now?.directional_state]:null;
+      const v=info?tr(lang,info[0],info[1]):
+        tr(lang,'Måling ikke frisk','Observation not current');
+      return {...row,status:info?'CURRENT_OBSERVATION':'OBSERVATION_UNAVAILABLE',
+        tone:info?info[2]:'missing',value:v,
+        sourceLabel:tr(lang,'Observeret momentum, ikke prognose','Observed momentum, not a forecast'),
+        priceLabel:tr(lang,'Ingen fremadrettet kursprognose','No forward price forecast')};
+    }
     if(!verified){
       // Independently source-issued Monday prices survive expiry of the
       // separate Official daily action. No stale direction is resurrected.
@@ -105,6 +116,16 @@ export function kompasHorizonStatusRows({compass,view,lang='da',observationCurre
     if(kind==='OFFICIAL'){
       const h=compass.horizons?.[officialId];
       const info=directions[h?.expected_direction];
+      // A verified abstention is evidence, not a missing source and not
+      // a directional prediction. Reuse the existing nonbinding status.
+      if(h?.expected_direction==='NO_EDGE')
+        return {...row,status:'NONBINDING_CONTEXT',tone:'missing',
+          sourceStatus:'OFFICIAL_SOURCE_NO_EDGE',
+          value:tr(lang,directions.NO_EDGE[0],directions.NO_EDGE[1]),
+          sourceLabel:tr(lang,'Officiel vurdering · ingen dokumenteret fordel',
+            'Official assessment · no proven edge'),
+          priceLabel:id==='H5_7D'&&weekPriceText?weekPriceText:
+            tr(lang,'Ingen retningsprognose eller kursmål','No directional forecast or price target')};
       if(!info||!['UP','DOWN','MIXED','SIDEWAYS','LEAN_BULLISH','LEAN_BEARISH'].includes(h.expected_direction))
         return id==='H5_7D'&&weekPriceText?weekOnly(row):row;
       return {...row,label:tr(lang,da,en),kind,status:'OFFICIAL_DIRECTION_ONLY',
@@ -114,15 +135,6 @@ export function kompasHorizonStatusRows({compass,view,lang='da',observationCurre
         // A direction is never an independently issued BTC price target.
         priceLabel:id==='H5_7D'&&weekPriceText?weekPriceText:
           tr(lang,'Retning, ikke kursmål','Direction, not a price target')};
-    }
-    if(kind==='OBSERVED'){
-      const info=observationCurrent?directions[compass.market_now?.directional_state]:null;
-      const v=info?tr(lang,info[0],info[1]):
-        tr(lang,'Måling ikke frisk','Observation not current');
-      return {...row,status:info?'CURRENT_OBSERVATION':'OBSERVATION_UNAVAILABLE',
-        tone:info?info[2]:'missing',value:v,
-        sourceLabel:tr(lang,'Observeret momentum, ikke prognose','Observed momentum, not a forecast'),
-        priceLabel:tr(lang,'Ingen fremadrettet kursprognose','No forward price forecast')};
     }
     // No source-verified strategic anchor. A type label is not an issued
     // direction, much less a numerical price forecast.

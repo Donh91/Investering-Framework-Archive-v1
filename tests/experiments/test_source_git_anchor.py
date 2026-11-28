@@ -188,3 +188,89 @@ class CanonicalSourceAnchorTests(unittest.TestCase):
         anchor.lookups = 128
         with self.assertRaises(SourceGitAnchorBudgetExceeded):
             anchor.matches(self.rel, self.digest)
+
+    def introduce_later(self):
+        rel = Path("raw/EXP-FC-later/source.json")
+        path = self.root / rel
+        path.parent.mkdir(parents=True)
+        path.write_bytes(self.original)
+        parent = git(self.root, "rev-parse", "HEAD").decode().strip()
+        git(self.root, "add", rel.as_posix())
+        git(self.root, "commit", "-qm", "first path introduction")
+        first = git(self.root, "rev-parse", "HEAD").decode().strip()
+        git(self.root, "push", "-q", "origin", "main")
+        return rel, path, parent, first
+
+    def test_first_introduction_binds_actual_git_parent_and_bytes_no_clock(self):
+        from datetime import datetime, timezone
+        rel, _, parent, first = self.introduce_later()
+        anchor = AcceptedMainSource(self.root, fixture_origin=self.origin.as_uri())
+        proof = anchor.first_introduction(rel, self.digest)
+        self.assertIsNotNone(proof)
+        self.assertEqual(proof["first_parent"], parent)
+        self.assertEqual(proof["first_commit"], first)
+        self.assertEqual(proof["main_head"], first)
+        self.assertEqual(proof["path"], rel.as_posix())
+        self.assertEqual(proof["git_blob_sha"], git(self.root, "rev-parse", f"{first}:{rel}").decode().strip())
+        self.assertEqual(proof["content_sha256"], self.digest)
+        self.assertIsNone(proof["repository"])
+        self.assertIsNone(proof["present_by_utc"])
+        self.assertIsNone(proof["absent_through_utc"])
+        self.assertIs(proof["server_acceptance_clock_verified"], False)
+        self.assertIs(proof["scientifically_admitted"], False)
+        self.assertFalse(anchor.matches(rel, self.digest, accepted_before=datetime.now(timezone.utc)))
+        self.assertFalse(anchor.matches(rel, self.digest, accepted_after=datetime.now(timezone.utc)))
+
+    def test_first_introduction_rejects_root_and_wrong_digest(self):
+        anchor = AcceptedMainSource(self.root, fixture_origin=self.origin.as_uri())
+        self.assertIsNone(anchor.first_introduction(self.rel, self.digest))
+        rel, _, _, _ = self.introduce_later()
+        anchor = AcceptedMainSource(self.root, fixture_origin=self.origin.as_uri())
+        self.assertIsNone(anchor.first_introduction(rel, "0" * 64))
+
+    def test_first_introduction_rejects_delete_readd_same_bytes(self):
+        rel, path, _, _ = self.introduce_later()
+        git(self.root, "rm", rel.as_posix())
+        git(self.root, "commit", "-qm", "remove")
+        path.parent.mkdir(parents=True, exist_ok=True)
+        path.write_bytes(self.original)
+        git(self.root, "add", rel.as_posix())
+        git(self.root, "commit", "-qm", "readd same bytes")
+        git(self.root, "push", "-q", "origin", "main")
+        anchor = AcceptedMainSource(self.root, fixture_origin=self.origin.as_uri())
+        self.assertTrue(anchor.matches(rel, self.digest))
+        self.assertIsNone(anchor.first_introduction(rel, self.digest))
+
+    def test_first_introduction_rejects_replaced_main_even_with_original_worktree(self):
+        rel, path, _, first = self.introduce_later()
+        path.write_bytes(b"replacement")
+        git(self.root, "add", rel.as_posix())
+        git(self.root, "commit", "-qm", "replace source")
+        git(self.root, "push", "-q", "origin", "main")
+        git(self.root, "checkout", "-q", first)
+        anchor = AcceptedMainSource(self.root, fixture_origin=self.origin.as_uri())
+        self.assertTrue(anchor.matches(rel, self.digest))
+        self.assertIsNone(anchor.first_introduction(rel, self.digest))
+
+    def test_first_introduction_rejects_merge_only_introduction(self):
+        git(self.root, "checkout", "-qb", "feature")
+        rel = Path("raw/feature/source.json")
+        path = self.root / rel
+        path.parent.mkdir(parents=True)
+        path.write_bytes(self.original)
+        git(self.root, "add", rel.as_posix())
+        git(self.root, "commit", "-qm", "branch-only introduction")
+        git(self.root, "checkout", "-q", "main")
+        git(self.root, "merge", "-q", "--no-ff", "-m", "merge feature", "feature")
+        git(self.root, "push", "-q", "origin", "main")
+        anchor = AcceptedMainSource(self.root, fixture_origin=self.origin.as_uri())
+        self.assertIsNone(anchor.first_introduction(rel, self.digest))
+
+    def test_first_introduction_rejects_pathspec_and_aggregate_budget(self):
+        from scripts.experiments.source_git_anchor import SourceGitAnchorBudgetExceeded
+        rel, _, _, _ = self.introduce_later()
+        anchor = AcceptedMainSource(self.root, fixture_origin=self.origin.as_uri())
+        self.assertIsNone(anchor.first_introduction(Path(":(glob)raw/**/source.json"), self.digest))
+        anchor.lookups = 127
+        with self.assertRaises(SourceGitAnchorBudgetExceeded):
+            anchor.first_introduction(rel, self.digest)

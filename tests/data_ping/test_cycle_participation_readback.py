@@ -1,0 +1,192 @@
+import copy
+import unittest
+from datetime import datetime, timedelta, timezone
+from scripts.data_ping.native_handlekompas import build, cycle_participation_readback, altseason_readback
+from scripts.data_ping.auto_market_state import normalize_breadth, capitalization_transmission_proxy
+
+NOW = datetime(2026, 11, 25, 11, tzinfo=timezone.utc)
+STAMP = "2026-11-25T10:00:00Z"
+H = "a" * 64
+
+def fixture():
+    buckets = {}
+    for key, lo, hi in [("LARGE_ALT_PROXY",3,20),("MID_ALT_PROXY",21,50),("SMALL_ALT_PROXY",51,100)]:
+        buckets[key] = dict(status="OBSERVED_PROXY",rank_window=[lo,hi],
+            coverage="TOP100_TAIL_ONLY_NOT_FULL_SMALL_CAP_UNIVERSE" if lo==51 else "TOP100_FULL_RANK_WINDOW",
+            raw_rank_window_constituent_count=hi-lo+1,excluded_non_beta_count=0,constituent_count=hi-lo+1,
+            advance_ratio_24h=.8,outperforming_btc_share_24h=.7,outperforming_eth_share_24h=.5)
+    return dict(packet_generated_at_utc="2026-11-25T10:10:00Z",
+        source_health={"breadth":{"status":"PASS","normalization":{"status":"PASS","retrieved_at_utc":STAMP}}},
+        normalized_state={"breadth":{"retrieved_at_utc":STAMP,"universe":{"membership_hash":H}},
+            "capitalization_transmission_proxy":dict(contract="CAPITALIZATION_TRANSMISSION_PROXY_v2",
+            bucket_semantics="FILTERED_TOP100_RANK_WINDOWS_EXPLICIT_NON_BETA_EXCLUSIONS_PROXY_ONLY",
+            source_membership_hash=H,source_retrieved_at_utc=STAMP,btc_return_24h_pct=1,eth_return_24h_pct=2,
+            authority=dict(binding=False,canonical_rotation=False,portfolio_action=False,market_threshold_change=False,execution_weight=0),
+            buckets=buckets)})
+
+def proxy(x):
+    return x["normalized_state"]["capitalization_transmission_proxy"]
+
+def read(x,now=NOW):
+    return cycle_participation_readback(x,as_of=now)
+
+class ParticipationTests(unittest.TestCase):
+    def test_owner_clock_variants_end_to_end(self):
+        raw = dict(contract="C5E_TOP100_BREADTH_OWNER_v1_2",
+            universe=dict(identifier="TOP100", version="v1_2", membership_hash=H, constituent_count=100),
+            aggregate=dict(membership_hash=H, constituent_count=100, advancers=100, decliners=0, flat=0),
+            evidence_semantics=dict(evidence_role="PROXY_ONLY", canonical_compatible=False,
+                canonical_large_cap_breadth="UNCONFIRMED", canonical_broad_alt_breadth="UNCONFIRMED"),
+            constituents=[dict(asset_id="bitcoin" if i == 1 else "ethereum" if i == 2 else f"asset-{i}",
+                filtered_rank=i, change_24h_pct=1 if i == 1 else 2 if i == 2 else 3)
+                for i in range(1, 101)])
+        for clocks in [
+            dict(retrieved_at_utc=STAMP),
+            dict(retrieved_at_utc=None, retrieval_timestamp=STAMP),
+            dict(observation=dict(retrieval_timestamp_utc=STAMP)),
+            dict(retrieval_timestamp=STAMP, observation=dict(retrieval_timestamp_utc="2026-11-25T09:00:00Z")),
+        ]:
+            with self.subTest(clocks=clocks):
+                source = {**raw, **clocks}
+                original = copy.deepcopy(source)
+                normalized, health = normalize_breadth(source, now_utc=NOW)
+                self.assertEqual(health["status"], "PASS")
+                self.assertEqual(source, original)
+                self.assertEqual(normalized, original)
+                x = fixture()
+                x["normalized_state"]["breadth"] = normalized
+                x["normalized_state"]["capitalization_transmission_proxy"] = capitalization_transmission_proxy(normalized)
+                x["source_health"]["breadth"]["normalization"] = health
+                self.assertEqual(proxy(x)["source_retrieved_at_utc"], STAMP)
+                self.assertEqual(read(x)["status"], "OBSERVED_PARTICIPATION")
+                self.assertEqual(read(x, NOW + timedelta(hours=7))["status"], "UNAVAILABLE")
+                proxy(x)["source_retrieved_at_utc"] = None
+                self.assertEqual(read(x)["status"], "UNAVAILABLE")
+        for invalid in ["bad", "2026-11-25T12:00:00Z", "2026-11-24T10:00:00Z"]:
+            source = {**raw, "retrieved_at_utc": invalid, "retrieval_timestamp": STAMP}
+            normalized, health = normalize_breadth(source, now_utc=NOW)
+            self.assertIsNone(normalized)
+            self.assertNotEqual(health["status"], "PASS")
+
+    def test_mutation(self):
+        x=fixture(); first=read(x)
+        self.assertEqual(first["status"],"OBSERVED_PARTICIPATION")
+        self.assertEqual(first["relative_leader"],"ETH")
+        proxy(x)["eth_return_24h_pct"]=-1
+        for row in proxy(x)["buckets"].values():
+            row["outperforming_eth_share_24h"]=.9
+        proxy(x)["buckets"]["LARGE_ALT_PROXY"]["outperforming_btc_share_24h"]=.2
+        second=read(x)
+        self.assertEqual(second["relative_leader"],"BTC")
+        self.assertEqual(second["buckets"]["LARGE_ALT_PROXY"]["outperforming_btc"],"MINORITY")
+        self.assertFalse(second["rotation_confirmed"])
+        self.assertEqual(second["phase"],"UNAVAILABLE")
+    def test_exact_expiry_and_future(self):
+        x=fixture()
+        self.assertEqual(read(x,NOW+timedelta(hours=7))["status"],"UNAVAILABLE")
+        self.assertEqual(read(x,NOW-timedelta(hours=2))["status"],"UNAVAILABLE")
+    def test_bad_authority_membership_and_health(self):
+        for edit in [
+            lambda x:proxy(x)["authority"].update(binding=True),
+            lambda x:x.update(validation_status="FAIL"),
+            lambda x:proxy(x).update(source_membership_hash="b"*64),
+            lambda x:x["source_health"]["breadth"].update(status="DEGRADED"),
+            lambda x:proxy(x).update(source_retrieved_at_utc="2026-11-25T09:00:00Z"),
+        ]:
+            x=fixture();edit(x);self.assertEqual(read(x)["status"],"UNAVAILABLE")
+    def test_owner_and_normalization_clock_bind_independently(self):
+        # All three timestamps are individually fresh and before issuance.
+        # Only the binding check, not freshness, can reject these mutations.
+        earlier = "2026-11-25T09:00:00Z"
+        for field in ("owner", "normalization"):
+            with self.subTest(field=field):
+                x = fixture()
+                if field == "owner":
+                    x["normalized_state"]["breadth"]["retrieved_at_utc"] = earlier
+                else:
+                    x["source_health"]["breadth"]["normalization"]["retrieved_at_utc"] = earlier
+                result = read(x)
+                self.assertEqual(result["status"], "UNAVAILABLE")
+                self.assertEqual(result["reason"], "SOURCE_MEMBERSHIP_OR_CLOCK_MISMATCH")
+                self.assertIsNone(result["observed_at_utc"])
+                self.assertIsNone(result["valid_until_utc"])
+        self.assertEqual(read(fixture())["status"], "OBSERVED_PARTICIPATION")
+
+    def test_partial_and_malformed_never_proxy_micro(self):
+        for value in [float("nan"),True,-.1,1.1,None]:
+            x=fixture();proxy(x)["buckets"]["LARGE_ALT_PROXY"]["advance_ratio_24h"]=value
+            result=read(x)
+            self.assertEqual(result["status"],"PARTIAL_OBSERVATION")
+            self.assertEqual(result["buckets"]["LARGE_ALT_PROXY"]["state"],"UNAVAILABLE")
+            self.assertEqual(result["buckets"]["MICROCAP_PROXY"]["state"],"UNAVAILABLE")
+            self.assertEqual(result["buckets"]["MEMES"]["state"],"UNAVAILABLE")
+    def test_impossible_benchmark_order_is_unavailable_per_bucket(self):
+        for btc, eth, advancing, btc_share, eth_share in [
+            (1, 2, .8, .4, .5),  # harder ETH benchmark has larger share
+            (2, 1, .8, .5, .4),  # harder BTC benchmark has larger share
+            (1, 1, .8, .7, .6),  # tied benchmarks must agree, even within one category
+            (0, 2, .8, .7, .5),  # advancing and BTC thresholds are identical
+            (-1, 2, .8, .7, .5), # negative BTC benchmark cannot have fewer winners than zero
+            (1, 2, .4, .7, .5),  # positive BTC benchmark cannot have more winners than zero
+        ]:
+            x=fixture()
+            proxy(x).update(btc_return_24h_pct=btc, eth_return_24h_pct=eth)
+            proxy(x)["buckets"]["LARGE_ALT_PROXY"].update(
+                advance_ratio_24h=advancing, outperforming_btc_share_24h=btc_share,
+                outperforming_eth_share_24h=eth_share)
+            self.assertEqual(read(x)["buckets"]["LARGE_ALT_PROXY"]["state"], "UNAVAILABLE")
+        x=fixture()
+        self.assertEqual(read(x)["buckets"]["LARGE_ALT_PROXY"]["state"], "OBSERVED_PROXY")
+    def test_native_owner_emits_identical_readback(self):
+        x=fixture()
+        self.assertEqual(build(x, now=NOW)["cycle_participation"], read(x))
+    def test_privacy_and_purity(self):
+        x=fixture();before=copy.deepcopy(x)
+        result=read(x)
+        self.assertEqual(x,before)
+        self.assertNotIn(H,str(result))
+        self.assertNotIn("return_24h_pct",str(result))
+        self.assertNotIn("constituent_count",str(result))
+
+class AltseasonTests(unittest.TestCase):
+    def source(self, score, state):
+        x=fixture()
+        x["source_health"]["altseason_context"]={"status":"PASS"}
+        x["normalized_state"]["altseason_context"]={"blockchaincenter_altcoin_season":{
+            "contract":"BLOCKCHAINCENTER_ALTCOIN_SEASON_SHADOW_CONTEXT_v1","status":"PASS",
+            "retrieved_at_utc":STAMP,"observation_date_utc":"2026-11-25",
+            "horizons":{"90":{"published_score":score,"recomputed_score":score,
+                               "score_reconciliation":"PASS_EXACT","source_state":state}}}}
+        return x
+
+    def test_source_threshold_boundaries_and_native_emission(self):
+        for score,state in [(25,"BITCOIN_SEASON"),(26,"BETWEEN_PUBLISHED_THRESHOLDS"),
+                            (74,"BETWEEN_PUBLISHED_THRESHOLDS"),(75,"ALTCOIN_SEASON")]:
+            x=self.source(score,state)
+            got=altseason_readback(x,as_of=NOW)
+            self.assertEqual(got["state"],state)
+            self.assertEqual(build(x,now=NOW)["altseason_readback"],got)
+            self.assertNotIn("published_score",got)
+            self.assertNotIn("eta",got)
+
+    def test_clock_and_false_pass(self):
+        x=self.source(75,"ALTCOIN_SEASON")
+        self.assertEqual(altseason_readback(x,as_of=NOW+timedelta(hours=23))["status"],"UNAVAILABLE")
+        self.assertEqual(altseason_readback(self.source(75,"BITCOIN_SEASON"),as_of=NOW)["status"],"UNAVAILABLE")
+        x["validation_status"]="FAIL"
+        self.assertEqual(altseason_readback(x,as_of=NOW)["status"],"UNAVAILABLE")
+
+    def test_carry_not_fresh_and_expiry(self):
+        x=self.source(75,"ALTCOIN_SEASON")
+        x["source_health"]["altseason_context"]={"status":"DEGRADED_CARRY"}
+        x["normalized_state"]["altseason_carry"]={
+            "value":75,"source_retrieved_at_utc":"2026-11-24T10:00:00Z",
+            "source_packet_generated_at_utc":"2026-11-24T11:00:00Z",
+            "source_observation_date_utc":"2026-11-24","max_age_hours":72,
+            "semantics":"LAST_VALID_PUBLISHED_VALUE_CARRIED_NOT_INTERPOLATED_NOT_PASS"}
+        self.assertEqual(altseason_readback(x,as_of=NOW)["status"],"CARRIED_NOT_FRESH")
+        self.assertEqual(altseason_readback(x,as_of=NOW+timedelta(hours=47))["status"],"UNAVAILABLE")
+
+
+if __name__ == "__main__":
+    unittest.main()

@@ -318,7 +318,9 @@ export function renderProductExperience(view,feeds,lang='da'){
  set('premium-action-code',readable.code?'OFFICIAL · '+readable.code:readable.explanation);
  const actionDescription=holder('premium-action-meaning');
  if(actionDescription)actionDescription.textContent=readable.explanation;
- set('premium-now-direction',decision.direction);
+ set('premium-now-direction',decision.direction==='UNKNOWN'?(lang==='en'?'Unknown direction':'Ukendt retning'):decision.direction);
+ // An unavailable action explanation is already visible in its meaning line.
+ const actionCode=holder('premium-action-code');if(actionCode)actionCode.hidden=!readable.verified;
  set('premium-sell',decision.sell);set('premium-distribution',decision.distribution);
  set('premium-bull',decision.bull===null?t.unavailable:String(decision.bull));
  set('premium-bear',decision.bear===null?t.unavailable:String(decision.bear));

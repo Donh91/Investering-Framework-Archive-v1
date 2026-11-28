@@ -1,5 +1,5 @@
 from __future__ import annotations
-import argparse, hashlib, json, re, subprocess, sys
+import argparse, hashlib, json, math, re, subprocess, sys
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
@@ -64,6 +64,78 @@ def build_learning_decision_impact(context:dict[str,Any],learning:dict[str,Any]|
     if not potential:
         return {**base,'assessment_status':'EVALUABLE_NO_INCREMENTAL_INPUT','changed_calibration_decision':False,'reason':'The advisory packet added no novel semantic identities or decision-relevant structured deltas beyond the frozen baseline context.'}
     return {**base,'assessment_status':'NOT_EVALUABLE_NOVEL_INPUT_NOT_CONSUMED','reason':'Novel advisory input existed, but the packet is advisory-only and was not allowed to alter the frozen baseline calibration. Fix/authorize the consumer edge before attributing decision impact.'}
+def experiment_outcome_scorecard(context:dict[str,Any], learning:dict[str,Any])->dict[str,Any]|None:
+    """Aggregate the original outcome owner's admitted rows, not new forecasts.
+
+    These are context-bound descriptive record counts, not independently
+    sampled performance, paired baseline skill or the full historical MM score.
+    The original context builder verifies each forecast and evidence binding.
+    No return values, source paths, raw provider data or action fields escape.
+    """
+    try:
+        if (context.get('contract')!='WEEKLY_API_CALIBRATION_CONTEXT_v6'
+                or context.get('authority')!='SHADOW_ONLY'
+                or sha({k:v for k,v in context.items() if k!='context_hash'})!=context.get('context_hash')
+                or context.get('experiment_learning')!=learning
+                or learning.get('status')!='AVAILABLE'
+                or learning.get('authority')!='SHADOW_ONLY_NO_AUTOMATIC_PROMOTION'
+                or learning.get('matured_outcome_evidence_available') is not True
+                or learning.get('outcome_ingestion_status')!='COMPLETE'
+                or learning.get('outcome_ingestion_diagnostics')!=[]):
+            return None
+        is_hash=lambda v:isinstance(v,str) and re.fullmatch(r'[a-f0-9]{64}',v) is not None
+        if not is_hash(learning.get('registry_sha256')) or not is_hash(context.get('freeze_sha256')):
+            return None
+        def clock(v):
+            return parse_time(v) if isinstance(v,str) and v.endswith('Z') else None
+        start,end=clock(context.get('window_start_utc')),clock(context.get('window_end_utc'))
+        rows=learning.get('new_matured_outcomes')
+        if start is None or end is None or not start<end or not isinstance(rows,list) or not rows:
+            return None
+        counts={'HIT':0,'MISS':0,'CENSORED':0}
+        seen_ids=set();seen_hashes=set()
+        for row in rows:
+            if not isinstance(row,dict) or row.get('source_contract') not in ('MATURED_OUTCOME_v2','MATURED_OUTCOME_v3'):
+                return None
+            fid,digest=row.get('forecast_id'),row.get('outcome_sha256')
+            at=clock(row.get('created_at_utc'))
+            if (not isinstance(fid,str) or not fid or fid in seen_ids or not is_hash(digest) or digest in seen_hashes
+                    or not is_hash(row.get('forecast_sha256'))
+                    or row.get('source_binding_verification')!='CURRENT_FILE_CANONICAL_JSON_SHA256'
+                    or at is None or not start<=at<end):
+                return None
+            seen_ids.add(fid);seen_hashes.add(digest)
+            if row.get('status')=='MATURED':
+                result,value=row.get('result'),row.get('return_pct')
+                if (result not in ('HIT','MISS') or type(value) not in (int,float)
+                        or not math.isfinite(value) or not is_hash(row.get('evidence_sha256'))):
+                    return None
+                counts[result]+=1
+            elif row.get('status')=='CENSORED':
+                if row.get('result') is not None or row.get('return_pct') is not None or not isinstance(row.get('reason'),str) or not row['reason']:
+                    return None
+                # The original maturation owner may censor before any market
+                # evidence is available. If supplied, path and digest must pair.
+                evidence_path,evidence_hash=row.get('evidence_path'),row.get('evidence_sha256')
+                if (evidence_path is not None or evidence_hash is not None) and (
+                        not isinstance(evidence_path,str) or not evidence_path or not is_hash(evidence_hash)):
+                    return None
+                counts['CENSORED']+=1
+            else:
+                return None
+        n=counts['HIT']+counts['MISS']
+        return {'contract':'MM_EXPERIMENT_OUTCOME_COUNTS_v1',
+                'authority':'DESCRIPTIVE_RESEARCH_ONLY',
+                'source_binding':'CONTEXT_HASH_AND_ORIGINAL_OWNER_ADMITTED_ROWS',
+                'context_sha256':context['context_hash'],'freeze_sha256':context['freeze_sha256'],
+                'registry_sha256':learning['registry_sha256'],
+                'outcome_record_count':len(rows),'matured_outcome_count':n,
+                'hit_count':counts['HIT'],'miss_count':counts['MISS'],'censored_count':counts['CENSORED'],
+                'independent_sample_size':None,'matched_baseline_skill':None,
+                'forecast_authority':False,'portfolio_action':False}
+    except (ValueError,TypeError,KeyError,OverflowError,RecursionError):
+        return None
+
 def fallback_scorecard(context:dict[str,Any])->dict[str,Any]:
     learning=context.get('experiment_learning') if isinstance(context.get('experiment_learning'),dict) else {}
     registry_status=str(learning.get('status') or 'UNAVAILABLE_CONTEXT')
@@ -90,14 +162,142 @@ def fallback_scorecard(context:dict[str,Any])->dict[str,Any]:
             'matured_outcome_count':None,
             'reason':'Experiment registry is available, but matured-outcome evidence ingestion is incomplete. This lane is degraded without misreporting the registry itself as unavailable.',
         }
+    if matured:
+        observed=experiment_outcome_scorecard(context,learning)
+        if observed is not None:
+            return {'status':'DEGRADED','experiment_registry_status':registry_status,
+                    'outcome_ingestion_status':'COMPLETE',
+                    'analysis_layer':{'experiment_outcome_counts':observed},
+                    'operational_translation_layer':{},
+                    'matured_outcome_count':observed['matured_outcome_count'],
+                    'reason':'Original owner outcome counts restored. Full analysis/translation and paired calibration score remain unavailable.'}
     return {
-        'status':'UNAVAILABLE_API_CONTRACT' if matured else 'PENDING_MATURED_OUTCOMES',
+        'status':'INCOMPLETE_EXPERIMENT_OUTCOME_INGESTION' if matured else 'PENDING_MATURED_OUTCOMES',
         'experiment_registry_status':registry_status,
         'analysis_layer':{},
         'operational_translation_layer':{},
-        'matured_outcome_count':len(matured),
-        'reason':'WEEKLY_CALIBRATION_SHADOW validated output contract does not currently include a scorecard field.' if matured else 'A valid experiment registry supplied zero newly matured outcomes; formal outcome scoring remains pending.',
+        'matured_outcome_count':None if matured else 0,
+        'reason':'Owner outcome records failed scorecard context or row integrity checks; no counts admitted.' if matured else 'A valid experiment registry supplied zero newly matured outcomes; formal outcome scoring remains pending.',
     }
+def calibration_context_matches_freeze(context:dict[str,Any], freeze:dict[str,Any])->bool:
+    try:
+        return (context.get('contract')=='WEEKLY_API_CALIBRATION_CONTEXT_v6'
+                and context.get('authority')=='SHADOW_ONLY'
+                and all(type(context.get(k)) is int and context[k]==freeze.get(k) for k in ('iso_year','iso_week'))
+                and isinstance(freeze.get('freeze_sha256'),str)
+                and re.fullmatch(r'[a-f0-9]{64}',freeze['freeze_sha256']) is not None
+                and context.get('freeze_sha256')==freeze['freeze_sha256']
+                and sha({k:v for k,v in context.items() if k!='context_hash'})==context.get('context_hash'))
+    except (ValueError,TypeError,OverflowError,RecursionError):
+        return False
+
+def analytical_translation(context:dict[str,Any],freeze:dict[str,Any],
+                           api:dict[str,Any],receipt:dict[str,Any],api_status:str)->dict[str,Any]:
+    """Preserve the existing shadow model's typed hypotheses, not live forecasts.
+
+    The current v3 API output has no action/phase/operational-translation field.
+    Do not infer one from prose, price targets or a successful transport.
+    Projection is deliberately value-free: only candidate horizons, counts and
+    receipt hashes; actual science admission remains the original owner.
+    """
+    base={'contract':'MM_SHADOW_ANALYTICAL_TRANSLATION_v1','status':'DEGRADED',
+          'authority':'SHADOW_ONLY_NO_ACTION_OR_FORECAST_AUTHORITY',
+          'candidate_status':'UNAVAILABLE','candidate_horizon_counts':{},
+          'candidate_count':None,
+          'phase':'UNAVAILABLE','rotation':'UNAVAILABLE','forecast_authority':False,
+          'portfolio_action':False,'model_weight_change':False,
+          'model_utilization_verified':False}
+    if api_status!='success':
+        return {**base,'reason':'API_FAILED'}
+    try:
+        if not calibration_context_matches_freeze(context,freeze):
+            return {**base,'reason':'CONTEXT_FREEZE_MISMATCH'}
+        if (not isinstance(receipt,dict) or receipt.get('contract')!='API_AGENT_RECEIPT_v3'
+                or receipt.get('task')!='WEEKLY_CALIBRATION_SHADOW' or receipt.get('status')!='PASS'
+                or receipt.get('untrusted_input_envelope') is not True
+                or not isinstance(receipt.get('response_id'),str) or not receipt['response_id']
+                or receipt.get('context_hash')!=sha(context) or receipt.get('output_hash')!=sha(api)):
+            return {**base,'reason':'GATEWAY_RECEIPT_MISMATCH'}
+        required={'status','summary','evidence_for','evidence_against','uncertainties','hypotheses','forecast_candidates'}
+        if not isinstance(api,dict) or set(api)!=required or not isinstance(api['summary'],str) or not api['summary'].strip():
+            return {**base,'reason':'OUTPUT_CONTRACT_INVALID'}
+        if api['status']!='READY':
+            return {**base,'reason':'MODEL_ANALYSIS_NOT_READY'}
+        if any(not isinstance(api[k],list) or not all(isinstance(v,str) for v in api[k])
+               for k in ('evidence_for','evidence_against','uncertainties','hypotheses')):
+            return {**base,'reason':'OUTPUT_CONTRACT_INVALID'}
+        candidates=api['forecast_candidates']
+        if not isinstance(candidates,list) or type(receipt.get('forecast_candidate_count')) is not int or receipt['forecast_candidate_count']!=len(candidates):
+            return {**base,'reason':'CANDIDATE_COUNT_MISMATCH'}
+        # Reuse original gateway validator, then enforce exact schema and finite
+        # numeric types (Python bool is an int; JSON NaN is not a valid target).
+        root=str(Path(__file__).resolve().parents[2])
+        if root not in sys.path:sys.path.insert(0,root)
+        from scripts.api_agent.api_gateway import validate_output
+        from scripts.lib.forecast_settlement_contract import normalize_metric_path
+        validate_output(api)
+        fields={'metric_path','direction','target_mode','threshold_pct','target_value','range_low','range_high','horizon_days','rationale'}
+        seen=set();horizons={}
+        for c in candidates:
+            if (set(c)!=fields or type(c['horizon_days']) is not int
+                    or not isinstance(c['metric_path'],str) or not isinstance(c['rationale'],str)
+                    or any(c[k] is not None and (type(c[k]) not in (int,float) or not math.isfinite(c[k]))
+                           for k in ('threshold_pct','target_value','range_low','range_high'))):
+                return {**base,'reason':'CANDIDATE_CONTRACT_INVALID'}
+            # One metric/horizon identity cannot contribute multiple competing
+            # rows to a single horizon count. Preserve unresolved conflict.
+            metric=normalize_metric_path(c['metric_path'])
+            key=(metric,c['horizon_days'])
+            if key in seen:
+                return {**base,'reason':'DUPLICATE_OR_CONFLICTING_CANDIDATE'}
+            seen.add(key)
+            h=str(c['horizon_days'])
+            horizons[h]=horizons.get(h,0)+1
+        return {**base,'reason':'TYPED_SHADOW_CANDIDATES_ONLY_NO_OPERATIONAL_DECISION',
+                'candidate_status':'VALIDATED_UNADMITTED' if candidates else 'NO_CANDIDATES',
+                'candidate_count':len(candidates),'candidate_horizon_counts':horizons,
+                'context_sha256':context['context_hash'],'freeze_sha256':freeze['freeze_sha256'],
+                'gateway_context_sha256':receipt['context_hash'],'gateway_output_sha256':receipt['output_hash']}
+    except (ValueError,TypeError,KeyError,AttributeError,OverflowError,RecursionError):
+        return {**base,'reason':'OUTPUT_CONTRACT_INVALID'}
+
+def effective_delivery_status(api_status: str, api: dict[str, Any],
+                              receipt: dict[str, Any], context: dict[str, Any],
+                              freeze: dict[str, Any], consumer_verified: bool) -> str:
+    """Verify delivery independently of the model's analytical readiness.
+
+    A valid gateway response may describe BLOCKED/DEGRADED analysis or include
+    duplicate hypotheses. Those are translation limitations, not transport errors.
+    """
+    if consumer_verified is not True or api_status != 'success':
+        return 'DEGRADED'
+    try:
+        if not calibration_context_matches_freeze(context, freeze):
+            return 'DEGRADED'
+        if (not isinstance(api, dict) or not isinstance(receipt, dict)
+                or receipt.get('contract') != 'API_AGENT_RECEIPT_v3'
+                or receipt.get('task') != 'WEEKLY_CALIBRATION_SHADOW'
+                or receipt.get('status') != 'PASS'
+                or receipt.get('untrusted_input_envelope') is not True
+                or not isinstance(receipt.get('response_id'), str) or not receipt['response_id']
+                or receipt.get('context_hash') != sha(context)
+                or receipt.get('output_hash') != sha(api)):
+            return 'DEGRADED'
+        candidates = api.get('forecast_candidates')
+        if (not isinstance(candidates, list)
+                or type(receipt.get('forecast_candidate_count')) is not int
+                or receipt['forecast_candidate_count'] != len(candidates)):
+            return 'DEGRADED'
+        root = str(Path(__file__).resolve().parents[2])
+        if root not in sys.path:
+            sys.path.insert(0, root)
+        from scripts.api_agent.api_gateway import validate_output
+        validate_output(api)
+        return 'READY'
+    except (ValueError, TypeError, KeyError, AttributeError, OverflowError, RecursionError):
+        return 'DEGRADED'
+
+
 def build_weekly_intelligence_audit(machine:dict[str,Any],pointer:dict[str,Any],
                                     machine_file_sha256:str,pointer_file_sha256:str,
                                     freeze:dict[str,Any]|None=None,preflight:dict[str,Any]|None=None)->str:
@@ -204,14 +404,15 @@ def main():
     learning=load(a.learning_packet) if a.learning_packet.exists() else None
     learning_impact=build_learning_decision_impact(context,learning,receipt,int(freeze['iso_year']),int(freeze['iso_week']))
     analysis=api.get('analysis') or api.get('calibration') or api.get('summary') or {'status':'UNAVAILABLE_API_FAILURE' if a.api_status!='success' else 'UNAVAILABLE_NOT_PRODUCED'}
-    translation=api.get('operational_translation') or {'status':'UNAVAILABLE_API_CONTRACT','reason':'WEEKLY_CALIBRATION_SHADOW validated output contract does not currently include an operational_translation field.'}
+    translation=analytical_translation(context,freeze,api,receipt,a.api_status)
     registry_fallback=fallback_scorecard(context)
-    if registry_fallback['status']=='UNAVAILABLE_EXPERIMENT_REGISTRY':
-        scorecard=registry_fallback
-    elif api.get('scorecard'):
-        scorecard=api['scorecard']
-    else:
-        scorecard=registry_fallback
+    # Current gateway schema has no scorecard. Never override failed
+    # deterministic evidence admission with an arbitrary model object.
+    scorecard=registry_fallback
+    if not calibration_context_matches_freeze(context,freeze):
+        scorecard={'status':'DEGRADED','experiment_registry_status':'UNVERIFIED',
+                   'matured_outcome_count':None,'analysis_layer':{},'operational_translation_layer':{},
+                   'reason':'Calibration context and freeze identity mismatch.'}
     shadow_path=Path('research/api_agent/outputs/shadow_admission/LATEST_SHADOW_ADMISSION_DECISION.json')
     shadow=load(shadow_path) if shadow_path.exists() else {'contract':'SHADOW_ADMISSION_AI_DECISION_v1','overall_status':'NOT_YET_AVAILABLE','candidate_decisions':[],'master_monday_summary':'No autonomous shadow-admission decision has been published yet.'}
     shadow_reporting={'mode':'REPORT_AFTER_DECISION_NO_APPROVAL_PROMPT','human_confirmation_required':False,'decision':shadow}
@@ -241,11 +442,11 @@ def main():
     consumer_receipt=machine.get('consumer_receipt') if isinstance(machine.get('consumer_receipt'),dict) else {}
     consumer_verified=consumer_receipt.get('consumption_state')=='VERIFIED'
     producer_status='READY' if a.api_status=='success' else 'READY_WITH_API_FAILURE'
-    effective_status=producer_status if consumer_verified else 'DEGRADED'
+    effective_status=effective_delivery_status(a.api_status,api,receipt,context,freeze,consumer_verified)
     experiment_status=(context.get('experiment_learning') or {}).get('status','UNAVAILABLE_CONTEXT') if isinstance(context.get('experiment_learning'),dict) else 'UNAVAILABLE_CONTEXT'
     report=f"# MASTER MONDAY — {freeze['iso_year']}-W{int(freeze['iso_week']):02d}\n\nPreflight: **{preflight['packet']['status']}**\n\nAPI calibration: **{a.api_status.upper()}**\n\nExperiment registry evidence: **{experiment_status}**\n\nConsumer receipt: **{consumer_receipt.get('status','UNAVAILABLE')}**\n\nLearning decision impact: **{learning_impact.get('assessment_status','UNKNOWN')}**\n\n## Analysis layer\n\n```json\n{json.dumps(analysis,ensure_ascii=False,indent=2)}\n```\n\n## Operational translation\n\n```json\n{json.dumps(translation,ensure_ascii=False,indent=2)}\n```\n\n## Calibration scorecard\n\n```json\n{json.dumps(scorecard,ensure_ascii=False,indent=2)}\n```\n\n## Learning decision impact — 8 week shadow measurement\n\n```json\n{json.dumps(learning_impact,ensure_ascii=False,indent=2)}\n```\n\n## Autonomous shadow admission\n\nThis section is reporting-only. The OpenAI API lifecycle decision does not require owner confirmation.\n\n```json\n{json.dumps(shadow,ensure_ascii=False,indent=2)}\n```\n"
     (a.output_dir/'MASTER_MONDAY_REPORT.md').write_text(report)
-    pointer={'contract':'MASTER_MONDAY_DELIVERY_POINTER_v1','iso_year':freeze['iso_year'],'iso_week':freeze['iso_week'],'status':effective_status,'producer_status':producer_status,'machine_package_path':str(machine_path),'machine_package_sha256':machine['package_sha256'],'report_path':str(a.output_dir/'MASTER_MONDAY_REPORT.md'),'preflight_status':preflight['packet']['status'],'freeze_sha256':freeze['freeze_sha256'],'experiment_learning_status':experiment_status,'scorecard_status':scorecard.get('status','UNKNOWN'),'operational_translation_status':translation.get('status','UNKNOWN'),'shadow_admission_status':shadow.get('overall_status','UNKNOWN'),'shadow_admission_human_confirmation_required':False,'consumer_receipt_status':consumer_receipt.get('status','UNAVAILABLE'),'consumer_receipt_state':consumer_receipt.get('consumption_state','UNKNOWN'),'learning_decision_impact_status':learning_impact.get('assessment_status'),'learning_changed_calibration_decision':learning_impact.get('changed_calibration_decision')}
+    pointer={'contract':'MASTER_MONDAY_DELIVERY_POINTER_v1','iso_year':freeze['iso_year'],'iso_week':freeze['iso_week'],'status':effective_status,'producer_status':producer_status,'machine_package_path':str(machine_path),'machine_package_sha256':machine['package_sha256'],'report_path':str(a.output_dir/'MASTER_MONDAY_REPORT.md'),'preflight_status':preflight['packet']['status'],'freeze_sha256':freeze['freeze_sha256'],'experiment_learning_status':experiment_status,'scorecard_status':scorecard.get('status','UNKNOWN'),'operational_translation_status':translation.get('status','UNKNOWN'),'translation_readiness_status':translation.get('status','UNKNOWN'),'shadow_admission_status':shadow.get('overall_status','UNKNOWN'),'shadow_admission_human_confirmation_required':False,'consumer_receipt_status':consumer_receipt.get('status','UNAVAILABLE'),'consumer_receipt_state':consumer_receipt.get('consumption_state','UNKNOWN'),'learning_decision_impact_status':learning_impact.get('assessment_status'),'learning_changed_calibration_decision':learning_impact.get('changed_calibration_decision')}
     pointer_path=a.output_dir/'MASTER_MONDAY_DELIVERY_POINTER.json'
     pointer_path.write_bytes(canon(pointer))
     # Version by exact delivered pointer bytes: retries or receipt corrections

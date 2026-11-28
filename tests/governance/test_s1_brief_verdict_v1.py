@@ -319,8 +319,15 @@ class RenderStability(unittest.TestCase):
                 brief = TB.brief_of(mutate)
                 self.assertIn("verdict", brief)
                 brief.pop("verdict")
+                brief.pop("generation")                                                             # fix round 7 (R6-SH1): added beside it
                 for key in ("c1b", "ledger"):                                                       # W2b: added beside it
                     brief.pop(key)
+                for key in ("thin", "decision_log", "recall", "codex_evidence", "claude_receipts", "unread", "executor_watch"):   # section 0.2i: added beside them
+                    brief.pop(key)
+                for e in brief["prs"]:                                                              # section 0.2i: judgment as data
+                    e.pop("thin", None)
+                for x in brief["next"]:                                                             # W5: the counter of each ranked entry
+                    self.assertEqual(x.pop("builds"), 1)
                 body = B.render(brief)
                 self.assertEqual((len(body), hashlib.sha256(body.encode("utf-8")).hexdigest()), RENDER_SHA256_BEFORE_W2[name])
 
@@ -400,7 +407,7 @@ class Digest(unittest.TestCase):
     def test_it_is_printed_after_the_publish_on_its_own_budget_and_reads_only(self):
         publish_mode = SOURCE[SOURCE.index('    if mode == "publish":'):]
         self.assertLess(publish_mode.index('print(f"S1_TICK_BRIEF_PUBLISHED'), publish_mode.index("print(readback_line(GitHub(token, budget=READBACK_API_CALLS), number, body))"))
-        self.assertIn("publish(GitHub(token, budget=PUBLISH_API_CALLS), body)", publish_mode)
+        self.assertIn("publish(GitHub(token, budget=PUBLISH_API_CALLS), body, result=outcome)", publish_mode)   # fix round 8: WRITTEN/SKIPPED
         self.assertEqual((B.READBACK_API_CALLS, B.PUBLISH_API_CALLS), (2, 25))
         fn = SOURCE[SOURCE.index("def readback_line("):SOURCE.index("def main(argv):")]
         self.assertNotIn("_request(", fn)                                                         # a GET through gh.get only

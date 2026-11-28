@@ -1,0 +1,36 @@
+{
+  "authority": {
+    "automatic_promotion": false,
+    "automatic_repository_write": false,
+    "automatic_skill_activation": false,
+    "canonical_effect": false,
+    "portfolio_execution": false
+  },
+  "changed_paths": [
+    "scripts/experiments/experiment_lifecycle_scientific_admission.py",
+    "tests/experiments/test_forecast_fair_allocation.py"
+  ],
+  "contract": "OPERATIONAL_EPISODE_v1",
+  "dominant_path_prefix": "scripts",
+  "episode_id": "OE-aff3abadfbcdfac5",
+  "evidence_limits": [
+    "Merged commit proves accepted repository change, not causal effectiveness by itself.",
+    "No failed approach is inferred unless separately evidenced.",
+    "No chain-of-thought or raw prompt is stored."
+  ],
+  "failed_approaches": [],
+  "failure_signature": null,
+  "operation_type": "UPDATE",
+  "outcome": "MERGED_TO_MAIN",
+  "resolution_summary": "* experiments: least-served, replay-idempotent forecast slot allocation The scientific admission writer ordered forecast slots by (kind, candidate_id) and counted only successful writes against --max-new-forecasts. Native run 44628588447 had 334 FIRED qualified candidates and cap 5; the five lowest IDs (EC-0258..EC-03d0) took every slot while EC-050a5080a53790da15e4 (same target metric, start value available) got none. Over history, 15 candidates hold most of the ~1.9k EXP-FC forecasts. Changes (allocation only; gates, cap, IDs, PIT and admission unchanged): - order = (FORECAST_TEST first, few",
+  "reusable_pattern": null,
+  "source_blob_shas": {
+    "scripts/experiments/experiment_lifecycle_scientific_admission.py": "2f65e7844949f8e5f6ab1701313fa649f6fbcafe",
+    "tests/experiments/test_forecast_fair_allocation.py": "4ce5d780dc8c68d3b6f22e386faa2aa11aa8ef88"
+  },
+  "source_commit_sha": "aff3abadfbcdfac5c6b9520d6dda7677bfcdb5dd",
+  "source_kind": "MERGED_MAIN_COMMIT",
+  "source_timestamp": "2026-11-27T12:17:00+01:00",
+  "task_class": "GENERAL_FRAMEWORK",
+  "task_summary": "experiments: least-served, replay-idempotent forecast slot allocation (DRAFT) (#2365)"
+}

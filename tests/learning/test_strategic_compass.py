@@ -1,12 +1,13 @@
 from __future__ import annotations
 
 import json
+import hashlib
 import tempfile
 import unittest
 from datetime import datetime, timezone
 from pathlib import Path
 
-from scripts.learning.strategic_compass import alignment_class, materialize, validate_forward_range_candidate
+from scripts.learning.strategic_compass import alignment_class, materialize, validate_forward_range_candidate, digest
 
 # Existing Official Compass Outcomes PR gate invokes this test module.
 # Import the isolated long-range shadow validators to execute their adversarial suite.
@@ -26,6 +27,18 @@ def write(path: Path, value: dict) -> None:
     path.write_text(json.dumps(value))
 
 
+def seal_official(repo,relative):
+    path=repo/relative
+    source=json.loads(path.read_text())
+    source.update(contract="OFFICIAL_DAILY_COMPASS_v1",issued_at_utc="2026-09-30T11:00:00Z")
+    source.pop("compass_sha256",None);source["compass_sha256"]=digest(source)
+    write(path,source)
+    write(repo/"04_MARKET_LEARNING/handlekompas/official/LATEST_COMPASS.json",{
+        "contract":"OFFICIAL_DAILY_COMPASS_LATEST_POINTER_v1","compass_path":relative,
+        "compass_id":source["compass_id"],"issued_at_utc":source["issued_at_utc"],
+        "compass_sha256":source["compass_sha256"]})
+
+
 def fixture_repo(tmp_path: Path, *, month=True, cycle_direction="UP") -> Path:
     compass_rel = "04_MARKET_LEARNING/handlekompas/official/daily/2026/09/30/CMP-test.json"
     write(tmp_path / compass_rel, {
@@ -37,10 +50,7 @@ def fixture_repo(tmp_path: Path, *, month=True, cycle_direction="UP") -> Path:
             "NEXT_5_7D": {"expected_direction": "SIDEWAYS", "expected_path": "absorption", "action_posture": "HOLD"},
         },
     })
-    write(tmp_path / "04_MARKET_LEARNING/handlekompas/official/LATEST_COMPASS.json", {
-        "compass_path": compass_rel,
-        "compass_sha256": "official-sha",
-    })
+    seal_official(tmp_path,compass_rel)
     projection = {
         "weeks_4_8": {
             "direction": cycle_direction, "summary": "structural bull", "state": "ROTATION",
@@ -61,16 +71,157 @@ def fixture_repo(tmp_path: Path, *, month=True, cycle_direction="UP") -> Path:
         }
     cn_rel = "05_CYCLE_NAVIGATOR/weekly/2026/W40"
     write(tmp_path / cn_rel / "CYCLE_NAVIGATOR_MACHINE_PACKAGE.json", {
+        "contract":"CYCLE_NAVIGATOR_MACHINE_PACKAGE_v1",
         "status": "READY", "issue_number": 28, "public_issue_number": 27,
         "decision_projection": projection,
     })
     write(tmp_path / "05_CYCLE_NAVIGATOR/LATEST_CYCLE_NAVIGATOR_POINTER.json", {
-        "week_dir": cn_rel, "machine_package_sha256": "cn-sha", "iso_year": 2026, "iso_week": 40,
+        "contract":"CYCLE_NAVIGATOR_DELIVERY_POINTER_v1",
+        "week_dir": cn_rel, "machine_package_sha256": hashlib.sha256((tmp_path/cn_rel/"CYCLE_NAVIGATOR_MACHINE_PACKAGE.json").read_bytes()).hexdigest(),
+        "iso_year": 2026, "iso_week": 40,"issue_number":28,"public_issue_number":27,"status":"READY",
     })
     return tmp_path
 
 
 class StrategicCompassTests(unittest.TestCase):
+    def test_strategic_rejects_unbound_long_horizon_and_official_source(self):
+        now=datetime(2026,9,30,12,tzinfo=timezone.utc)
+        for target in ("cn","official","week","official_clock","official_missing","cn_status","both"):
+            with self.subTest(target=target),tempfile.TemporaryDirectory() as td:
+                repo=fixture_repo(Path(td))
+                pointer=repo/"05_CYCLE_NAVIGATOR/LATEST_CYCLE_NAVIGATOR_POINTER.json"
+                if target=="cn":
+                    path=repo/"05_CYCLE_NAVIGATOR/weekly/2026/W40/CYCLE_NAVIGATOR_MACHINE_PACKAGE.json"
+                    source=json.loads(path.read_text())
+                    source["decision_projection"]["weeks_4_8"]["direction"]="DOWN"
+                    write(path,source)
+                elif target in ("official","both"):
+                    path=repo/"04_MARKET_LEARNING/handlekompas/official/daily/2026/09/30/CMP-test.json"
+                    source=json.loads(path.read_text())
+                    source["horizons"]["NEXT_1_3D"]["expected_direction"]="UP"
+                    write(path,source)
+                    if target == "both":
+                        p=json.loads(pointer.read_text());p["iso_week"]=41;write(pointer,p)
+                elif target in ("official_clock","official_missing"):
+                    op=repo/"04_MARKET_LEARNING/handlekompas/official/LATEST_COMPASS.json"
+                    if target == "official_missing":
+                        op.unlink()
+                    else:
+                        p=json.loads(op.read_text());p["issued_at_utc"]="2026-09-30T11:00:01Z";write(op,p)
+                elif target=="cn_status":
+                    p=json.loads(pointer.read_text());p["status"]="DEGRADED";write(pointer,p)
+                else:
+                    p=json.loads(pointer.read_text());p["iso_week"]=41;write(pointer,p)
+                result=materialize(repo,now)
+                self.assertEqual(result["status"],"DEGRADED")
+                self.assertTrue(result["source_binding_reason_code"].startswith("STRATEGIC_"))
+                anchor=json.loads((repo/result["anchor_path"]).read_text())
+                cn_valid = target in ("official","official_clock","official_missing")
+                official_valid = target in ("cn","week","cn_status")
+                self.assertEqual(anchor["strategic_21_30d"]["direction"],"UP" if cn_valid else "UNAVAILABLE")
+                self.assertEqual(anchor["cycle_4_8w"]["direction"],"UP" if cn_valid else "UNAVAILABLE")
+                self.assertEqual(anchor["tactical_context"]["72h"]["direction"],"DOWN" if official_valid else "UNAVAILABLE")
+                self.assertEqual(anchor["cross_horizon_alignment"]["class"],"MIXED_OR_NO_EDGE")
+                self.assertEqual(anchor["market_reference"] is not None, official_valid)
+                machine=repo/"05_CYCLE_NAVIGATOR/weekly/2026/W40/CYCLE_NAVIGATOR_MACHINE_PACKAGE.json"
+                machine_sha=hashlib.sha256(machine.read_bytes()).hexdigest()
+                if cn_valid:
+                    # Same lineage predicate used by weekly publication.
+                    self.assertEqual(((anchor.get("source_bindings") or {}).get("cycle_navigator") or {}).get("sha256"), machine_sha)
+                else:
+                    self.assertIsNone(anchor["source_bindings"]["cycle_navigator"]["sha256"])
+                self.assertEqual(anchor["source_bindings"]["cycle_navigator"]["expected_package_sha256"],
+                                 json.loads(pointer.read_text())["machine_package_sha256"])
+                self.assertEqual(materialize(repo,now)["write_status"],"NOOP_SAME_SOURCES")
+
+    def test_degraded_anchor_recovers_with_same_pointer_identity(self):
+        now=datetime(2026,9,30,12,tzinfo=timezone.utc)
+        with tempfile.TemporaryDirectory() as td:
+            repo=fixture_repo(Path(td))
+            path=repo/"05_CYCLE_NAVIGATOR/weekly/2026/W40/CYCLE_NAVIGATOR_MACHINE_PACKAGE.json"
+            original=path.read_bytes()
+            healthy=materialize(repo,now)
+            original_anchor=(repo/healthy["anchor_path"]).read_bytes()
+            path.write_bytes(b'{"duplicate":1,"duplicate":2}')
+            degraded=materialize(repo,now)
+            self.assertEqual(degraded["status"],"DEGRADED")
+            self.assertNotEqual(healthy["source_fingerprint"],degraded["source_fingerprint"])
+            path.write_bytes(original)
+            recovered=materialize(repo,now.replace(hour=13))
+            self.assertEqual(recovered["status"],"CREATED")
+            self.assertEqual(recovered["source_fingerprint"],healthy["source_fingerprint"])
+            self.assertEqual(recovered["issued_at_utc"],healthy["issued_at_utc"])
+            self.assertEqual((repo/recovered["anchor_path"]).read_bytes(),original_anchor)
+
+    def test_same_sources_never_attest_missing_or_modified_anchor(self):
+        from scripts.learning.strategic_compass import canon
+        now=datetime(2026,9,30,12,tzinfo=timezone.utc)
+        for mutation in ("missing", "rehashed", "pointer", "traversal", "duplicate", "future_clock"):
+            with self.subTest(mutation=mutation),tempfile.TemporaryDirectory() as td:
+                repo=fixture_repo(Path(td))
+                first=materialize(repo,now)
+                anchor=repo/first["anchor_path"]
+                pointer=repo/"04_MARKET_LEARNING/handlekompas/strategic/LATEST_STRATEGIC_COMPASS.json"
+                if mutation=="missing":
+                    anchor.unlink()
+                elif mutation in ("rehashed","future_clock"):
+                    payload=json.loads(anchor.read_text())
+                    if mutation=="rehashed":
+                        payload["strategic_21_30d"]["direction"]="DOWN"
+                    else:
+                        payload["issued_at_utc"]="2026-09-30T15:00:00Z"
+                    payload["anchor_sha256"]=digest({k:v for k,v in payload.items() if k!="anchor_sha256"})
+                    anchor.write_bytes(canon(payload))
+                    ptr=json.loads(pointer.read_text())
+                    ptr["anchor_sha256"]=payload["anchor_sha256"]
+                    ptr["issued_at_utc"]=payload["issued_at_utc"]
+                    pointer.write_bytes(canon(ptr))
+                elif mutation=="duplicate":
+                    pointer.write_bytes(pointer.read_bytes().rstrip()[:-1]+b',"anchor_id":"forged"}')
+                else:
+                    ptr=json.loads(pointer.read_text())
+                    if mutation=="traversal":
+                        ptr["anchor_path"]="../outside.json"
+                    else:
+                        ptr["alignment_class"]="FULL_BULL_ALIGNMENT"
+                    pointer.write_bytes(canon(ptr))
+                before=pointer.read_bytes()
+                with self.assertRaisesRegex(ValueError,"STRATEGIC_"):
+                    materialize(repo,now)
+                self.assertEqual(pointer.read_bytes(),before)
+
+    def test_recovery_rejects_coherently_rehashed_original(self):
+        from scripts.learning.strategic_compass import canon
+        now=datetime(2026,9,30,12,tzinfo=timezone.utc)
+        with tempfile.TemporaryDirectory() as td:
+            repo=fixture_repo(Path(td))
+            first=materialize(repo,now)
+            source=repo/"05_CYCLE_NAVIGATOR/weekly/2026/W40/CYCLE_NAVIGATOR_MACHINE_PACKAGE.json"
+            original=source.read_bytes()
+            source.write_bytes(b'{}')
+            degraded=materialize(repo,now)
+            anchor=repo/first["anchor_path"]
+            forged=json.loads(anchor.read_text())
+            forged["cycle_4_8w"]["direction"]="DOWN"
+            forged["anchor_sha256"]=digest({k:v for k,v in forged.items() if k!="anchor_sha256"})
+            anchor.write_bytes(canon(forged))
+            source.write_bytes(original)
+            pointer=repo/"04_MARKET_LEARNING/handlekompas/strategic/LATEST_STRATEGIC_COMPASS.json"
+            before=pointer.read_bytes()
+            with self.assertRaisesRegex(ValueError,"STRATEGIC_EXISTING_ANCHOR_INTEGRITY_FAILURE"):
+                materialize(repo,now.replace(hour=13))
+            self.assertEqual(pointer.read_bytes(),before)
+            self.assertEqual(json.loads(before)["anchor_id"],degraded["anchor_id"])
+
+    def test_same_sources_next_day_preserve_original_anchor(self):
+        now=datetime(2026,9,30,12,tzinfo=timezone.utc)
+        with tempfile.TemporaryDirectory() as td:
+            repo=fixture_repo(Path(td))
+            first=materialize(repo,now)
+            next_day=materialize(repo,datetime(2026,10,1,12,tzinfo=timezone.utc))
+            self.assertEqual(next_day["status"],"NOOP_SAME_SOURCES")
+            self.assertEqual(next_day["anchor_id"],first["anchor_id"])
+
     def test_tactical_pullback_structural_bull_class(self):
         self.assertEqual(alignment_class(["DOWN", "DOWN", "SIDEWAYS", "UP", "UP"]), "TACTICAL_PULLBACK_STRUCTURAL_BULL")
 
@@ -119,6 +270,7 @@ class StrategicCompassTests(unittest.TestCase):
             freeze["horizons"]["NEXT_1_3D"]["expected_direction"] = "UP"
             freeze["horizons"]["NEXT_5_7D"]["expected_direction"] = "UP"
             write(path, freeze)
+            seal_official(repo,str(path.relative_to(repo)))
             r = materialize(repo, datetime(2026, 9, 30, 12, tzinfo=timezone.utc))
             a = json.loads((repo / r["anchor_path"]).read_text())
             self.assertEqual(a["tactical_context"]["12h"]["direction"], "UNAVAILABLE")
