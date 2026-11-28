@@ -152,7 +152,7 @@ function capSummary(compass) {
 }
 
 function riskSummary(compass) {
-  const protection = compass?.protection_tracker || {};
+  const protection = compass?.full_stack?.truth_banner?.inherited===true?{}:compass?.protection_tracker || {};
   const pullback = publicState(protection.pullback_risk_state || 'UNAVAILABLE');
   return 'Pullback ' + pullback;
 }
@@ -322,6 +322,7 @@ function horizonCard(snapshot, compass, scale, horizon) {
 }
 
 function pullbackCard(compass, readingState='UNAVAILABLE') {
+  if(compass?.full_stack?.truth_banner?.inherited===true)return '<details id="pullbackWatch" class="premium-pullback"><summary>Inherited risk, not refreshed</summary><p>No action based on inherited risk. Await a fresh risk assessment.</p></details>';
   const valid=readingState==='CURRENT'&&compass?.contract==='PUBLIC_COMPASS_PROJECTION_v1'&&compass?.data_status==='OK';
   const p=valid&&compass?.protection_tracker?.contract==='COMPASS_PROTECTION_TRACKER_v1'?compass.protection_tracker:{};
   const sell=valid&&compass?.sell_assessment?.contract==='COMPASS_SELL_ASSESSMENT_v1'?compass.sell_assessment:{};

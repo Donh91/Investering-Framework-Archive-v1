@@ -51,6 +51,11 @@ assert.equal(now.riskState,'ELEVATED');
 assert.equal(now.sell,'UNAVAILABLE');
 assert.equal(now.distribution,'UNKNOWN');
 assert.notEqual(now.riskWindow,'UNAVAILABLE');
+for(const lang of ['da','en']){
+ const inherited=structuredClone(official);inherited.full_stack={truth_banner:{inherited:true}};
+ const d=decisionModel(view,inherited,lang);assert.equal(d.riskIndex,-1);assert.match(d.riskLabel,/ikke fornyet|not refreshed/);assert.equal(d.action,'HOLD_WAIT');assert.equal(d.bull,5);
+ inherited.full_stack.truth_banner.inherited=false;assert.equal(decisionModel(view,inherited,lang).riskIndex,2);
+}
 const en=decisionModel(view,official,'en');
 assert.match(en.riskLabel,/Elevated/);
 const stale=structuredClone(view);stale.compass.state='UNAVAILABLE';

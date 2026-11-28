@@ -79,12 +79,13 @@ export function compassProReadback(view,official,{lang='da',nowUtc=new Date().to
 
   out.status='OFFICIAL_SOURCE_BOUND';
   out.sourceIdentity=official.compass_id;
-  const raw=official.protection_tracker;
+  const inherited=official?.full_stack?.truth_banner?.inherited===true;
+  const raw=inherited?null:official.protection_tracker;
   const risk=officialPullbackStage(official,{forecast_week:view.weekly.forecast_week},lang);
   const ok=risk.status==='SOURCE_VALID'&&STAGES.includes(risk.sourceRiskState);
   const riskState=ok?risk.sourceRiskState:null;
   out.severity=ok?STAGES.indexOf(riskState)+1:null;
-  out.riskLabel=ok?risk.stageLabel:out.riskLabel;
+  out.riskLabel=ok||inherited?risk.stageLabel:out.riskLabel;
   out.evidenceQuality=ok&&QUALITY.has(raw?.confidence_quality)?
       tr(lang,{LOW:'Lav',MEDIUM:'Middel',HIGH:'Høj'}[raw.confidence_quality],
               {LOW:'Low',MEDIUM:'Medium',HIGH:'High'}[raw.confidence_quality]):out.evidenceQuality;
@@ -119,7 +120,7 @@ export function compassProReadback(view,official,{lang='da',nowUtc=new Date().to
   out.reentry=typeof raw?.reentry_state==='string'&&
      ['INACTIVE','WAIT_FOR_FLUSH','WAIT_FOR_RECLAIM','REVIEW','UNAVAILABLE'].includes(raw.reentry_state)?
      raw.reentry_state:out.reentry;
-  out.guidance=ok?plan(official.action_now,riskState,lang):
+  out.guidance=inherited?tr(lang,'Ingen handling baseret på nedarvet risiko. Afvent en frisk risikovurdering.','No action based on inherited risk. Await a fresh risk assessment.'):ok?plan(official.action_now,riskState,lang):
      tr(lang,'Risikoen er ikke kildeverificeret. Hold beslutningen på pause.',
              'Risk is not source-verified. Pause the decision.');
   if(wk&&['OK','DEGRADED'].includes(view.weekly.state)&&
