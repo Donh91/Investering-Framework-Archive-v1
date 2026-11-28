@@ -1,0 +1,665 @@
+{
+ "source": "gh api repos/Donh91/Investering-Framework-Archive-v1 issues/<n>/comments, pulls/<n>/reviews, pulls/<n>/comments (all pages), read 2026-11-27 after 21:02Z",
+ "fields": "only the fields decision() reads; bodies verbatim. comments_complete=false: non-Codex comments without an @codex review line were dropped, they are inert to decision()",
+ "cases": {
+  "2323": {
+   "note": "C2 #2323: manual request, receipt, then automatic re-review after ready_for_review edited the one state comment in place; no new receipt",
+   "head": "caecc32ed6386d3de49dc03eb9b8f983a879a797",
+   "comments_complete": true,
+   "comments": [
+    {
+     "id": 7226475038,
+     "user": {
+      "login": "Donh91",
+      "id": 160772984,
+      "type": "User"
+     },
+     "created_at": "2026-11-27T19:23:11Z",
+     "updated_at": "2026-11-27T19:23:11Z",
+     "body": "CONVERGENCE_AUTHOR_PREFLIGHT_v1 | 2026-11-27 | owner interactive\nhead: caecc32ed6386d3de49dc03eb9b8f983a879a797\nAUTHOR_TECHNICAL_PREFLIGHT (not independent approval). Current-main 32192a8d: 20 registered tasks, sole missing router model S1_V43_TERRA_MAX_REVIEW/gpt-6.1-terra; scoped gpt-6.2-sol MAX remains outside general router; legacy research model gpt-6.1-sol. No evidence of live misrouting from this diagnostic. Calibration settlement still 453 candidates, zero frozen/scored. 10 success/4 skipped at exact head. Prior Claude APPROVE 7132414673 is stale; mutation followup request 7133054149 remains pending. Keep #1823 as original policy owner. Architecture health as of 14:07Z reports DAILY_DIRECTOR_STALE (62.47h), separate operational issue; do not claim this module repairs it. No code changes or release authorization."
+    },
+    {
+     "id": 7227897681,
+     "user": {
+      "login": "Donh91",
+      "id": 160772984,
+      "type": "User"
+     },
+     "created_at": "2026-11-27T20:50:54Z",
+     "updated_at": "2026-11-27T20:50:54Z",
+     "body": "@codex review"
+    },
+    {
+     "id": 7227901605,
+     "user": {
+      "login": "chatgpt-codex-connector[bot]",
+      "id": 199175422,
+      "type": "Bot"
+     },
+     "created_at": "2026-11-27T20:51:10Z",
+     "updated_at": "2026-11-27T21:01:39Z",
+     "body": "<!-- codex-pull-request-review-summary -->\n<!-- codex-review-state:v1 {\"code_review\":{\"commit_sha\":\"caecc32ed6386d3de49dc03eb9b8f983a879a797\",\"has_any_findings\":false,\"has_unresolved_findings\":false,\"status\":\"completed\"},\"security_review\":{\"commit_sha\":null,\"has_any_findings\":null,\"has_unresolved_findings\":null,\"status\":null}} -->\n\n<details>\n<summary><strong>Codex Review Summary</strong>: ✅ Completed</summary>\n\nThis comment shows the latest Codex review activity on this pull request.\n\n| Review | Status | Commit | Review trigger |\n| --- | --- | --- | --- |\n| 📝 **Code Review** | ✅ **Completed** <relative-time datetime=\"2026-11-27T21:01:39.100285Z\">2026-11-27T21:01:39.100285Z</relative-time> | `caecc32` | Draft marked ready |\n\n\n\n<details> <summary>ℹ️ About Codex in GitHub</summary>\n<br/>\n\n[Your team has set up Codex to review pull requests in this repo](https://chatgpt.com/codex/cloud/settings/general). Reviews are triggered when you\n- Open a pull request for review\n- Mark a draft as ready\n- Comment \"@codex review\" or \"@codex security review\".\n\nCodex reacts with 👀 while any review is running, comments if it has suggestions, and reacts with 👍 once all reviews finish with no findings.\n\n</details>\n\n</details>"
+    },
+    {
+     "id": 7227919184,
+     "user": {
+      "login": "chatgpt-codex-connector[bot]",
+      "id": 199175422,
+      "type": "Bot"
+     },
+     "created_at": "2026-11-27T20:52:20Z",
+     "updated_at": "2026-11-27T20:52:20Z",
+     "body": "<!-- codex-review-receipt:v1 -->\n\nCodex Review: Didn't find any major issues. What shall we delve into next?\n\n**Reviewed commit:** `caecc32ed6`\n\n<details> <summary>ℹ️ About Codex in GitHub</summary>\n<br/>\n\n[Your team has set up Codex to review pull requests in this repo](https://chatgpt.com/codex/cloud/settings/general). Reviews are triggered when you\n- Open a pull request for review\n- Mark a draft as ready\n- Comment \"@codex review\".\n\nIf Codex has suggestions, it will comment; otherwise it will react with 👍.\n\n\n\n\nCodex can also answer questions or update the PR. Try commenting \"@codex address that feedback\".\n            \n</details>"
+    }
+   ],
+   "reviews": [],
+   "inline": []
+  },
+  "2324": {
+   "note": "C3 #2324: same lifecycle as #2323",
+   "head": "afe1c4ceaa77a96df9e1f5507f8781c1c56e50a9",
+   "comments_complete": true,
+   "comments": [
+    {
+     "id": 7133090434,
+     "user": {
+      "login": "Donh91",
+      "id": 160772984,
+      "type": "User"
+     },
+     "created_at": "2026-11-24T13:37:11Z",
+     "updated_at": "2026-11-24T13:37:11Z",
+     "body": "C5 SOURCE RIGHTS CHECKPOINT 2026-11-24 (not source admission): Ironflow current Terms §15.2 https://ironflow.sh/terms permits keyless/free/Explorer/x402 personal noncommercial research, demos and prototypes; commercial or other-user products require appropriate tier, bulk/substantially similar redistribution prohibited absent written agreement. Do not assume historical CC BY dataset license extends to live map API. Keep public repository value-free and private owner-only use subject to source-owner approval; no new key/account/purchase authorized. Native endpoint/schema and PIT source proof remain pending."
+    },
+    {
+     "id": 7226475525,
+     "user": {
+      "login": "Donh91",
+      "id": 160772984,
+      "type": "User"
+     },
+     "created_at": "2026-11-27T19:23:13Z",
+     "updated_at": "2026-11-27T19:23:13Z",
+     "body": "CONVERGENCE_AUTHOR_PREFLIGHT_v1 | 2026-11-27 | owner interactive\nhead: afe1c4ceaa77a96df9e1f5507f8781c1c56e50a9\nAUTHOR_TECHNICAL_PREFLIGHT (not independent approval). Exact head 6/6 CI, unchanged two files. Rechecked provider docs 2026-11-27: https://docs.ironflow.sh/api-reference/analytics/liquidation-map and https://ironflow.sh/guides/hyperliquid-liquidation-map confirm projection, 12-minute position snapshots and mark repricing each minute, top 10 within 10% keyless. Cross-margin assumptions and coverage exclusions remain material. Direct keyless GET via web unavailable; local curl DNS failure HTTP 000, zero bytes; no source authenticity or health claim. Empty map currently fails closed; malformed object shapes may raise KeyError/AttributeError rather than uniform ValueError, residual robustness issue for future caller. Existing structural validator not full admission; do not interpret missing buckets as zero or use for realized clearance. Existing review request 7132508756 pending. No new source writer or key."
+    },
+    {
+     "id": 7227898252,
+     "user": {
+      "login": "Donh91",
+      "id": 160772984,
+      "type": "User"
+     },
+     "created_at": "2026-11-27T20:50:57Z",
+     "updated_at": "2026-11-27T20:50:57Z",
+     "body": "@codex review"
+    },
+    {
+     "id": 7227901638,
+     "user": {
+      "login": "chatgpt-codex-connector[bot]",
+      "id": 199175422,
+      "type": "Bot"
+     },
+     "created_at": "2026-11-27T20:51:10Z",
+     "updated_at": "2026-11-27T21:01:27Z",
+     "body": "<!-- codex-pull-request-review-summary -->\n<!-- codex-review-state:v1 {\"code_review\":{\"commit_sha\":\"afe1c4ceaa77a96df9e1f5507f8781c1c56e50a9\",\"has_any_findings\":false,\"has_unresolved_findings\":false,\"status\":\"completed\"},\"security_review\":{\"commit_sha\":null,\"has_any_findings\":null,\"has_unresolved_findings\":null,\"status\":null}} -->\n\n<details>\n<summary><strong>Codex Review Summary</strong>: ✅ Completed</summary>\n\nThis comment shows the latest Codex review activity on this pull request.\n\n| Review | Status | Commit | Review trigger |\n| --- | --- | --- | --- |\n| 📝 **Code Review** | ✅ **Completed** <relative-time datetime=\"2026-11-27T21:01:27.113936Z\">2026-11-27T21:01:27.113936Z</relative-time> | `afe1c4c` | Draft marked ready |\n\n\n\n<details> <summary>ℹ️ About Codex in GitHub</summary>\n<br/>\n\n[Your team has set up Codex to review pull requests in this repo](https://chatgpt.com/codex/cloud/settings/general). Reviews are triggered when you\n- Open a pull request for review\n- Mark a draft as ready\n- Comment \"@codex review\" or \"@codex security review\".\n\nCodex reacts with 👀 while any review is running, comments if it has suggestions, and reacts with 👍 once all reviews finish with no findings.\n\n</details>\n\n</details>"
+    },
+    {
+     "id": 7227917055,
+     "user": {
+      "login": "chatgpt-codex-connector[bot]",
+      "id": 199175422,
+      "type": "Bot"
+     },
+     "created_at": "2026-11-27T20:52:11Z",
+     "updated_at": "2026-11-27T20:52:11Z",
+     "body": "<!-- codex-review-receipt:v1 -->\n\nCodex Review: Didn't find any major issues. Can't wait for the next one!\n\n**Reviewed commit:** `afe1c4ceaa`\n\n<details> <summary>ℹ️ About Codex in GitHub</summary>\n<br/>\n\n[Your team has set up Codex to review pull requests in this repo](https://chatgpt.com/codex/cloud/settings/general). Reviews are triggered when you\n- Open a pull request for review\n- Mark a draft as ready\n- Comment \"@codex review\".\n\nIf Codex has suggestions, it will comment; otherwise it will react with 👍.\n\n\n\n\nCodex can also answer questions or update the PR. Try commenting \"@codex address that feedback\".\n            \n</details>"
+    },
+    {
+     "id": 7227922111,
+     "user": {
+      "login": "Donh91",
+      "id": 160772984,
+      "type": "User"
+     },
+     "created_at": "2026-11-27T20:52:32Z",
+     "updated_at": "2026-11-27T20:52:32Z",
+     "body": "CONVERGENCE_SOURCE_ADMISSION_DELTA_v1 | 2026-11-27 | C3 #2324 @afe1c4ceaa77a96df9e1f5507f8781c1c56e50a9\nMaterial source-policy delta: Ironflow Terms last updated 2026-11-26 https://ironflow.sh/terms §§15.2,15.5. Personal/noncommercial scope still applicable to keyless/free/Explorer; bulk history retention and model use after plan ends are restricted; non-reconstructable derived outputs may be retained, perpetual bulk retention/trained models require separate licence. Transition rules for preexisting accounts apply as specified in §15.5; do not infer entitlement. This precludes assuming durable immutable raw capture for research/AI training from keyless data. Existing #387 owner: obtain explicit intended-use/retention interpretation or keep source BLOCKED; no new provider subscription, licence acceptance, key, archival data or code change. Current docs https://docs.ironflow.sh/api-reference/analytics/liquidation-map still specify top10 ±10% and modelled cross-margin assumptions. Direct keyless endpoint unavailable through current web transport; no native HTTP status observed. Code-only offline fixture review remains separate."
+    }
+   ],
+   "reviews": [],
+   "inline": []
+  },
+  "2325": {
+   "note": "C4 #2325: same lifecycle as #2323",
+   "head": "8e10a80bcee1c911c50a219ac52b25c53e2e146c",
+   "comments_complete": true,
+   "comments": [
+    {
+     "id": 7133091311,
+     "user": {
+      "login": "Donh91",
+      "id": 160772984,
+      "type": "User"
+     },
+     "created_at": "2026-11-24T13:37:13Z",
+     "updated_at": "2026-11-24T13:37:13Z",
+     "body": "C5 SOURCE RIGHTS CHECKPOINT 2026-11-24: FRED https://fred.stlouisfed.org/series/VXVCLS confirms daily close, Cboe copyright and citation required; graph explicitly warns about sharing. FRED update timestamp is not necessarily source observation close or independently proven original publication timestamp. No raw data publication, source admission or reactivation; existing owner must verify retention/derived use rights, session/availability clock and source identity before research integration. No paid call."
+    },
+    {
+     "id": 7226476093,
+     "user": {
+      "login": "Donh91",
+      "id": 160772984,
+      "type": "User"
+     },
+     "created_at": "2026-11-27T19:23:15Z",
+     "updated_at": "2026-11-27T19:23:15Z",
+     "body": "CONVERGENCE_AUTHOR_PREFLIGHT_v1 | 2026-11-27 | owner interactive\nhead: 8e10a80bcee1c911c50a219ac52b25c53e2e146c\nAUTHOR_TECHNICAL_PREFLIGHT (not independent approval). Exact head 6/6 CI, includes FRED raw-byte to feature integration. Current-main FRED registry still only DGS2/DGS10/DTWEXBGS/VIXCLS, VXVCLS absent, fred_macro DISABLED. Existing adapter therefore cannot yet receive authorized live matched pairs. Four caller-supplied dates are not independently proven consecutive exchange sessions; arbitrary gaps/fabricated clocks remain unqualified and flags deliberately false. FRED VXVCLS public series confirmed https://fred.stlouisfed.org/series/VXVCLS copyright/citation requirement; not a rights grant or original publication clock. Current CRE v1 explicitly disallows caller-asserted PIT and private-to-public receipt transfer; keep challenger outside frozen NEXT12H protocol, no market authority. Review request 7133273557 pending. No source activation or scientific promotion."
+    },
+    {
+     "id": 7227898910,
+     "user": {
+      "login": "Donh91",
+      "id": 160772984,
+      "type": "User"
+     },
+     "created_at": "2026-11-27T20:50:59Z",
+     "updated_at": "2026-11-27T20:50:59Z",
+     "body": "@codex review"
+    },
+    {
+     "id": 7227901744,
+     "user": {
+      "login": "chatgpt-codex-connector[bot]",
+      "id": 199175422,
+      "type": "Bot"
+     },
+     "created_at": "2026-11-27T20:51:10Z",
+     "updated_at": "2026-11-27T21:01:37Z",
+     "body": "<!-- codex-pull-request-review-summary -->\n<!-- codex-review-state:v1 {\"code_review\":{\"commit_sha\":\"8e10a80bcee1c911c50a219ac52b25c53e2e146c\",\"has_any_findings\":false,\"has_unresolved_findings\":false,\"status\":\"completed\"},\"security_review\":{\"commit_sha\":null,\"has_any_findings\":null,\"has_unresolved_findings\":null,\"status\":null}} -->\n\n<details>\n<summary><strong>Codex Review Summary</strong>: ✅ Completed</summary>\n\nThis comment shows the latest Codex review activity on this pull request.\n\n| Review | Status | Commit | Review trigger |\n| --- | --- | --- | --- |\n| 📝 **Code Review** | ✅ **Completed** <relative-time datetime=\"2026-11-27T21:01:36.372986Z\">2026-11-27T21:01:36.372986Z</relative-time> | `8e10a80` | Draft marked ready |\n\n\n\n<details> <summary>ℹ️ About Codex in GitHub</summary>\n<br/>\n\n[Your team has set up Codex to review pull requests in this repo](https://chatgpt.com/codex/cloud/settings/general). Reviews are triggered when you\n- Open a pull request for review\n- Mark a draft as ready\n- Comment \"@codex review\" or \"@codex security review\".\n\nCodex reacts with 👀 while any review is running, comments if it has suggestions, and reacts with 👍 once all reviews finish with no findings.\n\n</details>\n\n</details>"
+    },
+    {
+     "id": 7227922754,
+     "user": {
+      "login": "Donh91",
+      "id": 160772984,
+      "type": "User"
+     },
+     "created_at": "2026-11-27T20:52:34Z",
+     "updated_at": "2026-11-27T20:52:34Z",
+     "body": "CONVERGENCE_SOURCE_ADMISSION_DELTA_v1 | 2026-11-27 | C4 #2325 @8e10a80bcee1c911c50a219ac52b25c53e2e146c\nCurrent FRED legal terms https://fred.stlouisfed.org/legal/ summary II and API prohibitions (k),(l) expressly restrict software/ML development/training and API archival. Personal research permission and series citation label https://fred.stlouisfed.org/series/VXVCLS do NOT establish permission for automated persistent ML/agent corpus or public output. Existing collector uses CSV graph transport, do not silently assume API-specific clauses identical to CSV; general restrictions still require intended-use clarification. Cboe direct official source https://www.cboe.com/tradable-products/vix/term-structure also subject to its own terms, no automatic substitute. Current main FRED owner DISABLED and VXVCLS absent, keep that unchanged. Code-only synthetic fixture release independent of source rights. Direct CSV web fetch unavailable. No raw source values persisted/published, paid calls, source activation or new PR."
+    },
+    {
+     "id": 7227935769,
+     "user": {
+      "login": "chatgpt-codex-connector[bot]",
+      "id": 199175422,
+      "type": "Bot"
+     },
+     "created_at": "2026-11-27T20:53:27Z",
+     "updated_at": "2026-11-27T20:53:27Z",
+     "body": "<!-- codex-review-receipt:v1 -->\n\nCodex Review: Didn't find any major issues. Keep them coming!\n\n**Reviewed commit:** `8e10a80bce`\n\n<details> <summary>ℹ️ About Codex in GitHub</summary>\n<br/>\n\n[Your team has set up Codex to review pull requests in this repo](https://chatgpt.com/codex/cloud/settings/general). Reviews are triggered when you\n- Open a pull request for review\n- Mark a draft as ready\n- Comment \"@codex review\".\n\nIf Codex has suggestions, it will comment; otherwise it will react with 👍.\n\n\n\n\nCodex can also answer questions or update the PR. Try commenting \"@codex address that feedback\".\n            \n</details>"
+    }
+   ],
+   "reviews": [],
+   "inline": []
+  },
+  "2308": {
+   "note": "refusal: receipt, then the state edit 2 s later reports an unresolved finding (an older P1 thread moved onto the head)",
+   "head": "c3725f04ee1e1807bc815c3fb5dd596382067978",
+   "comments_complete": false,
+   "comments": [
+    {
+     "id": 7085969667,
+     "user": {
+      "login": "chatgpt-codex-connector[bot]",
+      "id": 199175422,
+      "type": "Bot"
+     },
+     "created_at": "2026-11-22T21:20:00Z",
+     "updated_at": "2026-11-22T21:51:42Z",
+     "body": "<!-- codex-pull-request-review-summary -->\n<!-- codex-review-state:v1 {\"code_review\":{\"commit_sha\":\"c3725f04ee1e1807bc815c3fb5dd596382067978\",\"has_any_findings\":true,\"has_unresolved_findings\":true,\"status\":\"completed\"},\"security_review\":{\"commit_sha\":null,\"has_any_findings\":null,\"has_unresolved_findings\":null,\"status\":null}} -->\n\n<details>\n<summary><strong>Codex Review Summary</strong>: ✅ Completed</summary>\n\nThis comment shows the latest Codex review activity on this pull request.\n\n| Review | Status | Commit | Review trigger |\n| --- | --- | --- | --- |\n| 📝 **Code Review** | ✅ **Completed** <relative-time datetime=\"2026-11-22T21:51:41.258941Z\">2026-11-22T21:51:41.258941Z</relative-time> | `c3725f0` | Manual request |\n\n\n\n<details> <summary>ℹ️ About Codex in GitHub</summary>\n<br/>\n\n[Your team has set up Codex to review pull requests in this repo](https://chatgpt.com/codex/cloud/settings/general). Reviews are triggered when you\n- Open a pull request for review\n- Mark a draft as ready\n- Comment \"@codex review\" or \"@codex security review\".\n\nCodex reacts with 👀 while any review is running, comments if it has suggestions, and reacts with 👍 once all reviews finish with no findings.\n\n</details>\n\n</details>"
+    },
+    {
+     "id": 7085971230,
+     "user": {
+      "login": "Donh91",
+      "id": 160772984,
+      "type": "User"
+     },
+     "created_at": "2026-11-22T21:20:07Z",
+     "updated_at": "2026-11-22T21:20:07Z",
+     "body": "@codex review\n\nHIGH_IMPACT CI review requested for exact PR head 3da2b5af7c3d843cff73eaab4811aabc9555c6e6. Focus on local HTTP dist containment/symlinks, Chrome and Playwright compatibility, axe reporting (not fake WCAG PASS), screenshot artifact privacy, effects on existing mandatory CN gate, dependency supply chain, fail-closed behavior and no data/authority mutation. Review the exact diff independently. No merge on this request alone."
+    },
+    {
+     "id": 7086022229,
+     "user": {
+      "login": "Donh91",
+      "id": 160772984,
+      "type": "User"
+     },
+     "created_at": "2026-11-22T21:24:05Z",
+     "updated_at": "2026-11-22T21:24:05Z",
+     "body": "@codex review\n\nSupersedes the previous head review: PR #2308 now at exact head 48c08fe41f33d87daff8dcb3ffa01f30e7b1041a after a CI-discovered selector mismatch. The first full CN gate confirmed the final production root is the unified Kompas PRO DOM, not the legacy #official-product-pilot. New code tests #compass-pro instead; please independently review this exact head and CI/visual QA output. Earlier approval, if any, does not authorize merging this new head."
+    },
+    {
+     "id": 7086034139,
+     "user": {
+      "login": "Donh91",
+      "id": 160772984,
+      "type": "User"
+     },
+     "created_at": "2026-11-22T21:25:02Z",
+     "updated_at": "2026-11-22T21:25:02Z",
+     "body": "@codex review\n\nCurrent exact head 0ab2ca777b91ccdce4bb7077b83f267b780bbbee. Two P1 findings on 3da2b5a were addressed without changing CN product code: (1) replace obsolete #official-product-pilot with actual promoted #compass-pro, (2) capture the default Compass view, then explicitly activate [data-premium-nav=\"graph\"] before graph visibility, asset interactions and screenshots. Please review the exact new head independently and verify true CI evidence. Do not treat previous head reviews as merge approval."
+    },
+    {
+     "id": 7086081698,
+     "user": {
+      "login": "Donh91",
+      "id": 160772984,
+      "type": "User"
+     },
+     "created_at": "2026-11-22T21:28:52Z",
+     "updated_at": "2026-11-22T21:28:52Z",
+     "body": "@codex review\n\nNew current head 29819099508adacfebaf34cd87614a024d64beba. The actual CI failure on previous head was locator.click targeting the hidden, non-button `#cn-live-forecast[data-asset=BTC]`, not the visible Graph B toggle. This commit now scopes to `#variant-panel button[data-asset=BTC|ETH]:visible`, checks exactly one each, clicks ETH and BTC, verifies `aria-pressed`. Re-review this exact head, including any further UX/runner hazards. CI must be fully green and qualified reviewer must approve before merge."
+    },
+    {
+     "id": 7086100632,
+     "user": {
+      "login": "chatgpt-codex-connector[bot]",
+      "id": 199175422,
+      "type": "Bot"
+     },
+     "created_at": "2026-11-22T21:30:23Z",
+     "updated_at": "2026-11-22T21:30:23Z",
+     "body": "<!-- codex-review-receipt:v1 -->\n\nCodex Review: Didn't find any major issues. Swish!\n\n**Reviewed commit:** `2981909950`\n\n<details> <summary>ℹ️ About Codex in GitHub</summary>\n<br/>\n\n[Your team has set up Codex to review pull requests in this repo](https://chatgpt.com/codex/cloud/settings/general). Reviews are triggered when you\n- Open a pull request for review\n- Mark a draft as ready\n- Comment \"@codex review\".\n\nIf Codex has suggestions, it will comment; otherwise it will react with 👍.\n\n\n\n\nCodex can also answer questions or update the PR. Try commenting \"@codex address that feedback\".\n            \n</details>"
+    },
+    {
+     "id": 7086111390,
+     "user": {
+      "login": "Donh91",
+      "id": 160772984,
+      "type": "User"
+     },
+     "created_at": "2026-11-22T21:31:13Z",
+     "updated_at": "2026-11-22T21:31:13Z",
+     "body": "@codex review\n\nExact current head 11366361cc38bdfd47f7bda7db9bccf861b9d376. Addressed both additional P2 findings on 0ab2ca7: axe-core runs on **all four real tabs** (Compass, Graph, Cycle, Results) at each of the four viewport sizes, and `accessibility=NO_AUTOMATED_VIOLATIONS` now requires all 16 audits. ETH/BTC interaction scopes the visible Graph B buttons, waits on actual `/data/latest.json` fetch + bounded paint, validates selected asset, declared freshness and explicit unavailable quote, and captures screenshots only after both refreshes. Please check the new exact head, especially genuine settle condition and false-green risk. Production remains untouched; no merge before independent review and CI pass."
+    },
+    {
+     "id": 7086132156,
+     "user": {
+      "login": "chatgpt-codex-connector[bot]",
+      "id": 199175422,
+      "type": "Bot"
+     },
+     "created_at": "2026-11-22T21:32:51Z",
+     "updated_at": "2026-11-22T21:32:51Z",
+     "body": "<!-- codex-review-receipt:v1 -->\n\nCodex Review: Didn't find any major issues. Delightful!\n\n**Reviewed commit:** `11366361cc`\n\n<details> <summary>ℹ️ About Codex in GitHub</summary>\n<br/>\n\n[Your team has set up Codex to review pull requests in this repo](https://chatgpt.com/codex/cloud/settings/general). Reviews are triggered when you\n- Open a pull request for review\n- Mark a draft as ready\n- Comment \"@codex review\".\n\nIf Codex has suggestions, it will comment; otherwise it will react with 👍.\n\n\n\n\nCodex can also answer questions or update the PR. Try commenting \"@codex address that feedback\".\n            \n</details>"
+    },
+    {
+     "id": 7086345367,
+     "user": {
+      "login": "Donh91",
+      "id": 160772984,
+      "type": "User"
+     },
+     "created_at": "2026-11-22T21:49:47Z",
+     "updated_at": "2026-11-22T21:49:47Z",
+     "body": "@codex review\n\nNew exact head c3725f04ee1e1807bc815c3fb5dd596382067978, **new safe split**. Please independently review the now-3-file PR: README shared-agent discovery + manual browser QA contract + real Playwright/axe public-only source reporter. The prior `.github/workflows/cn-site-v2-gate.yml` change has been restored byte-identically to main because changing the S1-pinned `.github` tree failed six governance tests and would require the W5 contract re-chain. Verify current diff contains NO workflow change, no false automatic-QA claim, manual invocation dependencies/source safety, and no market-data changes. Prior reviews at different heads do not authorize this head. OWNER_GATED workflows deferred. Squash-merge only if full current-head CI and all applicable rules are green."
+    },
+    {
+     "id": 7086368814,
+     "user": {
+      "login": "chatgpt-codex-connector[bot]",
+      "id": 199175422,
+      "type": "Bot"
+     },
+     "created_at": "2026-11-22T21:51:40Z",
+     "updated_at": "2026-11-22T21:51:40Z",
+     "body": "<!-- codex-review-receipt:v1 -->\n\nCodex Review: Didn't find any major issues. Delightful!\n\n**Reviewed commit:** `c3725f04ee`\n\n<details> <summary>ℹ️ About Codex in GitHub</summary>\n<br/>\n\n[Your team has set up Codex to review pull requests in this repo](https://chatgpt.com/codex/cloud/settings/general). Reviews are triggered when you\n- Open a pull request for review\n- Mark a draft as ready\n- Comment \"@codex review\".\n\nIf Codex has suggestions, it will comment; otherwise it will react with 👍.\n\n\n\n\nCodex can also answer questions or update the PR. Try commenting \"@codex address that feedback\".\n            \n</details>"
+    }
+   ],
+   "reviews": [
+    {
+     "id": 6014598606,
+     "user": {
+      "login": "chatgpt-codex-connector[bot]",
+      "id": 199175422,
+      "type": "Bot"
+     },
+     "state": "COMMENTED",
+     "commit_id": "3da2b5af7c3d843cff73eaab4811aabc9555c6e6",
+     "submitted_at": "2026-11-22T21:23:09Z",
+     "body": "<!-- codex-review-receipt:v1 -->\n\n\n### 💡 Codex Review\n\nHere are some automated review suggestions for this pull request.\n\n**Reviewed commit:** `3da2b5af7c`\n    \n\n<details> <summary>ℹ️ About Codex in GitHub</summary>\n<br/>\n\n[Your team has set up Codex to review pull requests in this repo](https://chatgpt.com/codex/cloud/settings/general). Reviews are triggered when you\n- Open a pull request for review\n- Mark a draft as ready\n- Comment \"@codex review\".\n\nIf Codex has suggestions, it will comment; otherwise it will react with 👍.\n\n\n\n\nCodex can also answer questions or update the PR. Try commenting \"@codex address that feedback\".\n            \n</details>"
+    },
+    {
+     "id": 6014617780,
+     "user": {
+      "login": "chatgpt-codex-connector[bot]",
+      "id": 199175422,
+      "type": "Bot"
+     },
+     "state": "COMMENTED",
+     "commit_id": "0ab2ca777b91ccdce4bb7077b83f267b780bbbee",
+     "submitted_at": "2026-11-22T21:28:13Z",
+     "body": "<!-- codex-review-receipt:v1 -->\n\n\n### 💡 Codex Review\n\nHere are some automated review suggestions for this pull request.\n\n**Reviewed commit:** `0ab2ca777b`\n    \n\n<details> <summary>ℹ️ About Codex in GitHub</summary>\n<br/>\n\n[Your team has set up Codex to review pull requests in this repo](https://chatgpt.com/codex/cloud/settings/general). Reviews are triggered when you\n- Open a pull request for review\n- Mark a draft as ready\n- Comment \"@codex review\".\n\nIf Codex has suggestions, it will comment; otherwise it will react with 👍.\n\n\n\n\nCodex can also answer questions or update the PR. Try commenting \"@codex address that feedback\".\n            \n</details>"
+    },
+    {
+     "id": 6014738833,
+     "user": {
+      "login": "Donh91",
+      "id": 160772984,
+      "type": "User"
+     },
+     "state": "COMMENTED",
+     "commit_id": "c3725f04ee1e1807bc815c3fb5dd596382067978",
+     "submitted_at": "2026-11-22T21:56:49Z",
+     "body": ""
+    },
+    {
+     "id": 6014739023,
+     "user": {
+      "login": "Donh91",
+      "id": 160772984,
+      "type": "User"
+     },
+     "state": "COMMENTED",
+     "commit_id": "c3725f04ee1e1807bc815c3fb5dd596382067978",
+     "submitted_at": "2026-11-22T21:56:51Z",
+     "body": ""
+    },
+    {
+     "id": 6014739178,
+     "user": {
+      "login": "Donh91",
+      "id": 160772984,
+      "type": "User"
+     },
+     "state": "COMMENTED",
+     "commit_id": "c3725f04ee1e1807bc815c3fb5dd596382067978",
+     "submitted_at": "2026-11-22T21:56:54Z",
+     "body": ""
+    },
+    {
+     "id": 6014739316,
+     "user": {
+      "login": "Donh91",
+      "id": 160772984,
+      "type": "User"
+     },
+     "state": "COMMENTED",
+     "commit_id": "c3725f04ee1e1807bc815c3fb5dd596382067978",
+     "submitted_at": "2026-11-22T21:56:56Z",
+     "body": ""
+    }
+   ],
+   "inline": [
+    {
+     "id": 4660085454,
+     "user": {
+      "login": "chatgpt-codex-connector[bot]",
+      "id": 199175422,
+      "type": "Bot"
+     },
+     "commit_id": "3da2b5af7c3d843cff73eaab4811aabc9555c6e6",
+     "original_commit_id": "3da2b5af7c3d843cff73eaab4811aabc9555c6e6",
+     "created_at": "2026-11-22T21:23:10Z",
+     "updated_at": "2026-11-22T21:23:10Z",
+     "body": "**<sub><sub>![P1 Badge](https://img.shields.io/badge/P1-orange?style=flat)</sub></sub>  Wait for the promoted Kompas PRO instead of the removed pilot**\n\nIn the inspected `cn-site-v2-gate.yml`, this test runs after `promote-root.mjs`, which promotes `next/unified.html` using `promoteUnifiedHtml()`. That transformer explicitly rejects `id=\"official-product-pilot\"` and requires `compass-pro` instead (`premium-v2/promote-root.mjs:82–93,132–135`). Consequently, this wait times out at every viewport on a correctly built root, making the existing mandatory product gate fail and preventing successful screenshots or axe audits. Target the actual promoted component and update its source-state readback accordingly.\n\nUseful? React with 👍 / 👎.\n\n<!-- codex-code-review-finding:v1 -->"
+    },
+    {
+     "id": 4660085456,
+     "user": {
+      "login": "chatgpt-codex-connector[bot]",
+      "id": 199175422,
+      "type": "Bot"
+     },
+     "commit_id": "c3725f04ee1e1807bc815c3fb5dd596382067978",
+     "original_commit_id": "3da2b5af7c3d843cff73eaab4811aabc9555c6e6",
+     "created_at": "2026-11-22T21:23:10Z",
+     "updated_at": "2026-11-22T21:23:10Z",
+     "body": "**<sub><sub>![P1 Badge](https://img.shields.io/badge/P1-orange?style=flat)</sub></sub>  Activate the graph tab before measuring or interacting with it**\n\nEven after correcting the obsolete pilot selector, navigation to the hashless root leaves the graph hidden: `premium-v2/premium-tabs.mjs:124–129,166` defaults to the Compass tab and sets every other panel's `hidden` property. Thus `#chart.getBoundingClientRect()` returns zero dimensions and this assertion rejects the healthy page at all four widths; the subsequent BTC/ETH clicks and graph screenshots also require that hidden panel to be revealed. Click `[data-premium-nav=\"graph\"]` and wait for the graph to become visible before graph measurements and interactions, while capturing the default Compass view separately if needed.\n\nUseful? React with 👍 / 👎.\n\n<!-- codex-code-review-finding:v1 -->"
+    },
+    {
+     "id": 4660104020,
+     "user": {
+      "login": "chatgpt-codex-connector[bot]",
+      "id": 199175422,
+      "type": "Bot"
+     },
+     "commit_id": "29819099508adacfebaf34cd87614a024d64beba",
+     "original_commit_id": "0ab2ca777b91ccdce4bb7077b83f267b780bbbee",
+     "created_at": "2026-11-22T21:28:13Z",
+     "updated_at": "2026-11-22T21:28:13Z",
+     "body": "**<sub><sub>![P2 Badge](https://img.shields.io/badge/P2-yellow?style=flat)</sub></sub>  Audit the default Compass view before hiding it**\n\nAt every viewport, this audit runs only after activating the graph tab. `premium-tabs.mjs` hides the other panels, and `premium-tabs.css` applies `display:none!important` to hidden tab panels, so axe excludes the default `#compass-pro` view, PATH and Proof from its accessibility checks. Consequently, accessibility regressions in the primary landing view cannot appear in the report, and `NO_AUTOMATED_VIOLATIONS` can be reported despite violations there. Run axe on the default Compass view before switching tabs and aggregate results for each audited view, explicitly identifying any unaudited views.\n\nUseful? React with 👍 / 👎.\n\n<!-- codex-code-review-finding:v1 -->"
+    },
+    {
+     "id": 4660104022,
+     "user": {
+      "login": "chatgpt-codex-connector[bot]",
+      "id": 199175422,
+      "type": "Bot"
+     },
+     "commit_id": "0ab2ca777b91ccdce4bb7077b83f267b780bbbee",
+     "original_commit_id": "0ab2ca777b91ccdce4bb7077b83f267b780bbbee",
+     "created_at": "2026-11-22T21:28:13Z",
+     "updated_at": "2026-11-22T21:28:13Z",
+     "body": "**<sub><sub>![P2 Badge](https://img.shields.io/badge/P2-yellow?style=flat)</sub></sub>  Wait for each asset refresh before capturing graph evidence**\n\nWhen an asset's feed request has not completed before the next browser operation, these clicks and screenshots race the renderer. In `premium-v2/graph-b/source-graph-b.mjs`, the click handler starts asynchronous `refresh()`, which immediately clears `model` and the plotted paths before fetching the feeds; the subsequent BTC refresh also invalidates any pending ETH result through `requestGeneration`. Playwright's `click()` does not await that refresh, so the test can skip the rendered ETH state and capture a temporarily empty BTC chart while still reporting functional PASS, since its graph assertions ran before either click. Wait for each selected asset's refresh to settle into a source-bound or explicitly unavailable state, verify the selected asset, and only then continue or capture screenshots.\n\nUseful? React with 👍 / 👎.\n\n<!-- codex-code-review-finding:v1 -->"
+    },
+    {
+     "id": 4660215716,
+     "user": {
+      "login": "Donh91",
+      "id": 160772984,
+      "type": "User"
+     },
+     "commit_id": "3da2b5af7c3d843cff73eaab4811aabc9555c6e6",
+     "original_commit_id": "3da2b5af7c3d843cff73eaab4811aabc9555c6e6",
+     "created_at": "2026-11-22T21:56:49Z",
+     "updated_at": "2026-11-22T21:56:49Z",
+     "body": "Fixed in the current exact-head read-only QA script: wait for #compass-pro, not the removed pilot. Original product root integration validated in Chrome, run 45072537557, and Codex re-reviewed c3725f04ee with no major issues. Current PR head c3725f04ee1e1807bc815c3fb5dd596382067978 remains 3 files, no workflow."
+    },
+    {
+     "id": 4660215917,
+     "user": {
+      "login": "Donh91",
+      "id": 160772984,
+      "type": "User"
+     },
+     "commit_id": "c3725f04ee1e1807bc815c3fb5dd596382067978",
+     "original_commit_id": "3da2b5af7c3d843cff73eaab4811aabc9555c6e6",
+     "created_at": "2026-11-22T21:56:51Z",
+     "updated_at": "2026-11-22T21:56:51Z",
+     "body": "Fixed: capture first-visit Compass, activate [data-premium-nav=graph], then wait for #variant-panel and #chart visible before measuring and interacting. Real 4-width Chromium run 45072537557 PASS; no source modification. Current PR head c3725f04ee1e1807bc815c3fb5dd596382067978 remains 3 files, no workflow."
+    },
+    {
+     "id": 4660216072,
+     "user": {
+      "login": "Donh91",
+      "id": 160772984,
+      "type": "User"
+     },
+     "commit_id": "29819099508adacfebaf34cd87614a024d64beba",
+     "original_commit_id": "0ab2ca777b91ccdce4bb7077b83f267b780bbbee",
+     "created_at": "2026-11-22T21:56:54Z",
+     "updated_at": "2026-11-22T21:56:54Z",
+     "body": "Fixed: axe runs on each real Compass, Graph, PATH, Proof tab at four widths, total 16 audits. The report honestly recorded 20 rule findings as NEEDS_REMEDIATION and did not claim WCAG PASS. Current PR head c3725f04ee1e1807bc815c3fb5dd596382067978 remains 3 files, no workflow."
+    },
+    {
+     "id": 4660216246,
+     "user": {
+      "login": "Donh91",
+      "id": 160772984,
+      "type": "User"
+     },
+     "commit_id": "0ab2ca777b91ccdce4bb7077b83f267b780bbbee",
+     "original_commit_id": "0ab2ca777b91ccdce4bb7077b83f267b780bbbee",
+     "created_at": "2026-11-22T21:56:56Z",
+     "updated_at": "2026-11-22T21:56:56Z",
+     "body": "Fixed: only visible Graph B BTC/ETH buttons are clicked and each selected asset waits for actual same-origin source fetch and bounded source-status readback before screenshots. Adversarial quality report records stale/unavailable truth. Current PR head c3725f04ee1e1807bc815c3fb5dd596382067978 remains 3 files, no workflow."
+    }
+   ]
+  },
+  "1850": {
+   "note": "refusal: clean receipt, then ready_for_review re-run edited the state in place to failed and Codex posted a usage-limit message",
+   "head": "1a03cce2be30e86db6b9e698aab0c719d1451ae5",
+   "comments_complete": false,
+   "comments": [
+    {
+     "id": 6535392360,
+     "user": {
+      "login": "Donh91",
+      "id": 160772984,
+      "type": "User"
+     },
+     "created_at": "2026-10-30T23:06:48Z",
+     "updated_at": "2026-10-30T23:06:48Z",
+     "body": "@codex review\n\nINDEPENDENT SCIENCE / CODE PRE-RELEASE REVIEW · DRAFT RQS #1850 · EXACT HEAD `44cd8f29dc3340676871cdeb7d2cdeb2902b332f`, NOT prior HEAD. This is a **read-only** request, no code edits, no merge or model-trading promotion.\n\nPlease falsify the following:\n1. UTC candle OPEN +1h CLOSE vs collection RUN source_window_end_utc; proper as-of cutoff, duplicate vs overlapping collection and 16 contiguous completed hours.\n2. Newly corrected `replay_census`: exactly 168 completed inclusive hourly cutoffs ending floor(asof), **even with empty source, truncated leading history, 200h source including warmup and 23:xx/day boundary**. Verify 101/101 existing Daily Capture tests and whether any incomplete/invalid source is accidentally marked eligible. Evaluate whether same-clock public data are retrospective only and NEVER proof of first_known.\n3. Candidate >=0.75% 3h rebound after prior <=-1.5% close-only drawdown is an unoptimized research prototype. Family independence and OI \"position reduction SIDE_UNKNOWN\" have no fake proof of short-covering, bull-trap probability, BUY/SELL or alpha. +6/24/72h due-only data are ex-post with true gaps and PENDING handling.\n4. Existing `.github/workflows/daily-capture-architecture-gate.yml` IS modified, contrary to older \"no workflow\" summaries; evaluate whether the change is appropriately bounded as a test-only integration, and identify release governance / cross-source recovery concerns.\n5. Check true current base/head and possible conflicts. Public 8-day fixed-source replay has 167/168 available windows and 6 overlapping candidates (not independent events); previous two-file subset 30/168, 4 candidates. Neither is an eligible prospective model performance claim.\n\nProvide concrete findings with source line and regression fixture, or an explicit no-major-issue review bound to this exact HEAD. **An ACK/reaction is not a completed scientific eligibility or release grant.** No private data, new CI dispatch, paid model inference or workflow changes requested."
+    },
+    {
+     "id": 6535395632,
+     "user": {
+      "login": "chatgpt-codex-connector[bot]",
+      "id": 199175422,
+      "type": "Bot"
+     },
+     "created_at": "2026-10-30T23:07:03Z",
+     "updated_at": "2026-11-01T11:17:55Z",
+     "body": "<!-- codex-pull-request-review-summary -->\n<!-- codex-review-state:v1 {\"code_review\":{\"commit_sha\":\"1a03cce2be30e86db6b9e698aab0c719d1451ae5\",\"has_any_findings\":true,\"has_unresolved_findings\":true,\"status\":\"failed\"},\"security_review\":{\"commit_sha\":null,\"has_any_findings\":null,\"has_unresolved_findings\":null,\"status\":null}} -->\n\n## Codex Review Summary\n\nThis comment shows the latest Codex review activity on this pull request.\n\n| Review | Status | Commit | Review trigger |\n| --- | --- | --- | --- |\n| 📝 **Code Review** | ⚠️ **Failed** <relative-time datetime=\"2026-11-01T11:17:53.063364Z\">2026-11-01T11:17:53.063364Z</relative-time><br/>We couldn’t complete this review. Comment `@codex review` to try again. | `1a03cce` | Draft marked ready |\n\n\n\n<details> <summary>ℹ️ About Codex in GitHub</summary>\n<br/>\n\n[Your team has set up Codex to review pull requests in this repo](https://chatgpt.com/codex/cloud/settings/general). Reviews are triggered when you\n- Open a pull request for review\n- Mark a draft as ready\n- Comment \"@codex review\" or \"@codex security review\".\n\nCodex reacts with 👀 while any review is running, comments if it has suggestions, and reacts with 👍 once all reviews finish with no findings.\n\n</details>"
+    },
+    {
+     "id": 6536171976,
+     "user": {
+      "login": "Donh91",
+      "id": 160772984,
+      "type": "User"
+     },
+     "created_at": "2026-10-31T00:02:47Z",
+     "updated_at": "2026-10-31T00:02:47Z",
+     "body": "@codex review\n\nOWNER-APPROVED FINAL INDEPENDENT TECHNICAL REVIEW REQUEST, EXACT CURRENT HEAD `1a03cce2be30e86db6b9e698aab0c719d1451ae5` of DRAFT Archive #1850. Previous review 44cd8f2 is stale and Grok Bridge #98 reviewed 48a4ba02; no formal approval exists on this head.\n\n**Read-only bounded ask, no edits, no merge, no paid inference or signal promotion.** Verify all three original Codex P2 fixes (stale census cutoff, malformed UTC candle open, immediately preceding 12h volume baseline) and Grok F1 follow-up (due-only preview rejects misaligned individual candles AND event_end). Independently challenge the NEW five-lane EX-POST script `scripts/research/rqs_five_lanes_expost.py` and tests on 17 blob-pinned weekly/day hourly files. Check especially: past-only features and future-only labels; no duplicated market-shock independence, no first-known/PIT claims; source run coverage delayed 1318/2005; 168h census numerator/denominator; handling of missing OHLC/OI/ETHBTC/spot; stable positive/negative test coverage; no official markets, source writer, signal weights, trade permission or new scheduled tasks.\n\nAudit the source-pinned JSON ledger `04_MARKET_LEARNING/handlekompas/research/2026-10-31__FIVE_LANES_83D_EXPOST_REPLAY_v1.json`, and note that its numerically reconstructed five-lane results are descriptive and could still contain independent analytical errors. Scientific owner #1596 and Pullback eligibility SUSPENDED remain binding. Verify existing Daily Capture Architecture Gate test invocation, exact-head 7 CI statuses, and changed YAML release governance.\n\nReturn concrete line-specific P0/P1/P2 findings with failing reproducer tests, or a bounded explicit no-major-code-defect result, without claiming economic edge or approval. Do not initiate any release."
+    },
+    {
+     "id": 6536210491,
+     "user": {
+      "login": "chatgpt-codex-connector[bot]",
+      "id": 199175422,
+      "type": "Bot"
+     },
+     "created_at": "2026-10-31T00:05:48Z",
+     "updated_at": "2026-10-31T00:05:48Z",
+     "body": "<!-- codex-review-receipt:v1 -->\n\nCodex Review: Didn't find any major issues. Another round soon, please!\n\n**Reviewed commit:** `1a03cce2be`\n\n<details> <summary>ℹ️ About Codex in GitHub</summary>\n<br/>\n\n[Your team has set up Codex to review pull requests in this repo](https://chatgpt.com/codex/cloud/settings/general). Reviews are triggered when you\n- Open a pull request for review\n- Mark a draft as ready\n- Comment \"@codex review\".\n\nIf Codex has suggestions, it will comment; otherwise it will react with 👍.\n\n\n\n\nCodex can also answer questions or update the PR. Try commenting \"@codex address that feedback\".\n            \n</details>"
+    },
+    {
+     "id": 6557218525,
+     "user": {
+      "login": "chatgpt-codex-connector[bot]",
+      "id": 199175422,
+      "type": "Bot"
+     },
+     "created_at": "2026-11-01T11:17:59Z",
+     "updated_at": "2026-11-01T11:17:59Z",
+     "body": "You have reached your Codex usage limits for code reviews. You can see your limits in the [Codex usage dashboard](https://chatgpt.com/codex/cloud/settings/usage).\nTo continue using code reviews, you can upgrade your account or add credits to your account and enable them for code reviews in your [settings](https://chatgpt.com/settings/code-review)."
+    }
+   ],
+   "reviews": [
+    {
+     "id": 5719643057,
+     "user": {
+      "login": "chatgpt-codex-connector[bot]",
+      "id": 199175422,
+      "type": "Bot"
+     },
+     "state": "COMMENTED",
+     "commit_id": "44cd8f29dc3340676871cdeb7d2cdeb2902b332f",
+     "submitted_at": "2026-10-30T23:09:17Z",
+     "body": "<!-- codex-review-receipt:v1 -->\n\n\n### 💡 Codex Review\n\nHere are some automated review suggestions for this pull request.\n\n**Reviewed commit:** `44cd8f29dc`\n    \n\n<details> <summary>ℹ️ About Codex in GitHub</summary>\n<br/>\n\n[Your team has set up Codex to review pull requests in this repo](https://chatgpt.com/codex/cloud/settings/general). Reviews are triggered when you\n- Open a pull request for review\n- Mark a draft as ready\n- Comment \"@codex review\".\n\nIf Codex has suggestions, it will comment; otherwise it will react with 👍.\n\n\n\n\nCodex can also answer questions or update the PR. Try commenting \"@codex address that feedback\".\n            \n</details>"
+    }
+   ],
+   "inline": [
+    {
+     "id": 4429236761,
+     "user": {
+      "login": "chatgpt-codex-connector[bot]",
+      "id": 199175422,
+      "type": "Bot"
+     },
+     "commit_id": "1a03cce2be30e86db6b9e698aab0c719d1451ae5",
+     "original_commit_id": "44cd8f29dc3340676871cdeb7d2cdeb2902b332f",
+     "created_at": "2026-10-30T23:09:17Z",
+     "updated_at": "2026-10-30T23:09:17Z",
+     "body": "**<sub><sub>![P2 Badge](https://img.shields.io/badge/P2-yellow?style=flat)</sub></sub>  Exclude lagged windows from complete-cutoff census counts**\n\nWhen the source lacks an as-of-eligible candle ending at a grid cutoff, `assess` can reuse a window ending up to three hours earlier, but the census counts it as another complete cutoff and potentially another candidate. Regression fixture: `replay_census(fixture(), \"2026-10-30T19:00:00Z\")` returns four eligible cutoffs and four candidates, although the fixture ends at 16:00Z; its cluster repeats that single event four times. At exact HEAD `44cd8f29dc3340676871cdeb7d2cdeb2902b332f`, all 101 gate tests pass, but the eight-file public replay's reported 167 eligible cutoffs include 59 whose evidence ends before their evaluation cutoff. Retain the three-hour tolerance for standalone diagnostics if desired, but require the evidence window to end at the evaluated hour before counting a complete census cutoff; otherwise classify it as unavailable rather than implicitly carrying earlier evidence forward.\n\nAGENTS.md reference: [AGENTS.md:L208-L208](https://github.com/Donh91/Investering-Framework-Archive-v1/blob/44cd8f29dc3340676871cdeb7d2cdeb2902b332f/AGENTS.md#L208-L208)\n\nUseful? React with 👍 / 👎.\n\n<!-- codex-code-review-finding:v1 -->"
+    },
+    {
+     "id": 4429236770,
+     "user": {
+      "login": "chatgpt-codex-connector[bot]",
+      "id": 199175422,
+      "type": "Bot"
+     },
+     "commit_id": "1a03cce2be30e86db6b9e698aab0c719d1451ae5",
+     "original_commit_id": "44cd8f29dc3340676871cdeb7d2cdeb2902b332f",
+     "created_at": "2026-10-30T23:09:17Z",
+     "updated_at": "2026-10-30T23:09:17Z",
+     "body": "**<sub><sub>![P2 Badge](https://img.shields.io/badge/P2-yellow?style=flat)</sub></sub>  Validate source-candle UTC alignment instead of the floored grid**\n\nWith malformed source timestamps, this alignment guard cannot reject anything: `first` derives from an already hour-floored cutoff, while `assess` only checks one-hour differences between source rows. Regression fixture: shift both timestamp fields in every row of `fixture()` by 30 minutes and assess at `2026-10-30T17:00:00Z`; the result is still `REPLAY_CANDIDATE_RESEARCH_ONLY`, with a 16:30Z window end, and the census counts it as eligible despite the owner's completed UTC-hour contract. Validate each source candle's OPEN alignment before admitting it, and add this shifted-grid negative fixture so invalid hourly source cannot masquerade as a complete UTC window.\n\nUseful? React with 👍 / 👎.\n\n<!-- codex-code-review-finding:v1 -->"
+    },
+    {
+     "id": 4429236778,
+     "user": {
+      "login": "chatgpt-codex-connector[bot]",
+      "id": 199175422,
+      "type": "Bot"
+     },
+     "commit_id": "44cd8f29dc3340676871cdeb7d2cdeb2902b332f",
+     "original_commit_id": "44cd8f29dc3340676871cdeb7d2cdeb2902b332f",
+     "created_at": "2026-10-30T23:09:17Z",
+     "updated_at": "2026-10-30T23:09:17Z",
+     "body": "**<sub><sub>![P2 Badge](https://img.shields.io/badge/P2-yellow?style=flat)</sub></sub>  Align the volume baseline with the preceding twelve hours**\n\nFor the three recovery candles at indices 13–15, the immediately preceding twelve volume observations are indices 1–12, but `candles[-16:-4]` selects indices 0–11: it omits the hour immediately before recovery and includes an older hour instead. Regression fixture: assign `btc_quote_volume` values `[1] + [100]*6 + [1000]*6 + [100]*3` to `fixture()`, with valid taker-buy volumes; the reported ratio is 1.0 instead of the correct 0.181818. Clearing index 12's volume also leaves the ratio available and `SPOT_PRICE_FLOW=true`, despite missing data in the intended baseline. Use the twelve candles immediately preceding `spot_tail` and test both the numerical result and missing-baseline behavior.\n\nUseful? React with 👍 / 👎.\n\n<!-- codex-code-review-finding:v1 -->"
+    }
+   ]
+  },
+  "1788": {
+   "note": "refusal: clean receipt, then ready_for_review re-run edited the state in place to running and never completed",
+   "head": "fe45acc99b4b5392ccefda38851cba0b1e7df7aa",
+   "comments_complete": false,
+   "comments": [
+    {
+     "id": 6387765223,
+     "user": {
+      "login": "Donh91",
+      "id": 160772984,
+      "type": "User"
+     },
+     "created_at": "2026-10-24T18:12:03Z",
+     "updated_at": "2026-10-24T18:12:03Z",
+     "body": "@codex review\n\nOwner-authorized bounded independent review for EXISTING #1516 F3/F4 research-only PR #1788. Review exact current HEAD `fe45acc99b4b5392ccefda38851cba0b1e7df7aa` (verify the live HEAD and update review target if it changed). Focus on frozen original integrity, PIT original issue <= original public delivery <= target, straddling/incomplete observations, non-finite arithmetic, overlapping/nonindependent results and every output retaining `eligible_for_canonical_score=false` and no production writes/source admission. Three-file scope only. No rewrite of source-governance/Vault rules, portfolio, current Compass ranges or site data. Report concrete P0/P1/P2, or no findings, and exact commit. Existing 14 focused tests locally PASS and matching source/test blobs were verified; five exact-head workflows success. This review request is NOT authorization to self-merge or bypass release gates. If usage or host budget prohibits review, report unavailable without paid retry."
+    },
+    {
+     "id": 6387767895,
+     "user": {
+      "login": "chatgpt-codex-connector[bot]",
+      "id": 199175422,
+      "type": "Bot"
+     },
+     "created_at": "2026-10-24T18:12:19Z",
+     "updated_at": "2026-10-24T18:15:00Z",
+     "body": "<!-- codex-pull-request-review-summary -->\n<!-- codex-review-state:v1 {\"code_review\":{\"commit_sha\":\"fe45acc99b4b5392ccefda38851cba0b1e7df7aa\",\"has_any_findings\":null,\"has_unresolved_findings\":null,\"status\":\"running\"},\"security_review\":{\"commit_sha\":null,\"has_any_findings\":null,\"has_unresolved_findings\":null,\"status\":null}} -->\n\n## Codex Review Summary\n\nThis comment shows the latest Codex review activity on this pull request.\n\n| Review | Status | Commit | Review trigger |\n| --- | --- | --- | --- |\n| 📝 **Code Review** | 🔄 **Running** since <relative-time datetime=\"2026-10-24T18:14:59.798028Z\">2026-10-24T18:14:59.798028Z</relative-time> | `fe45acc` | Draft marked ready |\n\n\n\n<details> <summary>ℹ️ About Codex in GitHub</summary>\n<br/>\n\n[Your team has set up Codex to review pull requests in this repo](https://chatgpt.com/codex/cloud/settings/general). Reviews are triggered when you\n- Open a pull request for review\n- Mark a draft as ready\n- Comment \"@codex review\" or \"@codex security review\".\n\nCodex reacts with 👀 while any review is running, comments if it has suggestions, and reacts with 👍 once all reviews finish with no findings.\n\n</details>"
+    },
+    {
+     "id": 6387777377,
+     "user": {
+      "login": "chatgpt-codex-connector[bot]",
+      "id": 199175422,
+      "type": "Bot"
+     },
+     "created_at": "2026-10-24T18:13:17Z",
+     "updated_at": "2026-10-24T18:13:17Z",
+     "body": "<!-- codex-review-receipt:v1 -->\n\nCodex Review: Didn't find any major issues. Chef's kiss.\n\n**Reviewed commit:** `fe45acc99b`\n\n<details> <summary>ℹ️ About Codex in GitHub</summary>\n<br/>\n\n[Your team has set up Codex to review pull requests in this repo](https://chatgpt.com/codex/cloud/settings/general). Reviews are triggered when you\n- Open a pull request for review\n- Mark a draft as ready\n- Comment \"@codex review\".\n\nIf Codex has suggestions, it will comment; otherwise it will react with 👍.\n\n\n\n\nCodex can also answer questions or update the PR. Try commenting \"@codex address that feedback\".\n            \n</details>"
+    }
+   ],
+   "reviews": [],
+   "inline": []
+  }
+ }
+}

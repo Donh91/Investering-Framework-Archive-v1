@@ -7,14 +7,16 @@ FIRST LINE: OWNER APPROVAL REQUIRED: followed by one entry per item that needs t
 - HIGH_EVIDENCE_HOLD(<recovery|separation>:<reason>) while HIGH EVIDENCE does not pass and a HIGH or HIGH_IMPACT item waits for it (it blocks only those items);
 - decide<n> for every PARKED_OWNER_DECISION item and every OWNER_GATED item that STEWARD_STATES.md would otherwise close (the owner closes or keeps it), the 10 oldest first and then +<k> for the rest;
 - pkg<id>:manual_only for every Bridge package that rule 5 skipped with reason manual_only and that is younger than 7 days;
-- close<n> for every CLOSED_NOISE item that S1 could not close for lack of a close tool.
+- close<n> for every CLOSED_NOISE item that S1 could not close for lack of a close tool;
+- BRANCH_UPDATE(#<PR> ...) for every PR whose branch must take main and that S1 does not update (rule 2c, owner route: a stale gate, or a required job that never ran on the head): the owner or a ChatGPT thread the owner directs presses Update branch (on a PR that a workflow opened, Approve workflows to run starts the waiting jobs instead);
+- C1B_GAP(window=<n>) while B.c1b.gap is set: the brief's test for unreviewed code on main (C1b) lost its anchor and scanned only the newest <n> commits; the owner looks once at main's history before that window. Nothing else waits for it, and it clears with the next complete brief.
 SECOND LINE: HIGH_IMPACT BLOCKED: followed by every other non-draft OWNER_GATED PR as #<PR> <H8> (<first missing gate>), or NONE.
 THIRD LINE: DISPOSITIONS TODAY: merged=<n> parked=<n> closed=<n> handed_off=<n> owner=<n>, counted from S1's own S1_ITEM_v1 and S1_LANE_MERGE_v1 posts of the current Copenhagen day (UNKNOWN for a count you could not read).
 - In a SOURCE_UNVERIFIED run the FIRST LINE is OWNER APPROVAL REQUIRED: UNKNOWN (source_unverified) and the other two lines read UNKNOWN.
 
 OWNER_APPROVAL_REQUIRED_v1 (an observability write on #1156)
 - The set is the FIRST LINE's entries keyed on (PR, H) for PRs and on the entry text otherwise.
-- Compare only against the newest OWNER_APPROVAL_REQUIRED_v1 on #1156 that S1 itself posted (author Donh91, created_at equals updated_at, with a contract= line). When the set differs, post one new OWNER_APPROVAL_REQUIRED_v1 listing, for each PR entry: PR, full 40-char head, OWNER_GATED reason, review kind and id, CI run ids, high_evidence=PASS, and the owner action: Squash and merge PR #<PR> at head <40> (the owner, or a ChatGPT thread the owner directs). For LANE_OFF, pkg and close entries give the exact owner action (the switch PR to merge, the package to open, the PR to close). When the set becomes empty post one OWNER_APPROVAL_REQUIRED_v1 with entries: NONE. Never repost an identical set.
+- Compare only against the newest OWNER_APPROVAL_REQUIRED_v1 on #1156 that S1 itself posted (author Donh91, created_at equals updated_at, with a contract= line). When the set differs, post one new OWNER_APPROVAL_REQUIRED_v1 listing, for each PR entry: PR, full 40-char head, OWNER_GATED reason, review kind and id, CI run ids, high_evidence=PASS, and the owner action: Squash and merge PR #<PR> at head <40> (the owner, or a ChatGPT thread the owner directs). For LANE_OFF, pkg, close, BRANCH_UPDATE and C1B_GAP entries give the exact owner action (the switch PR to merge, the package to open, the PR to close, the branch to update, the history to look at). When the set becomes empty post one OWNER_APPROVAL_REQUIRED_v1 with entries: NONE. Never repost an identical set.
 - Where: after H6 screening and before RECONCILE; at most once per run; suppressed in H1 and in SOURCE_UNVERIFIED runs; it does not use the ladder's single action. An entry is never release authority.
 
 DAILY SUMMARY (the owner-approved separate ChatGPT task of 00_FMOS/S1/DAILY_SUMMARY_BOOTSTRAP.txt follows this section only)
@@ -26,6 +28,6 @@ DAILY SUMMARY (the owner-approved separate ChatGPT task of 00_FMOS/S1/DAILY_SUMM
   3. "Parkeret / lukket:" one line per item with the reason in plain words; items in PARKED_OWNER_DECISION are marked "venter på din beslutning (luk eller behold)".
   4. "Venter på dig (HIGH_IMPACT):" the FIRST LINE entries with the exact click, or "Intet".
   5. "S1 arbejder videre i morgen med:" the 3 most overdue or next items of the open-work index.
-  6. "Sundhed:" heartbeat present today yes or no, lane ON or OFF (reason), ticks_24h.
+  6. "Sundhed:" heartbeat present today yes or no, lane ON or OFF (reason), ticks_24h, and from the newest heartbeat its last_action and its c1b_gap ("ukendt" for a field it does not carry; a c1b_gap other than NONE is written as "kodekontrol af main har et hul").
   7. "Lukket med bevis:" verified=<n> observing=<n> unverified=<n>, and one line per UNVERIFIED closure with its missing edge in plain words; "Edge-regnskab:" one line per stream decision of the day (promoted, candidate, killed, parked, closed as inconclusive), or "Ingen ændring". A merge is never called closed before its completion receipt exists.
 - When a source cannot be read, say so in that line ("kunne ikke læses") and never guess. The task's own output shows the same summary text.

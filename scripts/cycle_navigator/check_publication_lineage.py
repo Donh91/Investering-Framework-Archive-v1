@@ -10,6 +10,7 @@ from __future__ import annotations
 import argparse
 import json
 import sys
+import subprocess
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
@@ -169,6 +170,9 @@ def main() -> None:
     result = receipt_for(args.root, snapshot, datetime.now(timezone.utc))
     out = args.root / "05_CYCLE_NAVIGATOR/site/dist/data/publication-lineage.json"
     out.write_text(json.dumps(result, ensure_ascii=False, indent=2, sort_keys=True) + "\n")
+    # Final public-byte binding: latest.json is rewritten by two earlier builders.
+    # No workflow, scheduler or second data owner; run only after lineage is written.
+    subprocess.run(["node", str(ROOT / "05_CYCLE_NAVIGATOR/site/premium-v2/finalize-kompas-public.mjs"), str(out.parent)], check=True, timeout=30)
     print(json.dumps({"status": "PASS", **result}, sort_keys=True))
 
 

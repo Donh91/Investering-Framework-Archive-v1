@@ -8,8 +8,13 @@ name: S1 tick brief
 #          brief is older than 55 minutes AND this workflow had no cron run in the last 50 minutes and no build in
 #          the last 60. One or two API calls per event as a rule, five at most. No data of the triggering run or
 #          push is ever used.
-# build:   read-only token. Reads GitHub natively and parses PR heads as data; it never runs PR code.
-# publish: issues:write only. Writes the one brief issue (label s1-tick-brief). No secrets anywhere.
+# build:   read-only token. Reads GitHub natively and parses PR heads as data; it never runs PR code. It also decides:
+#          S1_DECISION_V1 (scripts/governance/s1_decision_v1.py, pure functions) is the ONE next action of the lane.
+# publish: issues:write only. Writes the one brief issue (label s1-tick-brief): the decision block, then the brief.
+# The executor (AGENTS.md section 0.2i) is NOT a job of this workflow (fix round 6, F2): .github/workflows/s1-executor.yml
+# starts only after a run of this workflow has COMPLETED with success, so this run's conclusion (TICK.md T2, and the
+# next build's C1b anchor) never depends on it. No job here executes anything.
+# No secrets anywhere.
 
 on:
   schedule:
@@ -24,8 +29,16 @@ on:
 
 permissions: {}
 
-# The build job is serialised in one group. The due job coalesces per event kind (see there), so a fallback run
-# that is not due can never replace a pending cron build; a run that reaches build is always a real build.
+# Fix round 7 (R6-SH1): ONE serialized writer. The WHOLE run (due, build, publish) is one critical section of the group
+# s1-tick-brief, cancel-in-progress false: a build reads the published brief and its own publish writes the next one
+# before any other run of this workflow (a rerun included) starts, so no publish can interleave with another build's
+# read. GitHub keeps at most one pending run: a newer event replaces a pending older one before it starts (never a
+# running one); a run that was waiting re-checks due, and recent_build() ignores a run cancelled that way. The write
+# token stays in the publish job only. publish() is the second fence: an exact compare-and-swap on the predecessor
+# tuple and the brief generation.
+concurrency:
+  group: s1-tick-brief
+  cancel-in-progress: false
 
 jobs:
   due:
@@ -37,11 +50,7 @@ jobs:
       (github.event.workflow_run.event == 'schedule' || github.event.workflow_run.event == 'workflow_dispatch')))
     runs-on: ubuntu-latest
     timeout-minutes: 5
-    # Coalescing: a newer event of the same kind cancels an older due check that is still running (a push never
-    # cancels the cron run's check: the group is per event kind).
-    concurrency:
-      group: s1-tick-brief-due-${{ github.event_name }}
-      cancel-in-progress: true
+    # Coalescing (fix round 7): the workflow-level group above; a job-level group here would deadlock inside it.
     permissions:
       contents: read
       issues: read
@@ -49,13 +58,13 @@ jobs:
     outputs:
       due: ${{ steps.due.outputs.due }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262   # v4.4.0 (= the v4 tag, read 2026-11-27)
         with:
           ref: ${{ github.sha }}
           persist-credentials: false
           sparse-checkout: |
             scripts/governance
-      - uses: actions/setup-python@v5
+      - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065   # v5.6.0 (= the v5 tag, read 2026-11-27)
         with:
           python-version: '3.12'
       - name: Is a new brief due
@@ -72,9 +81,6 @@ jobs:
     if: github.ref == 'refs/heads/main' && needs.due.outputs.due == 'true'
     runs-on: ubuntu-latest
     timeout-minutes: 20
-    concurrency:
-      group: s1-tick-brief
-      cancel-in-progress: false
     permissions:
       contents: read
       actions: read
@@ -83,12 +89,12 @@ jobs:
     outputs:
       brief: ${{ steps.build.outputs.brief }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262   # v4.4.0 (= the v4 tag, read 2026-11-27)
         with:
           ref: ${{ github.sha }}
           path: main
           persist-credentials: false
-      - uses: actions/setup-python@v5
+      - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065   # v5.6.0 (= the v5 tag, read 2026-11-27)
         with:
           python-version: '3.12'
       - name: Install the YAML parser (one wheel, pinned by hash)
@@ -118,13 +124,13 @@ jobs:
       issues: write
       actions: read
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262   # v4.4.0 (= the v4 tag, read 2026-11-27)
         with:
           ref: ${{ github.sha }}
           persist-credentials: false
           sparse-checkout: |
             scripts/governance
-      - uses: actions/setup-python@v5
+      - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065   # v5.6.0 (= the v5 tag, read 2026-11-27)
         with:
           python-version: '3.12'
       - name: Publish the brief issue

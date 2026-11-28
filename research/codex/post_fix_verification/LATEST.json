@@ -4,7 +4,7 @@
       "candidate_id": "codex-research-completion-reconciliation-v1",
       "checks": [
         {
-          "evidence": "remediation-maturation.yml: evidence_floor=40e2158c6a0855ca1c9b5d9dbf20bd92d364cc9a successful_runs=2/2 sampled_runs=45204991135:success,45075191532:success",
+          "evidence": "remediation-maturation.yml: evidence_floor=40e2158c6a0855ca1c9b5d9dbf20bd92d364cc9a successful_runs=2/2 sampled_runs=46015705356:success,45918850896:success",
           "kind": "N_CONSECUTIVE_SUCCESSFUL_RUNS",
           "pass": true
         },
@@ -24,7 +24,7 @@
       "candidate_id": "codex-operational-observability-pointer-truth-v1",
       "checks": [
         {
-          "evidence": "operations-dashboard.yml: evidence_floor=59cebf63bf6bdc44f00358346d5c1b4b7f3a64d5 successful_runs=2/2 sampled_runs=45208892287:success,45201663812:success",
+          "evidence": "operations-dashboard.yml: evidence_floor=59cebf63bf6bdc44f00358346d5c1b4b7f3a64d5 successful_runs=2/2 sampled_runs=46086621280:success,46019380005:success",
           "kind": "N_CONSECUTIVE_SUCCESSFUL_RUNS",
           "pass": true
         },
@@ -54,7 +54,7 @@
       "candidate_id": "codex-automation-health-workflow-pagination-v1",
       "checks": [
         {
-          "evidence": "health_history: evidence_floor=e2e990aa6a403274ef92b3c6d3dc8c3a68230ea0 matched=2/2 runs=45316179023,45200895051 checks=PASS",
+          "evidence": "health_history: evidence_floor=e2e990aa6a403274ef92b3c6d3dc8c3a68230ea0 matched=2/2 runs=46086275476,46012476366 checks=PASS",
           "kind": "N_HEALTH_HISTORY_MATCH",
           "pass": true
         },
@@ -69,8 +69,13 @@
       "candidate_id": "codex-automation-health-cadence-aware-staleness-v1",
       "checks": [
         {
-          "evidence": "health_history: evidence_floor=666740a3a94a27cb7e4cce421b123d0d0b32ec38 matched=2/2 runs=45316179023,45200895051 checks=45200895051:forbidden_findings=cycle-navigator-autonomous-calibration-loop.yml:SCHEDULE_STALE",
+          "evidence": "health_history: evidence_floor=666740a3a94a27cb7e4cce421b123d0d0b32ec38 matched=2/2 runs=46086275476,46012476366 checks=PASS",
           "kind": "N_HEALTH_HISTORY_MATCH",
+          "pass": true
+        },
+        {
+          "evidence": "MISSION_CONVERGENCE_REQUIRED",
+          "kind": "MISSION_CONVERGENCE",
           "pass": false
         }
       ]
@@ -99,7 +104,7 @@
       "candidate_id": "codex-situation-room-daily-static-root-cause-v1",
       "checks": [
         {
-          "evidence": "situation-room-daily-static.yml: first_attempt_schedule_only evidence_floor=8aebb7d224b77bcacb587f66b58ac4f252c48d13 successful_runs=1/1 sampled_runs=45246823022#1:success",
+          "evidence": "situation-room-daily-static.yml: first_attempt_schedule_only evidence_floor=8aebb7d224b77bcacb587f66b58ac4f252c48d13 successful_runs=1/1 sampled_runs=46042049616#1:success",
           "kind": "N_NATURAL_SCHEDULED_SUCCESSFUL_RUNS",
           "pass": true
         },
@@ -114,8 +119,8 @@
   "contract": "CODEX_POST_FIX_VERIFICATION_REPORT_v1",
   "coverage": {
     "machine_spec_configured": 6,
-    "machine_spec_unconfigured": 35,
-    "post_fix_total": 41
+    "machine_spec_unconfigured": 34,
+    "post_fix_total": 40
   },
   "skipped": [
     {
@@ -124,11 +129,6 @@
     }
   ],
   "unconfigured": [
-    {
-      "candidate_id": "codex-daily-director-directional-threshold-root-cause-v1",
-      "post_fix_gate": "ONE_PRODUCTION_SHAPE_PASS_PLUS_ONE_NATURAL_DAILY_DIRECTOR_PASS_WITH_NO_DIRECTIONAL_THRESHOLD_PARSE_ERROR",
-      "reason": "NO_MACHINE_VERIFICATION_SPEC"
-    },
     {
       "candidate_id": "codex-research-1557-proposal-batch-census-v1",
       "post_fix_gate": "Independent review + all exact-head CI on scoped implementation, then main readback and natural existing Daily Director producer/consumer receipt proving complete per-batch source metadata and stable replay. #1557 stays PARTIAL until full cross-family proposal-time coverage and #1157 consumer validation are independently proven. No global=N=6, no strategy promotion. If policy/owner authority required for additional sources, escalate and preserve HOLD_SOURCE; no parallel counter.",

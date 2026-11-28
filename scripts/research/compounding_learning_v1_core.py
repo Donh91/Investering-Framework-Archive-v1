@@ -237,6 +237,154 @@ def evaluate_candidates(registry, admission, adjudication, policy, previous_stat
     return selected, sorted({key for packet in selected for key in packet["trigger_event_keys"]})
 
 
+# R4: descriptive coverage identity, never a scientific equivalence or score.
+# Explicit aliases only; spot, index, mark and different venues remain distinct.
+TARGET_ALIAS_MAP = {
+    prefix + "derivatives." + asset + "-USDT-SWAP.mark_price.mark_price":
+        "derivatives." + asset + "-USDT-SWAP.mark_price.mark_price"
+    for asset in ("BTC", "ETH")
+    for prefix in ("", "latest_capture.market_metrics.", "market_metrics.", "latest_capture.")
+}
+COARSE_FAMILY_CONTRACT = "COMPOUNDING_COARSE_FAMILY_COVERAGE_v1"
+
+
+def coarse_family_key(spec):
+    if not isinstance(spec, dict):
+        return None
+    target = spec.get("target_metric_path")
+    direction = spec.get("target_direction")
+    kind = spec.get("kind")
+    origin = spec.get("novelty_reason")
+    unit = spec.get("target_unit_contract_version")
+    components = spec.get("components")
+    if (not all(isinstance(v, str) and v.strip() for v in (target, direction, kind, origin, unit))
+            or direction not in {"UP", "DOWN", "RANGE"} or not isinstance(components, list)):
+        return None
+    # No fuzzy matching, no inference from titles or prose, no cross-unit pooling.
+    if any(not isinstance(c, dict) or not isinstance(c.get("metric_path"), str)
+           or not c["metric_path"].strip() for c in components):
+        return None
+    if any("ROUND3" in v.upper().replace("_", "").replace("-", "")
+           for v in [target, origin, kind] + [c["metric_path"] for c in components]):
+        return None
+    mode = "PCT_RANGE" if direction == "RANGE" else "PCT_MOVE"
+    if spec.get("target_mode") not in (None, mode):
+        return None
+    # Known Director origin is stable; unknown origins retain exact identity.
+    return digest({"contract": COARSE_FAMILY_CONTRACT,
+                   "target": TARGET_ALIAS_MAP.get(target, target),
+                   "direction": direction, "mode": mode, "kind": kind, "unit": unit,
+                   "trigger_metrics": sorted({TARGET_ALIAS_MAP.get(c["metric_path"], c["metric_path"])
+                                              for c in components}),
+                   "origin": origin})
+
+
+def coarse_family_coverage(registry, admission, specs):
+    # Keep incomplete or contradictory metadata visible; never choose the
+    # last of two competing admission rows or count corrupted service.
+    amap, conflicting = {}, set()
+    for adm in admission.get("candidates", []):
+        if not isinstance(adm, dict):
+            raise ValueError("coarse family: malformed admission row")
+        cid = adm.get("candidate_id")
+        if not isinstance(cid, str) or not cid:
+            raise ValueError("coarse family: invalid admission ID")
+        if cid in amap:
+            conflicting.add(cid)
+        else:
+            amap[cid] = adm
+    groups, unmapped, seen = {}, {}, set()
+    owners, conflicted_forecasts = {}, set()
+    for row in registry.get("candidates", []):
+        if not isinstance(row, dict):
+            raise ValueError("coarse family: malformed registry row")
+        cid = row.get("candidate_id")
+        if not isinstance(cid, str) or not cid or cid in seen:
+            raise ValueError("coarse family: invalid or duplicate registry ID")
+        seen.add(cid)
+        forecast_ids = row.get("forecast_ids")
+        if isinstance(forecast_ids, list):
+            for fid in forecast_ids:
+                if isinstance(fid, str) and fid:
+                    if fid in owners and owners[fid] != cid:
+                        conflicted_forecasts.update((owners[fid], cid))
+                    owners[fid] = cid
+    for row in registry.get("candidates", []):
+        cid = row["candidate_id"]
+        adm, spec = amap.get(cid, {}), specs.get(cid)
+        fingerprint = adm.get("semantic_fingerprint")
+        forecast_ids = row.get("forecast_ids")
+        key = coarse_family_key(spec)
+        if _profile(row, {"profiles": PROFILE_DEFAULTS}) == "CONFIRMATORY":
+            reason = "CONFIRMATORY_EXCLUDED"
+        elif cid in conflicting:
+            reason = "DUPLICATE_ADMISSION_ID"
+        elif key is None:
+            reason = "SPEC_UNAVAILABLE_OR_UNMAPPED"
+        elif not isinstance(fingerprint, str) or not fingerprint:
+            reason = "ADMISSION_FINGERPRINT_UNAVAILABLE"
+        elif (row.get("kind") != spec.get("kind")
+              or (row.get("semantic_fingerprint") is not None
+                  and row["semantic_fingerprint"] != fingerprint)
+              or (row.get("scientific_admission_status") is not None
+                  and row["scientific_admission_status"] != adm.get("status"))):
+            reason = "REGISTRY_METADATA_CONFLICT"
+        elif (not isinstance(forecast_ids, list)
+              or any(not isinstance(fid, str) or not fid for fid in forecast_ids)
+              or len(set(forecast_ids)) != len(forecast_ids)
+              or cid in conflicted_forecasts):
+            reason = "FORECAST_IDENTITY_UNVERIFIED"
+        else:
+            reason = None
+        if reason:
+            unmapped[cid] = reason
+            continue
+        group = groups.setdefault(key, {"candidate_ids": [], "qualified_candidate_ids": [],
+                                        "served_candidate_ids": [], "semantic_fingerprints": set(),
+                                        "registered_forecast_ids": set()})
+        group["candidate_ids"].append(cid)
+        group["semantic_fingerprints"].add(fingerprint)
+        if adm.get("status") == "QUALIFIED_FOR_FORWARD_TEST":
+            group["qualified_candidate_ids"].append(cid)
+            if forecast_ids:
+                group["served_candidate_ids"].append(cid)
+                group["registered_forecast_ids"].update(forecast_ids)
+    rows = []
+    for key, group in sorted(groups.items()):
+        counts = len(group.pop("registered_forecast_ids"))
+        rows.append({"coarse_family_key": key, **{k: sorted(v) for k, v in group.items()},
+                     "registered_qualified_forecast_id_count": counts})
+    return {"contract": COARSE_FAMILY_CONTRACT, "authority": "DESCRIPTIVE_ONLY",
+            "allocation_authorized": False, "scientific_equivalence_asserted": False,
+            "registry_candidate_count": len(seen), "mapped_candidate_count": len(seen)-len(unmapped),
+            "unmapped_candidate_ids": sorted(unmapped), "unmapped_reasons": dict(sorted(unmapped.items())),
+            "families": rows, "coverage_complete": not unmapped,
+            "denominator_semantics": "REGISTERED_FORECAST_IDENTITIES_NOT_INDEPENDENT_EPISODES",
+            "source_temporal_binding": "NOT_ATTESTED_DESCRIPTIVE_ONLY"}
+
+
+def load_coarse_candidate_specs(registry, candidate_root):
+    # Read public candidate metadata only, never outcomes, raw captures or private sources.
+    # Duplicate files with conflicting specs are not a basis for a family assignment.
+    wanted = {r.get("candidate_id") for r in registry.get("candidates", [])}
+    specs, conflicts = {}, set()
+    for path in sorted(candidate_root.rglob("*.json")):
+        if path.stem not in wanted or path.is_symlink() or not path.resolve().is_relative_to(candidate_root.resolve()):
+            continue
+        if "ROUND3" in str(path.relative_to(candidate_root)).upper().replace("_", "").replace("-", ""):
+            continue
+        doc = load_json(path, {})
+        if (not isinstance(doc, dict) or doc.get("contract") != "EXPERIMENT_CANDIDATE_v1"
+                or doc.get("candidate_id") != path.stem or not isinstance(doc.get("spec"), dict)):
+            conflicts.add(path.stem)
+            continue
+        spec = doc["spec"]
+        if path.stem in specs and specs[path.stem] != spec:
+            conflicts.add(path.stem)
+        specs[path.stem] = spec
+    return {cid: spec for cid, spec in specs.items() if cid not in conflicts}
+
+
 def build_hypothesis_families(registry, admission, adjudication, policy=None):
     policy = policy or {"profiles": PROFILE_DEFAULTS, "default_profile": "STANDARD"}
     amap, jmap = _maps(admission, adjudication)
@@ -647,7 +795,33 @@ def _event(previous, families, delta, adjudication, as_of):
     }
 
 
+def _validate_shared_candidate_rosters(registry, admission, adjudication):
+    """Pre-product identity guard; do not use a last-wins map as evidence.
+
+    A partial adjudication roster can be legitimate due to publication cadence.
+    Existing freshness checks handle that separately. Duplicate/malformed IDs,
+    however, make the shared inputs ambiguous before any event or proposal.
+    """
+    for label, doc, field in (
+        ("registry", registry, "candidates"),
+        ("admission", admission, "candidates"),
+        ("adjudication", adjudication, "candidate_actions"),
+    ):
+        rows = doc.get(field) if isinstance(doc, dict) else None
+        if not isinstance(rows, list):
+            raise RuntimeError(f"SHARED_CANDIDATE_ROSTER_INVALID:{label}")
+        seen = set()
+        for row in rows:
+            cid = row.get("candidate_id") if isinstance(row, dict) else None
+            if not isinstance(cid, str) or not cid or cid.strip() != cid:
+                raise RuntimeError(f"SHARED_CANDIDATE_ID_INVALID:{label}")
+            if cid in seen:
+                raise RuntimeError(f"SHARED_CANDIDATE_ID_DUPLICATE:{label}")
+            seen.add(cid)
+
+
 def _build_products(registry, admission, adjudication, policy, previous, previous_backlog, as_of):
+    _validate_shared_candidate_rosters(registry, admission, adjudication)
     packets, new_keys = evaluate_candidates(registry, admission, adjudication, policy, previous, as_of)
     event_keys = sorted(set(previous.get("emitted_event_keys") or []) | set(new_keys))
     families = build_hypothesis_families(registry, admission, adjudication, policy)
@@ -773,6 +947,9 @@ def run_controller(*, dry_run=False, as_of_utc=None):
     previous = load_json(STATE, {}) or {}
     previous_backlog = load_json(BACKLOG, {}) or {}
     state, proposal, backlog, event = _build_products(registry, admission, adjudication, policy, previous, previous_backlog, _now(as_of_utc))
+    coverage = coarse_family_coverage(registry, admission, load_coarse_candidate_specs(registry, EXP / "candidates"))
+    state["coarse_family_coverage"] = coverage
+    coverage_changed = previous.get("coarse_family_coverage") != coverage
     should_persist = previous.get("evidence_fingerprint") != state["evidence_fingerprint"] or previous_backlog.get("contract") != "LEARNING_BACKLOG_v1"
     if not dry_run:
         if event:
@@ -781,6 +958,9 @@ def run_controller(*, dry_run=False, as_of_utc=None):
             persist_json(STATE, state)
             persist_json(NEXT, proposal)
             persist_json(BACKLOG, backlog)
+        elif coverage_changed:
+            # Coverage-only delta: preserve existing proposal/backlog bytes and event identity.
+            persist_json(STATE, state)
     return state
 
 

@@ -24,6 +24,20 @@ const empty=lang=>({contract:'CN_CYCLE_SOURCE_EXPLAINER_v1',state:'UNAVAILABLE',
  meaning:tr(lang,'Ingen aktuel fase kan vises uden kildebevis.',
   'No current phase can be presented without source evidence.'),
  referenceKind:'NONE',rotation:[],rawSource:null});
+// This is an already-qualified observation from the public-feed adapter.
+ // It is not a phase, rotation flow, forecast, or action permission.
+function independentObservation(view,lang){
+ const o=view?.live_observation;
+ if(o?.semantics!=='OBSERVED_MOMENTUM_NOT_CYCLE_OR_FORECAST'||
+    o.authority!=='PRESENTATION_ONLY'||!o.compass_id||o.compass_id!==view?.compass?.compass_id||
+    view?.delivery_health!=='FRESH'||!Number.isFinite(Date.parse(o.observation_open_utc)))return null;
+ const labels={BULLISH:['stigende','rising'],BEARISH:['faldende','falling'],MIXED:['blandet','mixed'],NEUTRAL:['neutralt','neutral'],SIDEWAYS:['sideværts','sideways']};
+ if(!Object.hasOwn(labels,o.direction))return null;
+ const direction=labels[o.direction][lang==='en'?1:0];
+ return {label:tr(lang,'Observeret momentum: ','Observed momentum: ')+direction+' · '+o.observation_open_utc,
+  boundary:tr(lang,'Dette er aktuelt momentum, ikke en bekræftet cyklusfase eller kapitalrotation.',
+   'This is current momentum, not a confirmed cycle phase or capital rotation.')};
+}
 export function cycleSourceReadback({view,lang='da'}={}){
  const p=view?.path,w=view?.weekly,c=view?.compass;
  const eligible=p?.state==='SOURCE_BOUND'&&c?.state==='FRESH'&&
@@ -33,7 +47,12 @@ export function cycleSourceReadback({view,lang='da'}={}){
   p.source_identity===c?.compass_id&&
   Array.isArray(p.full_phases)&&p.full_phases.length===10&&
   ['OK','PASS','DEGRADED'].includes(p.source_health);
- if(!eligible)return empty(lang);
+ const observation=independentObservation(view,lang);
+ if(!eligible){
+  const unavailable=empty(lang);
+  return observation?{...unavailable,state:'LIVE_OBSERVATION_ONLY',weekLabel:observation.label,
+   meaning:observation.boundary,reason:tr(lang,'Ugegrundlaget er ikke verificeret.','Weekly source is not verified.')}:unavailable;
+ }
  const kind=p.current_checkpoint?.status==='FROZEN_WEEK_REFERENCE'&&
   p.full_phases.some(x=>x.key===p.current_checkpoint.key)?
    'FROZEN_WEEK_REFERENCE':'NO_VERIFIED_PHASE';
@@ -69,7 +88,8 @@ export function cycleSourceReadback({view,lang='da'}={}){
   }):[];
  return {
   contract:'CN_CYCLE_SOURCE_EXPLAINER_v1',state:deg?'PARTIAL_WEEKLY':'SOURCE_ALIGNED',
-  weekLabel,meaning,reason,
+  weekLabel:observation?observation.label+' | '+weekLabel:weekLabel,
+  meaning:observation?observation.boundary+' '+meaning:meaning,reason,
   referenceKind:kind,
   nextMeaning:hasNext?tr(lang,'Næste fase er kun et ubekræftet mål.',
     'The next phase is an unconfirmed watch target.'):missingNext,

@@ -6,15 +6,46 @@
   "policy": "AGENTS.md section 0.2e",
   "decided": "2026-11-15 owner-present interactive",
   "clears_halt": null,
+  "executor": "LIVE",
+  "live_scope": "MERGE_LOW_NORMAL_ONLY",
+  "canary": {"max_merges_per_utc_day": 1, "decided": "LIVE v1 enable 2026-11-27: at most 1 executor merge per UTC day; lifting it after the first 48 hours is a reviewed switch change (no automatic expiry)"},
+  "review_policy": "CODEX_CLAUDE_OR_OFFLINE_RECALL",
+  "fallback_route": "OFF",
+  "fallback_data_allowlist": {
+    "decided": "owner addendum c 2026-11-26: route (c) merges only repository automation's data PRs on this list; derived from every merged PR github-actions[bot] opened (#735 #799 #1365 #1491 #1588 #1682 #1817 #1880 #2060 #2192 #2314)",
+    "author": "github-actions[bot]",
+    "entries": [
+      {
+        "name": "weekly shadow registry snapshot",
+        "head_ref": "^automation/shadow-registry-(?P<week>[0-9]{4}-W[0-9]{2})$",
+        "paths": [
+          {
+            "path": "^04_MARKET_LEARNING/shadow_registry/LATEST\\.json$",
+            "status": [
+              "modified"
+            ]
+          },
+          {
+            "path": "^04_MARKET_LEARNING/shadow_registry/weekly/(?P<week>[0-9]{4}-W[0-9]{2})\\.json$",
+            "status": [
+              "added"
+            ]
+          }
+        ]
+      }
+    ]
+  },
   "pins": {
-    "AGENTS.md": "18b6dbbe4adbeb2660590dc14cdb9e2ef3714994",
+    "AGENTS.md": "46902ee5ec479523c3c71e6d36ced5f6cd3de5d8",
     "00_FMOS/S1_REQUIRED_PR_JOBS_POLICY_V1.json": "44aea7baa306a8058fed2d760f5154f5ee7f7fad",
-    ".github": "fdd271c2d899aa655a5f7fe95b90e370cf6d85a8",
+    ".github": "c8164f72b76a8a7af5d86a70748069cf25377db4",
     ".agents": "e93392c3c78294c25d9073193c2405792fb3025c",
-    "scripts/governance": "3c3c03c53c3e899537bca458ff3bd777785b816c",
+    "scripts/governance": "7185e67c67a46868fde977bb547a2cc87fd802f8",
     "scripts/health": "a0ea5e97be8129a796d35213a796f0f852941be0",
     "07_PROMPTS_AND_AGENTS": "eb96a502d5a11847c40b821c5c18e76d417fe25b",
     "01_CORE_FRAMEWORK/governance": "b87a75cb93034089c381b607312667d87078a86a",
-    "00_FMOS/S1_WORKFLOW_ISOLATION_V1.json": "0397fb06d26aefb560b2f7f90840c7df89944cbd"
-  }
+    "00_FMOS/S1_WORKFLOW_ISOLATION_V1.json": "03986ee7a3a8fd10fd62f9eb6202b7b4b5fcea8c"
+  },
+  "review_dispatch": "SHADOW",
+  "review_dispatch_probe": null
 }

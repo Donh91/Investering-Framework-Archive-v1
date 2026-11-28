@@ -143,6 +143,70 @@ class AcceptedMainSource:
             return False
 
 
+    def first_introduction(self, relative_path: Path, expected_sha256: str) -> dict | None:
+        """Immutable single-parent path introduction, NOT a server clock."""
+        try:
+            rel = Path(relative_path)
+            key = rel.as_posix()
+            if (rel.is_absolute() or not rel.parts or ".." in rel.parts
+                    or not re.fullmatch(r"[A-Za-z0-9_.-]+(?:/[A-Za-z0-9_.-]+)*", key)):
+                return None
+            if not self.matches(rel, expected_sha256):
+                return None
+            self._check_budget()
+            if self.lookups >= 128:
+                raise SourceGitAnchorBudgetExceeded("SOURCE_ANCHOR_LOOKUP_BUDGET_EXCEEDED")
+            self.lookups += 1
+            head = self._main()
+
+            def checked(*args: str) -> bytes:
+                self._check_budget()
+                result = _git(self.root, *args)
+                self._check_budget()
+                return result
+
+            revisions = checked("--literal-pathspecs", "rev-list", "--full-history",
+                                "--first-parent", head, "--", key).splitlines()
+            # Refuse replacements and delete/re-add, even with identical bytes.
+            if len(revisions) != 1:
+                return None
+            first = revisions[0].decode("ascii")
+            parents = checked("rev-list", "--parents", "-n", "1", first).decode("ascii").split()
+            if (len(parents) != 2 or parents[0] != first
+                    or not all(re.fullmatch(r"[0-9a-f]{40}", x) for x in parents)):
+                return None
+            parent = parents[1]
+            checked("merge-base", "--is-ancestor", first, head)
+            if checked("--literal-pathspecs", "ls-tree", "-z", parent, "--", key):
+                return None
+            entry = checked("--literal-pathspecs", "ls-tree", "-z", first, "--", key)
+            match = re.fullmatch(rb"100(?:644|755) blob ([0-9a-f]{40})\t"
+                                 + re.escape(key.encode("ascii")) + rb"\x00", entry)
+            if match is None:
+                return None
+            if checked("--literal-pathspecs", "ls-tree", "-z", head, "--", key) != entry:
+                return None
+            original = self.originals[key][0]
+            blob = hashlib.sha1(b"blob " + str(len(original)).encode("ascii") + b"\0" + original).hexdigest()
+            if blob != match.group(1).decode("ascii"):
+                return None
+            self._check_budget()
+            return {
+                "contract": "EXPERIMENT_FIRST_MAIN_INTRODUCTION_v1",
+                "repository": "Donh91/Investering-Framework-Archive-v1" if self.fixture_origin is None else None,
+                "ref": "refs/heads/main", "main_head": head, "path": key,
+                "first_commit": first, "first_parent": parent,
+                "git_blob_sha": blob, "content_sha256": expected_sha256,
+                "server_acceptance_clock_verified": False,
+                "absent_through_utc": None, "present_by_utc": None,
+                "scientifically_admitted": False,
+            }
+        except SourceGitAnchorBudgetExceeded:
+            raise
+        except (OSError, UnicodeError, ValueError, SourceGitAnchorUnavailable):
+            return None
+
+
 def first_accepted_main_raw(repo_root: Path, relative_raw_path: Path,
                             expected_sha256: str, *, fixture_origin: str | None = None) -> bool:
     """Compatibility helper. fixture_origin is an isolated-test seam only."""

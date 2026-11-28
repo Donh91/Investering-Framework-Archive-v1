@@ -323,6 +323,23 @@ class PagesRecipe(unittest.TestCase):
         tracked = git(ROOT, "ls-files", "--", self.recipe["publish_root"])
         self.assertEqual(tracked, "")
 
+    def test_upload_id_is_metadata_only_and_other_upload_options_remain_rejected(self):
+        # Normalize the real recipe to an upload without an ID, then add a literal ID.
+        plain = self.text.replace("        id: pages_upload\n", "")
+        marker = "        uses: " + rb.UPLOAD_ACTION
+        self.assertEqual(plain.count(marker), 1)
+        named = plain.replace(marker, "        id: pages_upload\n" + marker)
+        self.assertEqual(rb.parse_pages_recipe(plain), rb.parse_pages_recipe(named))
+        for value in ("graph_history", "invalid id", "123", "${{ github.sha }}", ""):
+            with self.subTest(value=value):
+                with self.assertRaises(rb.RecipeError):
+                    rb.parse_pages_recipe(plain.replace(marker, "        id: " + value + "\n" + marker))
+        for extra in ("        if: always()\n", "        continue-on-error: true\n",
+                      "        env:\n          X: y\n"):
+            with self.subTest(extra=extra):
+                with self.assertRaises(rb.RecipeError):
+                    rb.parse_pages_recipe(named.replace(marker, extra + marker))
+
     def test_any_construct_the_reader_does_not_reproduce_fails_closed(self):
         t = self.text
         mutations = {

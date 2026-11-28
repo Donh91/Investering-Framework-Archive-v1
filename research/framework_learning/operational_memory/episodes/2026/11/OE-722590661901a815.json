@@ -1,0 +1,36 @@
+{
+  "authority": {
+    "automatic_promotion": false,
+    "automatic_repository_write": false,
+    "automatic_skill_activation": false,
+    "canonical_effect": false,
+    "portfolio_execution": false
+  },
+  "changed_paths": [
+    "scripts/data_terminal/fred_csv_collector.py",
+    "tests/data_terminal/test_fred_csv_collector.py"
+  ],
+  "contract": "OPERATIONAL_EPISODE_v1",
+  "dominant_path_prefix": "scripts",
+  "episode_id": "OE-722590661901a815",
+  "evidence_limits": [
+    "Merged commit proves accepted repository change, not causal effectiveness by itself.",
+    "No failed approach is inferred unless separately evidenced.",
+    "No chain-of-thought or raw prompt is stored."
+  ],
+  "failed_approaches": [],
+  "failure_signature": "macro-reject-non-finite-fred-observations-before-shadow",
+  "operation_type": "FIX",
+  "outcome": "MERGED_TO_MAIN",
+  "resolution_summary": "* fix(fred): reject non-finite numeric observations * test(fred): reject non-finite values and preserve missing semantics",
+  "reusable_pattern": null,
+  "source_blob_shas": {
+    "scripts/data_terminal/fred_csv_collector.py": "674c3f17d5f02bcb2ab3983dc5d68a3fe66a2907",
+    "tests/data_terminal/test_fred_csv_collector.py": "4bb05bb08b5be4a37c56d4266ed6cd13f577fcff"
+  },
+  "source_commit_sha": "722590661901a815ba7c5c82d4ae6df92c9a79aa",
+  "source_kind": "MERGED_MAIN_COMMIT",
+  "source_timestamp": "2026-11-24T14:34:57+01:00",
+  "task_class": "RESEARCH_ARCHIVE",
+  "task_summary": "fix(macro): reject non-finite FRED observations before shadow research (#2322)"
+}
