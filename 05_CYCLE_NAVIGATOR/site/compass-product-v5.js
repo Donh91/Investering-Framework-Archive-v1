@@ -52,7 +52,7 @@ function fullStackSection(c){
  const f=c?.full_stack;if(f?.contract!=='PUBLIC_COMPASS_FULL_STACK_READBACK_v1')return'';
  const official=c?.data_status==='OK'&&f.source_status?.official==='VERIFIED';
  const sh=f.shadow||{},st=f.strategic||{};
- const current=sh.status==='ALIGNED_RESEARCH',stale=sh.status==='STALE_RESEARCH';
+ const aligned=sh.status==='ALIGNED_RESEARCH',current=aligned||sh.status==='FRESH_RESEARCH',stale=sh.status==='STALE_RESEARCH';
  const d=k=>{const x=sh?.horizons?.[k];return !x?'UNAVAILABLE':current?words(x.direction||'NO_EDGE'):stale?'STALE · '+words(x.direction||'NO_EDGE'):'UNVERIFIED';};
  const future=st?.horizon_21_30d||{},cycle=st?.horizon_4_8w||{};
  const narrative=current&&sh.horizons?.['1_3d']?.interpretation?copy(sh.horizons['1_3d'].interpretation):
@@ -61,7 +61,7 @@ function fullStackSection(c){
  return `<section class="compass-synthesis" aria-label="Integrated Compass intelligence">
  <div class="synthesis-head"><div><span>COMPASS · COMBINED INTELLIGENCE</span><strong>Official decisions + independent research</strong></div><small>${esc(f.status==='COMPLETE'?'CROSS-CHECKED':'PARTIAL EVIDENCE')}</small></div>
  <div class="synthesis-proof"><div><span>CONFIRMED ACTION</span><strong>${esc(official?friendlyAction(f.official_action):'WAIT · DATA DEGRADED')}</strong></div>
- <div><span>MODEL PERSPECTIVE</span><strong>${esc(current?'Source-aligned outlook':stale?'Earlier snapshot · stale':'Unavailable')}</strong></div></div>
+ <div><span>MODEL PERSPECTIVE</span><strong>${esc(aligned?'Source-aligned outlook':current?'Fresh research · separate source':stale?'Earlier snapshot · stale':'Unavailable')}</strong></div></div>
  <div class="synthesis-horizons"><div><span>12H</span><strong>${esc(d('12h'))}</strong></div><div><span>1–3D</span><strong>${esc(d('1_3d'))}</strong></div><div><span>5–7D</span><strong>${esc(d('5_7d'))}</strong></div><div><span>2–3W</span><strong>${esc(f.weekly?.direction_2_3w||'UNAVAILABLE')}</strong></div><div><span>21–30D</span><strong>${esc(future.direction||'UNAVAILABLE')}</strong></div><div><span>4–8W</span><strong>${esc(cycle.direction||'UNAVAILABLE')}</strong></div></div>
  <p class="synthesis-analysis">${esc(narrative)}</p><small class="synthesis-boundary">Model research is not a buy/sell instruction. Confirmed actions, protection and market-cycle phases remain official.</small></section>`;
 }

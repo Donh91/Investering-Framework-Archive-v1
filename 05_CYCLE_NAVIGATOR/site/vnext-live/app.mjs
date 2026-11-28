@@ -3,7 +3,7 @@
  * Never synthesize a market action, forecast, score or hidden source. */
 import {inspectOfficialPublicFeeds} from './official-feed-parity.mjs';
 import {mondayContext,mondayLabels} from './monday-public-bridge.mjs';
-import {sourceTrace,displayPublicStatus,displayLongDirection,displaySourceConfidence} from './source-trace.mjs';
+import {sourceTrace,displayPublicStatus,displayLongDirection,displaySourceConfidence,displaySourceRow} from './source-trace.mjs';
 import {forwardOutlook} from './forward-outlook.mjs';
 import {chartSourceFingerprint} from './chart-source-key.mjs';
 import {renderProductExperience,initProductExperience,presentOfficialAction} from './premium-experience.mjs';
@@ -172,7 +172,7 @@ function drawSourceTrace(){
    'Cycle Navigator':'Cycle Navigator'
  };
  for(const item of result.sources)
-   row('source-trace-body',[lang==='da'?(da[item.name]||item.name):item.name,displayPublicStatus(item.status,lang)]);
+   row('source-trace-body',[lang==='da'?(da[item.name]||item.name):item.name,displaySourceRow(item,lang)]);
 }
 function drawForward(){
  const trace=sourceTrace(feeds?.latest,feeds?.compass,view);

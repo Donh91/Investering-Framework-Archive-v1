@@ -5,7 +5,7 @@
  */
 import '../vnext-live/premium-experience.css';
 import {inspectOfficialPublicFeeds} from '../vnext-live/official-feed-parity.mjs';
-import {sourceTrace,displayPublicStatus,displayLongDirection,displaySourceConfidence} from '../vnext-live/source-trace.mjs';
+import {sourceTrace,displayPublicStatus,displayLongDirection,displaySourceConfidence,displaySourceRow} from '../vnext-live/source-trace.mjs';
 import {mondayContext,mondayLabels} from '../vnext-live/monday-public-bridge.mjs';
 import {forwardOutlook} from '../vnext-live/forward-outlook.mjs';
 import {VIEWS,readHorizon,lensContext,explainPosture,explainCurrentAction,sourceWatch,expiredOfficial} from './compass-reader.mjs';
@@ -521,7 +521,7 @@ function sourceRows(){
       t('Strategisk forskning · ikke-bindende','Strategic research · nonbinding');
   row('long-horizon-body',[periods[item.id]||safe(item.id),displayLongDirection(item,lang),owner]);
  }
- for(const item of (trace?.sources||[]))row('source-trace-body',[safe(item.name),displayPublicStatus(item.status,lang)]);
+ for(const item of (trace?.sources||[]))row('source-trace-body',[safe(item.name),displaySourceRow(item,lang)]);
  const title=$('source-trace-title');
  if(title)title.textContent=lang==='da'?'Længere tidshorisonter · kildekontekst':'Longer horizons · source context';
  const sourceSummary=$('compass-pro')?.querySelector('.source-trace-details > summary');

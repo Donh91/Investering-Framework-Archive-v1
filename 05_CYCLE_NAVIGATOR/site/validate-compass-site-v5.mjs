@@ -23,7 +23,7 @@ if(f.shadow?.authority!=='RESEARCH_ONLY_NO_ACTION_PERMISSION')throw Error('model
 if(f.official_data_status!==compass.data_status)throw Error('official status discrepancy');
 if(f.source_status?.cycle_navigator!=='WEEKLY_POINTER_ALIGNED'&&f.weekly?.direction_2_3w!=='UNAVAILABLE')throw Error('unverified 2-3w direction leaked');
 if(compass.data_status!=='OK'&&f.official_action!=='UNAVAILABLE')throw Error('degraded action falsely promoted');
-if(f.shadow?.status==='ALIGNED_RESEARCH'||f.shadow?.status==='STALE_RESEARCH'){
+if(['ALIGNED_RESEARCH','FRESH_RESEARCH','STALE_RESEARCH'].includes(f.shadow?.status)){
  for(const key of ['12h','1_3d','5_7d']) if(!f.shadow.horizons?.[key])throw Error('missing independent horizon');
 }
 if(!renderer.includes('fullStackSection(c)'))throw Error('missing combined renderer');
@@ -83,8 +83,11 @@ const shHash=verifiedRawDigest(shRaw,sh,'forecast_sha256',shp.forecast_sha256);
 if(shCurrent&&shHash&&!['ALIGNED_RESEARCH','STALE_RESEARCH'].includes(f.shadow.status))throw Error('valid current Shadow suppressed');
 if(shCurrent&&!shHash&&f.shadow.status!=='UNVERIFIED')throw Error('tampered Shadow promoted');
 if(!shCurrent&&f.shadow?.status==='ALIGNED_RESEARCH')throw Error('historical Shadow promoted as current research');
-if(f.shadow?.status==='STALE_RESEARCH'&&f.shadow?.current_source_aligned!==false&&
-  !shCurrent)throw Error('source diverged but stale flag omitted');
+if(f.shadow?.status==='FRESH_RESEARCH'&&f.shadow?.current_source_aligned!==false)throw Error('fresh different-source research mislabelled');
+if(['FRESH_RESEARCH','ALIGNED_RESEARCH'].includes(f.shadow?.status)){
+ const issue=Date.parse(sh.issued_at_utc),source=Date.parse(sh.source_bindings?.auto_market_state?.packet_generated_at_utc),built=Date.parse(f.generated_at_utc);
+ if(![issue,source,built].every(Number.isFinite)||built<issue||built-issue>14*3600000||issue<source||issue-source>12*3600000)throw Error('Shadow freshness clock invalid');
+}
 if(f.shadow?.status==='ALIGNED_RESEARCH'&&f.shadow?.current_source_aligned!==true)throw Error('aligned Shadow lacks exact source proof');
 if(shHash){const altered=shRaw.replace(/}\s*$/,',"tampered":true}\n');if(verifiedRawDigest(altered,{...sh,tampered:true},'forecast_sha256',shp.forecast_sha256))throw Error('tampered Shadow not detected');}
 const stBound=st.source_bindings?.cycle_navigator||{};
