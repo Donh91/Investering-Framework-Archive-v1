@@ -156,6 +156,11 @@ test('truth banner binds source age to the original issue and ages after expiry'
  assert.equal(kompasTruthBanner(read(),{nowMs:issued}).state,'FRESH');
  const inherited={...official,cn_protection_state_basis:'INHERITED_FROM_PRIOR_ISSUE'};
  const cases={nowMs:issued+60*60000,weeklyAligned:true};
+ const freshInherited=kompasTruthBanner(read(inherited),{...cases,nowMs:issued});
+ assert.equal(freshInherited.state,'FRESH');
+ assert.equal(freshInherited.inherited,true);
+ assert.match(freshInherited.text,/ikke fornyet.*Kun aktuelle observationsdata/);
+ assert.equal(kompasTruthBanner(read(inherited),{...cases,weeklyAligned:false}).inherited,true);
  const stale=kompasTruthBanner(read(inherited),cases);
  assert.equal(stale.state,'STALE');
  assert.match(stale.text,/2026-11-02 UTC \(udgave #32\), ikke fornyet.*Forældede data/);

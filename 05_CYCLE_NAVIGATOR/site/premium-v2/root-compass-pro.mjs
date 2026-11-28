@@ -287,9 +287,11 @@ function renderRiskQuick(){
    feeds.compass.weekly_context?.forecast_week===view?.weekly?.forecast_week;
  const p=eligible?feeds.compass.protection_tracker:null;
  const sourceStage=eligible?$('pro-risk-stage')?.textContent:null;
- const stage=sourceStage&&/^[1-5]\/5 · /.test(sourceStage)?sourceStage:null;
- set('cn-risk-quick-state',stage||
-   (en?'— / 5 · awaiting fresh data':'— / 5 · afventer nye data'));
+ const inherited=feeds?.compass?.full_stack?.truth_banner?.inherited===true;
+ const stage=!inherited&&sourceStage&&/^[1-5]\/5 · /.test(sourceStage)?sourceStage:null;
+ set('cn-risk-quick-state',stage||(inherited?
+   (en?'— / 5 · inherited risk, not refreshed':'— / 5 · tidligere risikovurdering, ikke fornyet'):
+   (en?'— / 5 · awaiting fresh data':'— / 5 · afventer nye data')));
  // Evidence gate: no proven pullback edge yet (pullback_learning suspended, 0 closed
  // episodes). Say so on the card itself instead of implying a calibrated warning.
  const lang=en?'en':'da';
@@ -338,7 +340,7 @@ function renderRiskQuick(){
  // Same official five source stages, never inferred from hourly prices.
  const source=$('premium-risk-steps'),target=$('cn-risk-quick-steps');
  if(source&&target){
-  target.replaceChildren(...[...source.children].map(el=>{
+  target.replaceChildren(...(inherited?[]:[...source.children]).map(el=>{
    const copy=el.cloneNode(true);copy.removeAttribute('id');return copy;
   }));
  }

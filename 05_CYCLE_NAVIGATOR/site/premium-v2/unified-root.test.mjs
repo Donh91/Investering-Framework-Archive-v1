@@ -273,6 +273,8 @@ test('pullback first fold mirrors only eligible official PRO stages, never raise
  assert.match(runtime,/\$\('pro-risk-stage'\)\?\.textContent/);
  assert.match(runtime,/\$\('pro-guidance'\)\?\.textContent/);
  assert.match(runtime,/surface\.dataset\.current=stage\?'true':'false'/);
+ assert.match(runtime,/const stage=!inherited&&sourceStage/);
+ assert.match(runtime,/inherited\?\[\]:\[\.\.\.source\.children\]/);
  assert.doesNotMatch(runtime,/const\s+pullbackThreshold\s*=/);
  assert.doesNotMatch(html,/eventProbability\s*:\s*\d/);
  const css=await read('./premium-tabs.css');
@@ -386,6 +388,9 @@ test('Kompas WAIT is a contextual answer with horizon, distinct review window an
  assert.match(explainPosture(reading,'da'),/Intet nyt køb eller salg er bekræftet/);
  assert.equal(sourceWatch({latest,compass,view,lang:'da',now})?.text,
    'Hold øje med, om ETH/BTC og markedsbredden forbedres.');
+ assert.equal(sourceWatch({latest:{},compass,view,lang:'da',now}),null);
+ assert.equal(sourceWatch({latest:{},compass,view,lang:'en',now})?.text,'Watch whether ETH/BTC and breadth recover.');
+ assert.equal(sourceWatch({latest,compass:{...compass,full_stack:{...compass.full_stack,truth_banner:{inherited:true}}},view,lang:'da',now}),null);
  assert.match(explainPosture(reading,'en'),/Wait = evidence points both ways/);
  const down={...compass,horizons:{NEXT_1_3D:{
    ...compass.horizons.NEXT_1_3D,expected_direction:'DOWN'}}};

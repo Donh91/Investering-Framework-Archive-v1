@@ -199,12 +199,12 @@ export function explainCurrentAction({latest,compass,view,lang='da',now=Date.now
  * mechanical trigger, and can never change the official action.
  */
 export function sourceWatch({latest,compass,view,lang='da',now=Date.now()}){
- if(!currentCompass({compass,view,now}))return null;
+ if(!currentCompass({compass,view,now})||compass?.full_stack?.truth_banner?.inherited===true)return null;
  const p=compass?.protection_tracker,c=p?.public_explanation;
  if(c?.contract!=='CN_PUBLIC_PROTECTION_COPY_v1'||c.action_authority!==false||
     c.risk_state!==p?.pullback_risk_state||
     c.forecast_week!==compass.weekly_context.forecast_week||
     !isPlain(c.watch_for)||c.watch_for.length>220)return null;
  const t=sourceTranslation(c.watch_for,latest,lang);
- return t.text?{text:t.text,translated:t.translated}:null;
+ return t.text&&(lang==='en'||t.translated)?{text:t.text,translated:t.translated}:null;
 }
