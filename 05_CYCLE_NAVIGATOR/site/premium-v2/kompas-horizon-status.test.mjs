@@ -6,7 +6,7 @@ import './original-week-price-readback.test.mjs';
 
 const compass={
   contract:'PUBLIC_COMPASS_PROJECTION_v1',data_status:'OK',compass_id:'CMP-TEST-1',
-  market_now:{directional_state:'BULLISH'},
+  market_now:{directional_state:'BULLISH',new_price_observation:true,market_observation_open_utc:'2026-11-25T09:00:00Z',predecessor_market_observation_open_utc:'2026-11-25T08:00:00Z'},
   horizons:{
     NEXT_1_3D:{expected_direction:'UP'},
     NEXT_5_7D:{expected_direction:'MIXED'},
@@ -47,13 +47,20 @@ test('official verified horizons show source directions, not numeric price targe
 });
 
 test('now and 0-12h remain observed momentum and never a future forecast',()=>{
-  const fresh=kompasHorizonStatusRows({compass,view,observationCurrent:true}).rows;
+  const now=Date.parse('2026-11-25T11:00:00Z');
+  const fresh=kompasHorizonStatusRows({compass,view,observationCurrent:true,now}).rows;
   assert.equal(by(fresh,'NOW').status,'CURRENT_OBSERVATION');
   assert.equal(by(fresh,'H0_12H').status,'CURRENT_OBSERVATION');
   assert.match(by(fresh,'H0_12H').sourceLabel,/ikke prognose/);
   const stale=kompasHorizonStatusRows({compass,view,observationCurrent:false}).rows;
   assert.equal(by(stale,'NOW').status,'OBSERVATION_UNAVAILABLE');
   assert.equal(by(stale,'H0_12H').tone,'missing');
+  const delayed=kompasHorizonStatusRows({compass,view,observationCurrent:true,now:Date.parse('2026-11-25T11:31:00Z')}).rows;
+  assert.equal(by(delayed,'NOW').status,'OBSERVATION_UNAVAILABLE');
+  assert.equal(by(delayed,'NOW').value,'Måling forsinket · 91 min');
+  assert.equal(by(delayed,'H0_12H').value,by(delayed,'NOW').value);
+  const noNew={...compass,market_now:{...compass.market_now,new_price_observation:false}};
+  assert.equal(by(kompasHorizonStatusRows({compass:noNew,view,observationCurrent:true,now}).rows,'NOW').value,'Ingen ny måling · 60 min');
 });
 
 test('expired, wrong ID, fake contract and invalid official direction all fail closed',()=>{
