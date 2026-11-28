@@ -1,6 +1,6 @@
 /* Pure-source Swing Kompas invariants. No market API, network or synthetic forecasts. */
 import assert from 'node:assert/strict';
-import {readSwingRotation} from './swing-rotation-readback.mjs';
+import {readSwingRotation,allSwingFutureUnissued} from './swing-rotation-readback.mjs';
 
 const view={compass:{state:'FRESH',permit_path_live_gates:true,compass_id:'CMP-FIXTURE',action_now:'HOLD_WAIT'}};
 const src={
@@ -68,3 +68,10 @@ const en=readSwingRotation(view,src,{lang:'en'});
 assert.equal(en.horizons[0].text,'Falling');
 assert.equal(en.rows[3].nowLabel,'Strict wait');
 console.log('PASS: Swing Kompas uses only official market-wide horizons/current cap actions; all 12 sector×horizon forecasts unavailable');
+
+assert.equal(allSwingFutureUnissued(fresh),true);
+assert.equal(allSwingFutureUnissued(check(stale,src)),true);
+const partlyIssued=structuredClone(fresh);partlyIssued.rows[0].future[0].status='ISSUED';
+assert.equal(allSwingFutureUnissued(partlyIssued),false);
+assert.equal(allSwingFutureUnissued({...fresh,rows:[]}),false);
+assert.equal(allSwingFutureUnissued({...fresh,sectorHorizonStatus:'UNKNOWN'}),false);
