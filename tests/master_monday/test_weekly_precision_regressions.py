@@ -222,5 +222,36 @@ class WeeklyPrecisionRegressionTests(unittest.TestCase):
         self.assertEqual(publisher.analytical_translation(c,f,a,r,'success')['reason'],'GATEWAY_RECEIPT_MISMATCH')
         self.assertEqual(publisher.analytical_translation(c,f,a,r,'failure')['reason'],'API_FAILED')
 
+    def test_weekly_sections_independent_and_unavailable_lanes_refused(self):
+        c,f,a,r=self.translation_fixture()
+        c['legacy_research_context']={'status':'UNAVAILABLE','hypotheses':[]}
+        c['daily_director_rows']=[{'source':'fixture'}]
+        c.pop('context_hash');c['context_hash']=publisher.sha(c)
+        r['context_hash']=publisher.sha(c)
+        a['status']='DEGRADED'
+        a['scorecard']={'status':'UNAVAILABLE','summary':'no scorecard','evidence_keys':[]}
+        a['operational_translation']={'status':'READY','summary':'research hypothesis','evidence_keys':['daily_director_rows']}
+        r['output_hash']=publisher.sha(a)
+        t=publisher.analytical_translation(c,f,a,r,'success')
+        self.assertEqual(t['status'],'READY')
+        self.assertTrue(t['model_utilization_verified'])
+        self.assertFalse(t['forecast_authority'])
+        a['operational_translation']['evidence_keys']=['legacy_research_context']
+        r['output_hash']=publisher.sha(a)
+        t=publisher.analytical_translation(c,f,a,r,'success')
+        self.assertEqual(t['status'],'DEGRADED')
+        self.assertFalse(t['model_utilization_verified'])
+        a['scorecard']={'status':'READY','summary':'research scorecard','evidence_keys':['daily_director_rows']}
+        a['operational_translation']={'status':'UNAVAILABLE','summary':'no translation','evidence_keys':[]}
+        r['output_hash']=publisher.sha(a)
+        self.assertEqual(publisher.weekly_scorecard(c,f,a,r,'success')['status'],'READY')
+        a['scorecard']['evidence_keys']=['legacy_research_context']
+        r['output_hash']=publisher.sha(a)
+        self.assertNotEqual(publisher.weekly_scorecard(c,f,a,r,'success')['status'],'READY')
+        a['status']='BLOCKED'
+        a['scorecard']['evidence_keys']=['daily_director_rows']
+        r['output_hash']=publisher.sha(a)
+        self.assertNotEqual(publisher.weekly_scorecard(c,f,a,r,'success')['status'],'READY')
+
 if __name__ == '__main__':
     unittest.main()
