@@ -1,0 +1,110 @@
+{
+  "action_on_review": "BRIDGE_173_CLAUDE_REVIEW_IF_AVAILABLE_OR_INHOUSE_GOVERNED_FALLBACK",
+  "constraints": {
+    "no_mandatory_claude": true,
+    "no_paid_retry_unknown": true,
+    "no_second_s1": true,
+    "no_trading": true,
+    "no_unsafe_merge": true,
+    "no_vault_write": true,
+    "one_existing_s1_task": true,
+    "owner_present_high_impact": true
+  },
+  "created_utc": "2026-11-16",
+  "existing_source_authority": {
+    "current_action_loop_blob": "b4649725eaf972fd559bdbd91803f029185eb6cd",
+    "current_contract_blob": "4ef1bee7d045b4b09b0d8f745c21c856d2704d7e",
+    "observation_utc": "2026-11-16T17:31:28Z",
+    "observed_main_sha": "584d18a7870fa0d45c99a7fd3f75356edf203f30",
+    "registration_blob": "e518bb4e90f6c9bdf3eaebfa6809f32fe8cfedc9",
+    "registration_path": "research/api_agent/coordination/S1_SOL_MAX_ELITE_BOUNDED_BATCH_20261104.json",
+    "repo": "Donh91/Investering-Framework-Archive-v1",
+    "review_source": "Donh91/Investering-AI-Audit-Bridge#173",
+    "sole_s1_task_id": "6ae5fd466b48819187abc224ec0f1c5f"
+  },
+  "expected_outputs": [
+    "source_coverage",
+    "root_cause_graph",
+    "three_findings_max",
+    "minimal_patch_spec",
+    "independent_inhouse_review_matrix",
+    "exactly_once_failure_recovery",
+    "high_impact_owner_card",
+    "v2_to_v3_measured_cohort",
+    "rollback",
+    "limitations_and_abstentions"
+  ],
+  "inputs": [
+    {
+      "bytes": 21400,
+      "path": "DESIGN.md",
+      "sha256": "15cb7e6a6f84407394781f5953b6e7ee47359efc4561d540108c3a6107adcd2d"
+    },
+    {
+      "bytes": 4089,
+      "path": "README.md",
+      "sha256": "b1deb90e54d86629e4ee6bcd2af50189f468d684871491724f05044bf1d6cb92"
+    },
+    {
+      "bytes": 8030,
+      "path": "REVIEW_MATRIX.md",
+      "sha256": "a80fc4c4583b6d7f0c2d3730b857c806979592e65807aebab5f73f56ec3aeecf"
+    },
+    {
+      "bytes": 13163,
+      "path": "SOL_MAX_MISSION.md",
+      "sha256": "d1fc3120e682bdd608b7e75ed1b1fb3b16a93572a59d4850e8b4fc9fa5b02c65"
+    },
+    {
+      "bytes": 16268,
+      "path": "reference/s1_steward_guard_reference.py",
+      "sha256": "77ae302e02a9f4ebc15502bdcdde87dee43a2270739b3b4280c78a7c3f50d8d8"
+    },
+    {
+      "bytes": 7627,
+      "path": "reference/s1_steward_planner_reference.py",
+      "sha256": "d3aabfdbbc0f96e33491826db89a304d0a851b1a66f7e3bc87a9fb4189a557ff"
+    },
+    {
+      "bytes": 16277,
+      "path": "reference/test_s1_steward_guard_reference.py",
+      "sha256": "9e66710dc927999c94388077bee2e1225ee259d436507e967999f464aefeb36c"
+    },
+    {
+      "bytes": 5420,
+      "path": "reference/test_s1_steward_planner_reference.py",
+      "sha256": "8b8faef528722adfe07bfee2c66fdaeaa4cfcb81eb45e6cfe5d732763c85e62e"
+    }
+  ],
+  "mandate": "Review existing Claude v2 and in-house S1 vNext for three highest-impact reproducible architectural defects, minimum patches, negative controls, and actual safe release; never deploy directly.",
+  "max_new_paid_posts_by_request": 1,
+  "mission_id_proposed": "S1-STEWARD-EVOLUTION-20261116",
+  "mission_id_registered": false,
+  "model_requested": "gpt-6.1-sol",
+  "new_automation_created": false,
+  "new_paid_liability_usd": 0,
+  "owner_authorized_high_level": true,
+  "paid_blockers": [
+    "dispatch_enabled_false_in_existing_main_registration",
+    "billing_liability_for_run_41870364609_UNKNOWN",
+    "public_storage_consent_30_days_not_proven",
+    "mission_id_not_in_five_registered_20261104_ids",
+    "existing_paid_response_schema_patch_only",
+    "owner_monthly_budget_and_github_native_paid_claim_not_reconciled"
+  ],
+  "paid_dispatch_authorized_by_existing_source_contract": false,
+  "paid_posts_executed": 0,
+  "paid_runtime_status": "BLOCKED_CURRENT_SOURCE",
+  "reasoning_effort_requested": "max",
+  "schema": "S1_SOL_MAX_STEWARD_EVOLUTION_RESEARCH_PACKET_v1",
+  "status": "PREPARED_NOT_DISPATCHED",
+  "target_existing_claude_v2": {
+    "maturity": "UNMERGED_PATCH_DRAFT_R4_REQUIRED",
+    "readme_blob": "ebec773a4e510f16fbe7801abbcb077cbee92595",
+    "readme_path": "reports/claude/automated/2026/11/CLAUDE-S1-V2-BUILD-20261116T0716Z/README.md",
+    "recipe_blob": "30089f5e6332708a31b07682d0338dd6549758cf",
+    "recipe_path": "reports/claude/automated/2026/11/CLAUDE-S1-V2-AUTONOMOUS-STEWARD-RECIPE-20261116T0640Z/RECIPE.md",
+    "ref": "claude/log",
+    "repo": "Donh91/Investering-AI-Audit-Bridge"
+  }
+}
