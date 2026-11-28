@@ -79,8 +79,8 @@ const make=(tag,className,content)=>{
 };
 // Collapse only the wholly unissued sector-by-horizon grid, never a verified reading.
 export function allSwingFutureUnissued(model){
- return model?.sectorHorizonStatus==='NOT_ISSUED'&&Array.isArray(model.rows)&&model.rows.length===GROUPS.length&&
-  model.rows.every(row=>Array.isArray(row.future)&&row.future.length===HORIZONS.length&&
+ return model?.contract==='CN_SWING_ROTATION_READBACK_V1'&&model.sectorHorizonStatus==='NOT_ISSUED'&&Array.isArray(model.rows)&&model.rows.length===GROUPS.length&&
+  model.rows.every((row,i)=>row.key===GROUPS[i].key&&Array.isArray(row.future)&&row.future.length===HORIZONS.length&&
    row.future.every((cell,i)=>cell.key===HORIZONS[i].key&&cell.status==='NOT_ISSUED'));
 }
 export function renderSwingRotation(container,model,{lang='da'}={}){
@@ -113,6 +113,7 @@ export function renderSwingRotation(container,model,{lang='da'}={}){
  'Official current posture per capitalization group; future class signals are not issued'));
  const header=make('div','swing-grid-header');
  header.setAttribute('role','row');
+ if(collapse)header.style.gridTemplateColumns='minmax(0,1.4fr) minmax(0,1fr)';
  for(const text of [t('Kapitalgruppe','Capital group'),t('Status nu','Now'),
   ...(collapse?[]:HORIZONS.map(h=>lang==='en'?h.en:h.da))]){
   const c=make('div','swing-colhead',text);c.setAttribute('role','columnheader');header.append(c);
@@ -121,6 +122,7 @@ export function renderSwingRotation(container,model,{lang='da'}={}){
  for(const row of model?.rows||[]){
   const line=make('div','swing-grid-row'+(row.isMicro?' swing-micro':''));
   line.setAttribute('role','row');
+  if(collapse)line.style.gridTemplateColumns='minmax(0,1.4fr) minmax(0,1fr)';
   const label=make('div','swing-group');
   label.setAttribute('role','rowheader');
   label.append(make('strong','',row.label),make('small','',row.sizeReference));
@@ -140,7 +142,7 @@ export function renderSwingRotation(container,model,{lang='da'}={}){
  }
  ledger.append(grid);
  container.append(ledger);
- if(collapse)container.append(make('p','swing-not-issued',
+ if(collapse)container.append(make('p','swing-explainer swing-not-issued',
   t('Kompas PRO 2.0 gruppesignaler er ikke udstedt endnu (12 fremtidssignaler mangler en verificeret kilde).',
     'Compass PRO 2.0 group signals are not issued yet (12 forward signals have no verified source).')));
  container.append(make('p','swing-explainer',
