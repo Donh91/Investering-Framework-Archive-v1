@@ -46,11 +46,15 @@ export function importantStatusLine({compass,view,lang='da',now=Date.now()}={}){
  const nativeVerified=stack?.source_status?.auto_market_state==='HASH_VERIFIED'&&
   ((sourceStatus==='SOURCE_ALIGNED'&&n?.official_source_aligned===true)||
    (sourceStatus==='VERIFIED_NEWER_OR_DIFFERENT_SOURCE'&&n?.official_source_aligned===false))&&
-  ['PASS','DEGRADED','UNAVAILABLE'].includes(n?.data_health);
+  ['PASS','DEGRADED','UNAVAILABLE'].includes(n?.data_health)&&
+  // An affirmative native posture is never shown on non-PASS producer health.
+  (!['PREPARE','BUY','HOLD'].includes(n?.now)||n.data_health==='PASS');
  const nativeAction=Object.hasOwn(NATIVE_ACTIONS,n?.now)?NATIVE_ACTIONS[n.now][lang==='en'?1:0]:null;
  if(nativeVerified&&nativeAction&&Number.isFinite(checked)&&checked>issued&&checked<=now){
   const notes=[];
-  if(n.data_health!=='PASS'&&n.now!=='HOLD_WAIT_DATA_DEGRADED')
+  if(n.data_health==='UNAVAILABLE')
+   notes.push(tr(lang,'data utilgængelige','data unavailable'));
+  else if(n.data_health!=='PASS'&&n.now!=='HOLD_WAIT_DATA_DEGRADED')
    notes.push(tr(lang,'datakvalitet forringet','data quality degraded'));
   if(n.official_source_aligned===false)
    notes.push(tr(lang,'ikke afstemt med officiel udgave','not aligned with the official issue'));

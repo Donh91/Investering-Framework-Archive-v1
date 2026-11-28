@@ -139,3 +139,19 @@ test('native readback requires producer verification, health and exact alignment
  assert.match(r.text,/Nyere kontrol/);
  assert.equal(r.tone,'ok');
 });
+
+
+test('affirmative native posture is suppressed unless producer health is PASS',()=>{
+ const base=feeds();
+ for(const code of ['PREPARE','BUY','HOLD'])for(const health of ['DEGRADED','UNAVAILABLE']){
+  const compass=structuredClone(base.compass);
+  Object.assign(compass.full_stack.native,{now:code,data_health:health});
+  const r=importantStatusLine({compass,view:base.view,now});
+  assert.equal(r.text,'Officiel udgave 09.24: Afvent. Kun den officielle vurdering styrer handlingen.');
+  const en=importantStatusLine({compass,view:base.view,now,lang:'en'});
+  assert.equal(en.text,'Official issue 09:24: Wait. Only the official outlook owns action.');
+ }
+ const wait=structuredClone(base.compass);wait.full_stack.native.data_health='UNAVAILABLE';
+ assert.match(importantStatusLine({compass:wait,view:base.view,now,lang:'en'}).text,/Newer check .*: Wait, data unavailable, not aligned/);
+ assert.match(importantStatusLine({compass:wait,view:base.view,now,lang:'da'}).text,/Nyere kontrol .*: Afvent, data utilgængelige, ikke afstemt/);
+});
