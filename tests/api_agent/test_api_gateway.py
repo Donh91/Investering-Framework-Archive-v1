@@ -116,6 +116,25 @@ class ApiGatewayTests(unittest.TestCase):
         self.assertEqual(triage['allowed_write_prefix'],'research/api_agent/outputs/automation_orchestration/')
         self.assertEqual(senior['allowed_write_prefix'],triage['allowed_write_prefix'])
 
+    def test_weekly_contract_is_task_local_and_fail_closed(self):
+        from scripts.api_agent.api_gateway import api_attempt_limit
+        task='WEEKLY_CALIBRATION_SHADOW'
+        cfg=load_registry(REGISTRY)['tasks'][task]
+        self.assertEqual(api_attempt_limit(cfg),1)
+        self.assertEqual(cfg['max_output_tokens'],3000)
+        schema=build_request(task,cfg,'test',{})['text']['format']['schema']
+        self.assertIn('scorecard',schema['required'])
+        self.assertIn('operational_translation',schema['required'])
+        self.assertNotIn('scorecard',output_schema()['required'])
+        v=valid_output()
+        with self.assertRaises(ValueError):validate_output(v,task)
+        for k in ('scorecard','operational_translation'):
+            v[k]={'status':'READY','summary':'Observed calibration error','evidence_keys':['daily_director_rows']}
+        validate_output(v,task)
+        v['scorecard']['evidence_keys']=[]
+        with self.assertRaises(ValueError):validate_output(v,task)
+        validate_output(blocked_output('test',task),task)
+
     def test_valid_output(self):validate_output(valid_output())
     def test_valid_forecast_candidate_pct_move(self):
         value=valid_output();value['forecast_candidates']=[directional_pct()];validate_output(value)

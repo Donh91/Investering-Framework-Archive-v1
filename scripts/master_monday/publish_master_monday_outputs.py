@@ -191,6 +191,42 @@ def calibration_context_matches_freeze(context:dict[str,Any], freeze:dict[str,An
     except (ValueError,TypeError,OverflowError,RecursionError):
         return False
 
+def weekly_section_has_evidence(context:dict[str,Any],section:Any)->bool:
+    """Availability is source-lane specific, never wrapper truthiness."""
+    if not isinstance(section,dict) or section.get('status')!='READY':
+        return False
+    refs=section.get('evidence_keys')
+    if not isinstance(refs,list) or not refs or any(not isinstance(k,str) for k in refs):
+        return False
+    if len(set(refs))!=len(refs):
+        return False
+    def rows(v):
+        return isinstance(v,list) and bool(v) and all(isinstance(r,dict) and bool(r) for r in v)
+    def available(key):
+        lane=context.get(key)
+        if key=='daily_director_rows':
+            return rows(lane)
+        if key=='daily_director_intraday_sequence':
+            return context.get('daily_director_intraday_status')=='COMPLETE' and rows(lane)
+        if not isinstance(lane,dict):
+            return False
+        if key=='legacy_research_context':
+            return lane.get('status')=='AVAILABLE_RESEARCH_ONLY' and rows(lane.get('hypotheses'))
+        if key=='experiment_learning':
+            return (lane.get('status')=='AVAILABLE' and lane.get('outcome_ingestion_status')=='COMPLETE'
+                    and lane.get('matured_outcome_evidence_available') is True
+                    and (rows(lane.get('new_matured_outcomes')) or rows(lane.get('active_candidates'))))
+        if key=='deterministic_range_baseline_learning':
+            return (lane.get('contract')=='MASTER_MONDAY_DETERMINISTIC_RANGE_LEARNING_v1'
+                    and not lane.get('diagnostics') and rows(lane.get('recent_scores')))
+        if key=='compass_learning':
+            return (lane.get('contract')=='MASTER_MONDAY_COMPASS_LEARNING_INPUT_v1'
+                    and not lane.get('diagnostics') and any(rows(lane.get(k)) for k in
+                    ('tactical_outcomes','strategic_outcomes','shadow_v2_outcomes')))
+        return False
+    return all(available(k) for k in refs)
+
+
 def analytical_translation(context:dict[str,Any],freeze:dict[str,Any],
                            api:dict[str,Any],receipt:dict[str,Any],api_status:str)->dict[str,Any]:
     """Preserve the existing shadow model's typed hypotheses, not live forecasts.
@@ -219,9 +255,11 @@ def analytical_translation(context:dict[str,Any],freeze:dict[str,Any],
                 or receipt.get('context_hash')!=sha(context) or receipt.get('output_hash')!=sha(api)):
             return {**base,'reason':'GATEWAY_RECEIPT_MISMATCH'}
         required={'status','summary','evidence_for','evidence_against','uncertainties','hypotheses','forecast_candidates'}
+        if isinstance(api,dict) and any(k in api for k in ('scorecard','operational_translation')):
+            required.update(('scorecard','operational_translation'))
         if not isinstance(api,dict) or set(api)!=required or not isinstance(api['summary'],str) or not api['summary'].strip():
             return {**base,'reason':'OUTPUT_CONTRACT_INVALID'}
-        if api['status']!='READY':
+        if api['status']=='BLOCKED' or (api['status']!='READY' and 'operational_translation' not in api):
             return {**base,'reason':'MODEL_ANALYSIS_NOT_READY'}
         if any(not isinstance(api[k],list) or not all(isinstance(v,str) for v in api[k])
                for k in ('evidence_for','evidence_against','uncertainties','hypotheses')):
@@ -253,7 +291,10 @@ def analytical_translation(context:dict[str,Any],freeze:dict[str,Any],
             seen.add(key)
             h=str(c['horizon_days'])
             horizons[h]=horizons.get(h,0)+1
-        return {**base,'reason':'TYPED_SHADOW_CANDIDATES_ONLY_NO_OPERATIONAL_DECISION',
+        section=api.get('operational_translation')
+        if weekly_section_has_evidence(context,section):
+            base={**base,'status':'READY','model_utilization_verified':True,'research_only_translation':section['summary'],'evidence_keys':section['evidence_keys']}
+        return {**base,'reason':('WEEKLY_SECTION_EVIDENCE_UNAVAILABLE' if isinstance(section,dict) and section.get('status')=='READY' and base['status']!='READY' else 'TYPED_SHADOW_CANDIDATES_ONLY_NO_OPERATIONAL_DECISION'),
                 'candidate_status':'VALIDATED_UNADMITTED' if candidates else 'NO_CANDIDATES',
                 'candidate_count':len(candidates),'candidate_horizon_counts':horizons,
                 'context_sha256':context['context_hash'],'freeze_sha256':freeze['freeze_sha256'],
@@ -398,6 +439,18 @@ def build_weekly_intelligence_audit(machine:dict[str,Any],pointer:dict[str,Any],
         json.dumps(index,sort_keys=True,ensure_ascii=False,indent=2)+'\n```\n')
 
 
+def weekly_scorecard(context,freeze,api,receipt,api_status):
+    registry_fallback=fallback_scorecard(context)
+    section=api.get('scorecard') if isinstance(api,dict) else None
+    if (effective_delivery_status(api_status,api,receipt,context,freeze,True)=='READY'
+            and api.get('status')!='BLOCKED' and weekly_section_has_evidence(context,section)
+            and registry_fallback.get('outcome_ingestion_status')=='COMPLETE'):
+        return {**registry_fallback,'status':'READY','analysis_layer':{**registry_fallback['analysis_layer'],
+            'research_only_scorecard':section['summary'],'evidence_keys':section['evidence_keys']},
+            'reason':'Qualitative shadow calibration assessment plus verified owner outcome evidence; no invented numerical score.'}
+    return registry_fallback
+
+
 def main():
     ap=argparse.ArgumentParser();ap.add_argument('--freeze',type=Path,required=True);ap.add_argument('--preflight',type=Path,required=True);ap.add_argument('--context',type=Path,required=True);ap.add_argument('--api-output',type=Path);ap.add_argument('--api-receipt',type=Path);ap.add_argument('--api-status',required=True);ap.add_argument('--output-dir',type=Path,required=True);ap.add_argument('--learning-packet',type=Path,default=Path('research/framework_learning/LATEST_MASTER_MONDAY_LEARNING_PACKET.json'));a=ap.parse_args()
     freeze=load(a.freeze);preflight=load(a.preflight);context=load(a.context);api=load(a.api_output) if a.api_output and a.api_output.exists() else {};receipt=load(a.api_receipt) if a.api_receipt and a.api_receipt.exists() else {}
@@ -405,10 +458,7 @@ def main():
     learning_impact=build_learning_decision_impact(context,learning,receipt,int(freeze['iso_year']),int(freeze['iso_week']))
     analysis=api.get('analysis') or api.get('calibration') or api.get('summary') or {'status':'UNAVAILABLE_API_FAILURE' if a.api_status!='success' else 'UNAVAILABLE_NOT_PRODUCED'}
     translation=analytical_translation(context,freeze,api,receipt,a.api_status)
-    registry_fallback=fallback_scorecard(context)
-    # Current gateway schema has no scorecard. Never override failed
-    # deterministic evidence admission with an arbitrary model object.
-    scorecard=registry_fallback
+    scorecard=weekly_scorecard(context,freeze,api,receipt,a.api_status)
     if not calibration_context_matches_freeze(context,freeze):
         scorecard={'status':'DEGRADED','experiment_registry_status':'UNVERIFIED',
                    'matured_outcome_count':None,'analysis_layer':{},'operational_translation_layer':{},
