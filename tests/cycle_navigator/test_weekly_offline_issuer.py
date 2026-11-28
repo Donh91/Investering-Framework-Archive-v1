@@ -68,6 +68,15 @@ class OfflineIssuerTest(unittest.TestCase):
         self.assertIn("2026-11-15",v["readable_markdown"])
         self.assertIn(METHOD,v["readable_markdown"])
 
+    def test_c5_context_on_off_preserves_frozen_forecast_bytes(self):
+        import json
+        c,b,p=fixtures()
+        off=build_offline_value(c,b,p,2026,46,34,33)["forecast_freeze"]
+        c["c5_context"]={"status":"AVAILABLE","authority":"CONTEXT_ONLY_NOT_DECISION_OR_SCORING","scoring_allowed":False,"macro":{"term_structure_class":"INVERTED"},"realized_liquidations":{"assets":{"BTC":{"24h":{"pressure_class":"HIGH"}}}}}
+        on=build_offline_value(c,b,p,2026,46,34,33)["forecast_freeze"]
+        encode=lambda x:json.dumps(x,sort_keys=True,separators=(",",":"),ensure_ascii=False).encode()
+        self.assertEqual(encode(off),encode(on))
+
     def test_not_backdated_and_source_contract_mismatch_fails_closed(self):
         c,b,p=fixtures()
         p_before=copy.deepcopy(p)

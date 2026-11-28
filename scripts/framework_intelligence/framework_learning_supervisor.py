@@ -524,6 +524,12 @@ def main():
         "weekly_forensics_delta": src["weekly_forensics"].get("master_monday_delta") if src["weekly_forensics"].get("contract") == "WEEKLY_FORENSICS_PACK_v1" and src["weekly_forensics"].get("mode") == "FINAL" else None,
         "weekly_forensics_authority": "ADVISORY_ONLY",
     }
+    # C5 is a separate context block; the existing advisory flag stays false.
+    import sys
+    if str(root.resolve()) not in sys.path:
+        sys.path.insert(0, str(root.resolve()))
+    from scripts.master_monday.c5_context_readback import read_c5_context
+    packet['c5_context'] = read_c5_context(root, now)
     # Existing Monday Supervisor owns the skill-learning loop. No new
     # automation, paid call, external supervisor or independent writer.
     skill_calibration = None

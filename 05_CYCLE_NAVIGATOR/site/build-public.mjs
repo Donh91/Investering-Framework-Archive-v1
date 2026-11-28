@@ -1,3 +1,4 @@
+import { projectC5Context } from './vnext-live/monday-public-bridge.mjs';
 import {bindNativeParticipation,bindNativeAltseason,t6ObservationPath,bindT6Observation} from './cycle-participation.mjs';
 import { mkdir, readFile, rm, writeFile, copyFile } from "node:fs/promises";
 import { createHash } from "node:crypto";
@@ -389,6 +390,7 @@ async function buildFullStackReadback(compass,weeklyPointer,weeklyPackage,series
     status:"SOURCE_ALIGNED",analytics_status:mondayAnalytics,
     api_analysis_status:apiAnalysisAvailable?"AVAILABLE_SHADOW_ONLY":"UNAVAILABLE",
     scorecard_status:scoreStatus,operational_translation_status:translationStatus,
+    c5_context:projectC5Context(masterMachine?.c5_context),
     // Source hashes remain internal verification inputs; SITE_CONTRACT forbids
     // publishing machine hashes or internal paths in the public projection.
     authority:"WEEKLY_CONTEXT_ONLY_NO_CURRENT_ACTION"
