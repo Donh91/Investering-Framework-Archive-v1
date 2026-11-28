@@ -9,7 +9,7 @@ import {sourceTrace,displayPublicStatus,displayLongDirection,displaySourceConfid
 import {mondayContext,mondayLabels} from '../vnext-live/monday-public-bridge.mjs';
 import {forwardOutlook} from '../vnext-live/forward-outlook.mjs';
 import {VIEWS,readHorizon,lensContext,explainPosture,explainCurrentAction,sourceWatch,expiredOfficial} from './compass-reader.mjs';
-import {publicOverview,directionVisual,readRotation,POSITION_GUIDE,shortVsForward,observedMarketClock,verifiedPublishedLiveMomentum,verifiedKompasPublicationLineage,sourceHorizonClock} from './compass-overview.mjs';
+import {publicOverview,directionVisual,readRotation,POSITION_GUIDE,shortVsForward,observedMarketClock,verifiedPublishedLiveMomentum,publicationQualifiedObservationView,sourceHorizonClock} from './compass-overview.mjs';
 import {enhanceLegacyArrow,enhanceLegacyLabel} from './direction-mark.mjs';
 import {hourlyFloorBanner,kompasTruthBanner} from '../kompas-truth-banner.mjs';
 import {originalSourceAgeLabel} from '../source-age-readback.mjs';
@@ -563,8 +563,7 @@ function renderHorizonStatus(){
  // A missing or mismatched publication receipt cannot independently revive
  // momentum on a degraded weekly join. Keep the separately valid Official
  // daily readback and strategic source untouched.
- const matrixView=verifiedKompasPublicationLineage(feeds?.publicationLineage,view)?view:
-  view?{...view,live_observation:null}:null;
+ const matrixView=publicationQualifiedObservationView({compass:feeds?.compass,view,publicationLineage:feeds?.publicationLineage});
  const matrix=kompasHorizonStatusRows({
   compass:feeds?.compass,view:matrixView,lang,strategic,trace,originalWeekPrice,
   observationCurrent:clock.state==='FRESH_OBSERVATION'
@@ -777,8 +776,9 @@ function renderSourceClocks(){
 function renderCycleSource(){
  const lang=document.documentElement.lang==='en'?'en':'da';
  const en=lang==='en';
- const model=cycleSourceReadback({view,lang});
- renderCycleMap(document,{view,latest:feeds?.latest,lang});
+ const cycleView=publicationQualifiedObservationView({compass:feeds?.compass,view,publicationLineage:feeds?.publicationLineage});
+ const model=cycleSourceReadback({view:cycleView,lang});
+ renderCycleMap(document,{view:cycleView,latest:feeds?.latest,lang});
  renderCycleParticipation(document,feeds?.latest,feeds?.compass,{lang});
  set('cn-cycle-health',model.weekLabel);
  set('cn-cycle-meaning',model.meaning);

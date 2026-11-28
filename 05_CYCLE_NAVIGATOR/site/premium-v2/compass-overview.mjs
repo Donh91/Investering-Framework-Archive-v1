@@ -180,6 +180,11 @@ export function verifiedPublishedLiveMomentum({compass,view,publicationLineage,n
  return verifiedKompasPublicationLineage(publicationLineage,view)?
   verifiedLiveMomentum({compass,view,now}):null;
 }
+// Every root consumer must use the same source, publication and candle clock gate.
+export function publicationQualifiedObservationView({compass,view,publicationLineage,now=Date.now()}={}){
+ return verifiedPublishedLiveMomentum({compass,view,publicationLineage,now})?view:
+  view?{...view,live_observation:null}:null;
+}
 export function verifiedLiveMomentum({compass,view,now=Date.now()}={}){
  const o=view?.live_observation,m=compass?.market_now;
  if(!Number.isFinite(now)||view?.delivery_health!=='FRESH'||

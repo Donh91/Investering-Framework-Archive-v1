@@ -2,6 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import {cycleMapModel,cycleMapMarkup,renderCycleMap} from './cycle-map.mjs';
 import {inspectOfficialPublicFeeds} from '../vnext-live/official-feed-parity.mjs';
+import {publicationQualifiedObservationView} from './compass-overview.mjs';
 function fixture(phase='PRE_ROTATION'){
  const latest={generated_at:'2026-11-17T13:45:00Z',package:{issue_number:35,status:'OK',generated_unix:1794818153,market_cycle_context:{current_phase:phase,next_gate:'Source gate'},decision_projection:{weeks_4_8:{state:'BROAD_ALTSEASON'}}},public_series:{current_public_projection:{public_issue_number:34,forecast_week:'2026-W47'}}};
  const view={delivery_health:'FRESH',weekly:{state:'OK',public_issue_number:34,machine_issue_number:35,forecast_week:'2026-W47'},compass:{state:'FRESH',permit_path_live_gates:true,compass_id:'c'},path:{state:'SOURCE_BOUND',source_identity:'c',source_issue:34,source_week:'2026-W47',current_checkpoint:{key:'BTC',status:'FROZEN_WEEK_REFERENCE'}}};
@@ -44,4 +45,17 @@ test('both consumers suppress independently qualified momentum after delivery he
   renderCycleMap(doc,{view,latest:x.latest,lang:'en'});assert.equal(e.hidden,true);assert.equal(e.textContent,'');
  }
  const view={...v,compass:{...v.compass,compass_id:undefined},live_observation:{...v.live_observation,compass_id:undefined}};assert.equal(cycleMapModel({view,latest:x.latest}).observation,null);
+});
+
+test('root cycle map and horizon matrix share exact publication and closed-candle gate',()=>{
+ const x=liveFixture();x.compass.market_now.new_price_observation=true;
+ x.compass.market_now.predecessor_market_observation_open_utc='2026-11-25T08:00:00Z';
+ const v=inspect(x);const view={...v,generated_at:x.latest.generated_at,weekly:{...v.weekly,forecast_week:'2026-W48',public_issue_number:36}};
+ const publicationLineage={contract:'CN_PUBLICATION_LINEAGE_RELEASE_RECEIPT_v1',semantics:'PUBLIC_BUNDLE_BUILD_TIME_EVIDENCE_NOT_LIVE_CLIENT_FRESHNESS',authority:'READ_ONLY_RECONCILIATION_NO_FORECAST_OR_TRADING_AUTHORITY',source_to_public_equality:'PASS',prospective_forecast_points_created:0,forecast_week:'2026-W48',public_issue_number:36};
+ const args={compass:x.compass,view,publicationLineage,now:Date.parse('2026-11-25T11:00:00Z')};
+ assert.ok(publicationQualifiedObservationView(args).live_observation);
+ assert.equal(publicationQualifiedObservationView({...args,now:Date.parse('2026-11-25T11:31:00Z')}).live_observation,null);
+ assert.equal(publicationQualifiedObservationView({...args,publicationLineage:null}).live_observation,null);
+ assert.equal(publicationQualifiedObservationView({...args,publicationLineage:{...publicationLineage,public_issue_number:35}}).live_observation,null);
+ assert.equal(publicationQualifiedObservationView({...args,now:Date.parse('2026-11-25T11:31:00Z')}).compass.action_now,view.compass.action_now);
 });

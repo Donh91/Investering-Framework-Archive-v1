@@ -5,7 +5,7 @@
  * verifier. Unknown/missing source never becomes an affirmative direction.
  */
 import {originalWeekPriceLabel} from './original-week-price-readback.mjs';
-import {verifiedLiveMomentum} from './compass-overview.mjs';
+import {verifiedLiveMomentum,observedMarketClock} from './compass-overview.mjs';
 
 export const KOMPAS_HORIZONS=Object.freeze([
   ['NOW','Nu','Now','OBSERVED'],
@@ -61,6 +61,7 @@ function trustedStrategicContext(trace,strategic){
 export function kompasHorizonStatusRows({compass,view,lang='da',observationCurrent=false,strategic=null,trace=null,originalWeekPrice=null,now=Date.now()}={}){
   const verified=validOfficial(compass,view);
   const independent=verifiedLiveMomentum({compass,view,now});
+  const clock=observedMarketClock({compass,now});
   const weekPriceText=originalWeekPriceLabel(originalWeekPrice,{lang});
   const weekOnly=(row)=>({...row,status:'SOURCE_ISSUED_WEEK_PRICE_ONLY',
     tone:'mixed',sourceStatus:'ORIGINAL_WEEK_PRICE_NOT_DAILY_ACTION',
@@ -100,9 +101,13 @@ export function kompasHorizonStatusRows({compass,view,lang='da',observationCurre
           priceLabel:tr(lang,'BTC-retning · ikke kursmål','BTC direction · not a price target')};
     }
     if(kind==='OBSERVED'&&(verified||independent)){
-      const info=independent?directions[independent.direction]:observationCurrent&&verified?directions[compass.market_now?.directional_state]:null;
-      const v=info?tr(lang,info[0],info[1]):
-        tr(lang,'Måling ikke frisk','Observation not current');
+      const info=independent?directions[independent.direction]:
+        observationCurrent&&verified&&clock.state==='FRESH_OBSERVATION'?directions[compass.market_now?.directional_state]:null;
+      const unavailable=clock.state==='OBSERVATION_DELAYED'?tr(lang,'Måling forsinket','Observation delayed'):
+        clock.state==='NO_NEW_PRICE_OBSERVATION'?tr(lang,'Ingen ny måling','No new observation'):
+        tr(lang,'Ingen gyldig måling','No verified observation');
+      const age=Number.isFinite(clock.ageSeconds)?' · '+Math.floor(clock.ageSeconds/60)+' min': '';
+      const v=info?tr(lang,info[0],info[1]):unavailable+age;
       return {...row,status:info?'CURRENT_OBSERVATION':'OBSERVATION_UNAVAILABLE',
         tone:info?info[2]:'missing',value:v,
         sourceLabel:tr(lang,'Observeret momentum, ikke prognose','Observed momentum, not a forecast'),
