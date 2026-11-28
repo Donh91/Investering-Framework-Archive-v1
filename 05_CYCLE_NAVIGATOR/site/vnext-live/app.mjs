@@ -2,7 +2,7 @@
 /* Premium candidate only. Same-origin read-only official public data.
  * Never synthesize a market action, forecast, score or hidden source. */
 import {inspectOfficialPublicFeeds} from './official-feed-parity.mjs';
-import {mondayContext,mondayLabels} from './monday-public-bridge.mjs';
+import {mondayContext,mondayLabels,renderC5Context} from './monday-public-bridge.mjs';
 import {sourceTrace,displayPublicStatus,displayLongDirection,displaySourceConfidence} from './source-trace.mjs';
 import {forwardOutlook} from './forward-outlook.mjs';
 import {chartSourceFingerprint} from './chart-source-key.mjs';
@@ -141,6 +141,7 @@ function drawMonday(){
  show('monday-source-explanation',tr('Ugentlig kontekst – ingen selvstændig handelstilladelse.','Weekly context only – no independent trade permission.'));
  show('monday-scorecard',displayPublicStatus(verified?m.scorecard_status:'UNAVAILABLE',lang));
  show('monday-translation',displayPublicStatus(verified?m.operational_translation_status:'UNAVAILABLE',lang));
+ renderC5Context(document,verified?m.c5_context:null,lang);
  show('monday-api',verified&&m.api_analysis_status==='AVAILABLE_SHADOW_ONLY'
    ?tr('Tilgængelig · ikke-bindende','Available · nonbinding'):displayPublicStatus('UNAVAILABLE',lang));
 }

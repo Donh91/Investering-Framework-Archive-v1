@@ -65,6 +65,7 @@ export function mondayContext(latest,compass,parsed){
   result.api_analysis_status=mon.api_analysis_status==='AVAILABLE_SHADOW_ONLY'?'AVAILABLE_SHADOW_ONLY':'UNAVAILABLE';
   result.scorecard_status=cleanState(mon.scorecard_status);
   result.operational_translation_status=cleanState(mon.operational_translation_status);
+  result.c5_context=projectC5Context(mon.c5_context);
   return result;
 }
 export function mondayLabels(v,lang='da'){
@@ -85,4 +86,45 @@ export function mondayLabels(v,lang='da'){
       ?(da?'Kildernes analyse-status er modstridende. Ingen samlet analysebekræftelse.':'Conflicting analytical source status. No complete analysis confirmation.')
       :(da?'Leveringen er verificeret, men dele af analysen mangler eller er uafklarede.':'Delivery is verified, but parts of the analysis are missing or unresolved.');
   return {title,evidence,severity:al==='COMPLETE'?'normal':al==='CONFLICTING_ANALYTICS'?'warning':'neutral'};
+}
+
+// Strict derived-only projection. No source rows, hashes, paths or arbitrary source text.
+const C5_AUTH='CONTEXT_ONLY_NOT_DECISION_OR_SCORING';
+const C5_REASONS=new Set(['C5_PREREG_NOT_FROZEN','C5_CONTEXT_UNVERIFIED','C5_ADAPTER_UNAVAILABLE','C5_NOT_ISSUED','FRED_NOT_SCHEDULED','FRED_CAPTURE_FAILED','FRED_RECEIPT_MISSING_OR_AMBIGUOUS','FRED_RECEIPT_SCOPE_INVALID','FRED_RECEIPT_HASH_MISMATCH','FRED_ARTIFACT_UNVERIFIED','FRED_SOURCE_BINDING_INVALID','FRED_SOURCE_IDENTITY_INVALID','FRED_CAPTURE_UNVERIFIED','FRED_C5_CAPTURE_NOT_AVAILABLE','FRED_CONTEXT_INTEGRITY_INVALID','FRED_CONTEXT_BINDING_INVALID','FRED_CAPTURE_STALE','FRED_CONTEXT_UNVERIFIED','FRED_MATCHED_SESSION_GAP','FRED_INPUT_INVALID','FRED_CAPTURE_CLOCK_INVALID_OR_STALE','OKX_CAPTURE_CLOCK_INVALID_OR_STALE','OKX_LATEST_RUN_BINDING_INVALID','OKX_LATEST_ASSET_CAPTURE_FAILED','OKX_CAPTURE_COVERAGE_GAP','OKX_CAPTURE_UNVERIFIED','OKX_BASELINE_INCOMPLETE_OR_ZERO']);
+const c5reason=v=>C5_REASONS.has(v)?v:'C5_CONTEXT_UNVERIFIED';
+const clock=v=>typeof v==='string'&&/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d+)?(?:Z|\+00:00)$/.test(v)&&Number.isFinite(Date.parse(v))?v:null;
+export function projectC5Context(v){
+ const out={contract:'C5_MM_CONTEXT_v1',authority:C5_AUTH,scoring_allowed:false,status:'UNAVAILABLE',reason:'C5_NOT_ISSUED'};
+ if(!v)return out;
+ if(v.contract!==out.contract||v.authority!==C5_AUTH||v.scoring_allowed!==false||!clock(v.as_of_utc))return {...out,reason:'C5_CONTEXT_UNVERIFIED'};
+ out.as_of_utc=clock(v.as_of_utc);out.reason=c5reason(v.reason);
+ const m=v.macro,d=v.realized_liquidations;
+ const macroGood=m?.status==='AVAILABLE'&&['INVERTED','FLAT','CONTANGO'].includes(m.term_structure_class)&&clock(m.as_of_utc)&&Date.parse(m.as_of_utc)<=Date.parse(out.as_of_utc);
+ out.macro=macroGood?{status:'AVAILABLE',term_structure_class:m.term_structure_class,as_of_utc:clock(m.as_of_utc)}:{status:'UNAVAILABLE',reason:c5reason(m?.reason||v.reason)};
+ out.realized_liquidations={status:'UNAVAILABLE',reason:c5reason(d?.reason||v.reason),assets:{}};
+ let any=false;
+ if(d?.status==='AVAILABLE_LOWER_BOUND'&&clock(d.as_of_utc)&&Date.parse(d.as_of_utc)<=Date.parse(out.as_of_utc)){
+  for(const asset of ['BTC','ETH']){const row=d.assets?.[asset];out.realized_liquidations.assets[asset]={};
+   for(const win of ['24h','7d']){const x=row?.[win];const valid=x?.status==='AVAILABLE_LOWER_BOUND'&&['HIGH','LOW','NORMAL','UNAVAILABLE'].includes(x.pressure_class)&&[x.long_notional_usd,x.short_notional_usd].every(n=>Number.isFinite(n)&&n>=0);
+    out.realized_liquidations.assets[asset][win]=valid?{status:'AVAILABLE_LOWER_BOUND',pressure_class:x.pressure_class,long_notional_usd:x.long_notional_usd,short_notional_usd:x.short_notional_usd,pressure_reason:c5reason(x.pressure_reason)}:{status:'UNAVAILABLE',reason:c5reason(x?.reason||row?.reason)};any ||= valid;
+   }}
+  if(any){out.realized_liquidations.status='AVAILABLE_LOWER_BOUND';out.realized_liquidations.as_of_utc=clock(d.as_of_utc);}
+ }
+ out.status=macroGood&&any?'AVAILABLE':macroGood||any?'PARTIAL':'UNAVAILABLE';
+ return out;
+}
+export function c5ContextLabel(v,lang='da'){
+ const da=lang!=='en',x=projectC5Context(v),parts=[];
+ const m=x.macro,d=x.realized_liquidations;
+ if(m?.status==='AVAILABLE')parts.push('VIX: '+m.term_structure_class+' · '+m.as_of_utc);
+ else parts.push('VIX: UNAVAILABLE ('+(m?.reason||x.reason)+')');
+ for(const a of ['BTC','ETH'])for(const w of ['24h','7d']){const r=d?.assets?.[a]?.[w];parts.push(a+' '+w+': '+(r?.status==='AVAILABLE_LOWER_BOUND'?r.pressure_class+' · '+(da?'observeret minimum':'observed lower bound')+(r.pressure_class==='UNAVAILABLE'?' ('+r.pressure_reason+')':''):'UNAVAILABLE ('+(r?.reason||d?.reason||x.reason)+')'));}
+ if(d?.as_of_utc)parts.push('OKX: '+d.as_of_utc);
+ return parts.join(' | ');
+}
+export function renderC5Context(doc, value, lang='da'){
+ const anchor=doc.getElementById('monday-translation');if(!anchor)return;
+ let row=doc.getElementById('monday-c5-context');
+ if(!row){row=doc.createElement('p');row.id='monday-c5-context';row.className='small';const parent=anchor.closest('section')||anchor.parentElement;parent.appendChild(row);}
+ row.textContent=(lang==='en'?'Macro and derivatives context (non-scoring)':'Makro- og derivatkontekst (ikke-scorende)')+': '+c5ContextLabel(value,lang);
 }

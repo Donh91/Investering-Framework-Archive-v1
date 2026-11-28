@@ -6,7 +6,7 @@
 import '../vnext-live/premium-experience.css';
 import {inspectOfficialPublicFeeds} from '../vnext-live/official-feed-parity.mjs';
 import {sourceTrace,displayPublicStatus,displayLongDirection,displaySourceConfidence} from '../vnext-live/source-trace.mjs';
-import {mondayContext,mondayLabels} from '../vnext-live/monday-public-bridge.mjs';
+import {mondayContext,mondayLabels,renderC5Context} from '../vnext-live/monday-public-bridge.mjs';
 import {forwardOutlook} from '../vnext-live/forward-outlook.mjs';
 import {VIEWS,readHorizon,lensContext,explainPosture,explainCurrentAction,sourceWatch,expiredOfficial} from './compass-reader.mjs';
 import {publicOverview,directionVisual,readRotation,POSITION_GUIDE,shortVsForward,observedMarketClock,verifiedPublishedLiveMomentum,publicationQualifiedObservationView,sourceHorizonClock} from './compass-overview.mjs';
@@ -545,6 +545,7 @@ function mondayReadback(){
  set('monday-translation',displayPublicStatus(valid?m.operational_translation_status:'UNAVAILABLE',lang));
  set('monday-api',valid&&m.api_analysis_status==='AVAILABLE_SHADOW_ONLY'?
   t('Research tilgængelig · ikke-bindende','Research available · nonbinding'):displayPublicStatus('UNAVAILABLE',lang));
+ renderC5Context(document,valid?m.c5_context:null,lang);
  const title=$('monday-title');
  if(title)title.textContent=t('Mandagens dokumenterede ugegrundlag','Monday’s verified weekly context');
 }
