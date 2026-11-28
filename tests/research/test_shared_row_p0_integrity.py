@@ -306,6 +306,144 @@ class SharedRowP0IntegrityTests(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, "event_id already frozen"):
             controller.ingest(row_path)
 
+    def test_persistence_extension_replays_bound_owner_and_rejects_self_rehashed_mutation(self):
+        fixture = FixtureRepo(self)
+        row = fixture.build()["row"]
+        row["provenance_hash"] = controller.frozen_provenance_hash(row)
+        verified = controller.verify_persistence_source_bindings(row, fixture.observation)
+        self.assertEqual(verified["persistence_replay"]["consecutive_same_side"], 168)
+        self.assertTrue(verified["persistence_replay"]["left_censored"])
+        self.assertIsNone(verified["persistence_replay"]["first_above_bar_utc"])
+        for key, value in (("consecutive_same_side", 1), ("lookback_rows", 167),
+                           ("window_start_utc", "2026-08-03T00:00:00Z"),
+                           ("method", "SYNTHETIC_RATIO")):
+            forged = dict(row)
+            metadata = json.loads(forged["ethbtc_window_inputs"])
+            metadata[key] = value
+            forged["ethbtc_window_inputs"] = controller.canon(metadata)
+            forged["provenance_hash"] = controller.frozen_provenance_hash(forged)
+            controller.verify_frozen_provenance(forged)
+            # Old frozen candidate semantics are deliberately unchanged.
+            controller.verify_source_bindings(forged, fixture.observation)
+            with self.assertRaisesRegex(ValueError, key):
+                controller.verify_persistence_source_bindings(forged, fixture.observation)
+        forged = dict(row)
+        forged["ethbtc_window_inputs"] = forged["ethbtc_window_inputs"].replace(
+            '"consecutive_same_side":168', '"consecutive_same_side":1,"consecutive_same_side":168')
+        self.assertNotEqual(forged["ethbtc_window_inputs"], row["ethbtc_window_inputs"])
+        with self.assertRaisesRegex(ValueError, "DUPLICATE_KEY"):
+            controller.verify_persistence_source_bindings(forged, fixture.observation)
+
+    def test_read_only_persistence_audit_reuses_original_owner(self):
+        fixture = FixtureRepo(self)
+        # Use the production normalization and ingress, not Python dict repr in CSV.
+        source = fixture.repo / "persistence-row.json"
+        source.write_text(json.dumps(fixture.build()["row"]) + "\n")
+        controller.ingest(source)
+        row = controller.rows(controller.LEDGER)[0]
+        before = controller.LEDGER.read_bytes()
+        report = controller.audit_persistence_cohort()
+        self.assertEqual(report["status"], "REPLAY_COMPLETE", report)
+        self.assertEqual(report["verified_n"], 1)
+        self.assertEqual(report["left_censored_n"], 1)
+        self.assertEqual(report["observed_above_episode_n"], 0)
+        self.assertFalse(report["forecast_authority"])
+        self.assertEqual(controller.LEDGER.read_bytes(), before)
+        controller.append(controller.LEDGER, row)
+        duplicate = controller.audit_persistence_cohort()
+        self.assertEqual(duplicate["status"], "REPLAY_BLOCKED")
+        self.assertEqual(duplicate["rejected_n"], 2)
+
+    def test_pinned_owner_ignores_worktree_and_rejects_future_source_commit(self):
+        fixture = FixtureRepo(self)
+        path = fixture.repo / "row.json"
+        path.write_text(json.dumps(fixture.build()["row"]) + "\n")
+        controller.ingest(path)
+        fixture.commit_path(controller.LEDGER, "freeze ledger")
+        pinned = fixture._git("rev-parse", "HEAD")
+        row = controller.rows(controller.LEDGER)[0]
+        decisions = json.loads(row["candidate_decisions"])
+        reader = controller.PinnedSourceReplay(fixture.repo, pinned)
+        original = reader.verify(row, fixture.observation, decisions)
+        self.assertEqual(original["consecutive_same_side"], 168)
+        controller.LEDGER.write_text("dirty ledger header\n")
+        controller.CONTRACT.write_text("{}")
+        self.assertEqual(controller.PinnedSourceReplay(fixture.repo, pinned).verify(
+            row, fixture.observation, decisions), original)
+        fixture.commit_path(controller.CONTRACT, "later source")
+        future = fixture._git("rev-parse", "HEAD")
+        forged = dict(row)
+        manifest = json.loads(forged["source_binding_manifest"])
+        manifest["source_commit"] = future
+        forged["source_version_commit"] = future
+        forged["source_binding_manifest"] = controller.canon(manifest)
+        forged["source_binding_manifest_sha256"] = materializer.sha_json(manifest)
+        forged["provenance_hash"] = controller.frozen_provenance_hash(forged, fields=reader.fields)
+        with self.assertRaises(subprocess.CalledProcessError):
+            reader.verify(forged, fixture.observation, decisions)
+        forged = dict(row)
+        meta = json.loads(row["ethbtc_window_inputs"])
+        meta["consecutive_same_side"] = 1
+        forged["ethbtc_window_inputs"] = controller.canon(meta)
+        forged["provenance_hash"] = controller.frozen_provenance_hash(forged, fields=reader.fields)
+        with self.assertRaisesRegex(ValueError, "consecutive_same_side"):
+            reader.verify(forged, fixture.observation, decisions)
+
+    def test_pinned_history_diagnostics_distinguish_future_and_missing_object(self):
+        fixture = FixtureRepo(self)
+        path = fixture.repo / "row.json"
+        path.write_text(json.dumps(fixture.build()["row"]) + "\n")
+        controller.ingest(path)
+        fixture.commit_path(controller.LEDGER, "freeze ledger")
+        pinned = fixture._git("rev-parse", "HEAD")
+        reader = controller.PinnedSourceReplay(fixture.repo, pinned)
+        self.assertFalse(reader.history_context["shallow"])
+        self.assertEqual(reader.history_context["replace_ref_n"], 0)
+        self.assertFalse(reader.history_context["grafts_present"])
+        reader.require_ancestor(pinned)
+        controller.CONTRACT.write_text("{}")
+        fixture.commit_path(controller.CONTRACT, "future source")
+        future = fixture._git("rev-parse", "HEAD")
+        for source, code, kind in (
+            (future, "PINNED_SOURCE_NOT_ANCESTOR", "commit"),
+            ("0" * 40, "PINNED_GIT_ANCESTRY_ERROR", "UNAVAILABLE"),
+        ):
+            with self.subTest(source=source):
+                with self.assertRaises(subprocess.CalledProcessError) as caught:
+                    reader.require_ancestor(source)
+                detail = reader.ancestry_failure(source, caught.exception)
+                self.assertEqual(detail["code"], code)
+                self.assertEqual(detail["source_object_type"], kind)
+                self.assertEqual(detail["checkout_object_type"], "commit")
+        graft = fixture.repo / ".git/info/grafts"
+        graft.parent.mkdir(parents=True, exist_ok=True)
+        graft.write_text("")
+        with self.assertRaisesRegex(ValueError, "PINNED_GIT_HISTORY_INCOMPLETE_OR_REWRITTEN"):
+            controller.PinnedSourceReplay(fixture.repo, pinned)
+
+    def test_real_archive_persistence_cohort_is_fully_replayed_without_writes(self):
+        # Fresh process avoids fixture module/global contamination and uses
+        # the existing full-checkout native research gate, not mocked owners.
+        ledger = PROJECT / "06_RESEARCH_LAB/shared_row_model_tournament_v1/data/PROSPECTIVE_SHARED_ROW_LEDGER.csv"
+        before = ledger.read_bytes()
+        run = subprocess.run([sys.executable,
+            "scripts/research/prospective_evidence_controller.py", "--audit-persistence"],
+            cwd=PROJECT, capture_output=True, text=True, timeout=180)
+        self.assertEqual(ledger.read_bytes(), before)
+        self.assertEqual(run.returncode, 0, run.stdout + run.stderr)
+        report = json.loads(run.stdout)
+        self.assertEqual(report["status"], "REPLAY_COMPLETE", report)
+        self.assertGreater(report["verified_n"], 0)
+        self.assertEqual(report["verified_n"], report["post_floor_row_n"])
+        self.assertEqual(report["raw_row_n"], report["verified_n"] + report["excluded_pre_floor_n"])
+        self.assertEqual(report["rejected_n"], 0)
+        self.assertFalse(report["scientific_pit_eligible"])
+        self.assertFalse(report["forecast_authority"])
+        self.assertEqual(report["checkout_sha"], subprocess.check_output(
+            ["git", "-C", str(PROJECT), "rev-parse", "HEAD"], text=True).strip())
+        print("PINNED_PERSISTENCE_COHORT " + json.dumps(
+            {k: v for k, v in report.items() if k != "rows"}, sort_keys=True))
+
     def test_prospective_source_freshness_exact_boundary_and_all_three_stale_guards(self):
         clock = datetime(2026, 10, 24, 12, 0, tzinfo=timezone.utc)
         materializer.require_fresh_sources(
