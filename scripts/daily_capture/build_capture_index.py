@@ -13,6 +13,7 @@ if __package__ in (None, ""):
     sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
 
 from scripts.daily_capture.freeze_capture_execution_plan import validate_plan
+from scripts.daily_capture.c5_context import capture_fred_context
 
 OWNER_DIRS = {
     "fred_macro": "fred-owner-output",
@@ -407,6 +408,8 @@ def main() -> None:
         "context_owners_passed": context_passed,
         "owners": owners,
         "market_metrics": extract_metrics(args.root),
+        "c5_vix_context": capture_fred_context(args.root / "fred-owner-output", args.run_id,
+            captured_at, datetime.now(timezone.utc), int(exit_codes.get("fred_macro", 999))),
         "hourly_sequence_lane": "03_DAILY_CAPTURE_LOGS/hourly",
         "hourly_sequence_owned_fields": [
             "BTCUSDT_1H_OHLCV", "ETHUSDT_1H_OHLCV", "ETHBTC_1H_OHLC",
