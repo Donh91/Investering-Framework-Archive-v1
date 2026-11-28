@@ -267,6 +267,12 @@ export function pathModel(view,lang='da'){
      eta:safe(x.eta)||t.pathNoEta})):[],
    source:eligible?('CN #'+p.source_issue+' · '+p.source_week+' · '+p.source_identity):t.unavailable};
 }
+export function cycleLadderDisplay(path,lang='da'){
+ const collapsed=!path?.phases?.some(x=>x.kind==='reference'||x.kind==='next');
+ const watch=path?.eligible===true&&path.altStatus==='WATCH_ONLY';
+ return {collapsed,hideAltseason:collapsed&&!watch,
+  message:lang==='en'?(watch?'Current cycle phase not verified.':'Current cycle phase and altseason timing are unavailable. Awaiting verified evidence.'):(watch?'Aktuel cyklusfase ikke verificeret.':'Aktuel cyklusfase og altseason-timing er utilgængelig. Afventer verificeret kilde.')};
+}
 // Pure source-safety selector, not a new forecasting/scoring engine.
 export function priceSequenceModel(view,latest,now=Date.now()){
  const src=latest?.public_live_precision;
@@ -411,7 +417,10 @@ export function renderProductExperience(view,feeds,lang='da'){
  const root=holder('view-path');
  if(root)root.dataset.evidence=path.eligible?'reference':'unverified';
  const rail=reset('premium-path-rail');
- if(rail){path.phases.forEach((x,i)=>{
+ const cycleDisplay=cycleLadderDisplay(path,lang);
+ if(root){root.dataset.cycleLadderState=cycleDisplay.collapsed?'UNAVAILABLE':'REFERENCE';root.dataset.cycleAltseasonState=cycleDisplay.hideAltseason?'UNAVAILABLE':'WATCH_OR_REFERENCE';}
+ if(rail&&cycleDisplay.collapsed){rail.append(element('li','path-empty',cycleDisplay.message));}
+ else if(rail){path.phases.forEach((x,i)=>{
     const e=element('li','path-node'),name=element('strong','path-phase-label',x.label);
     e.dataset.kind=x.kind;e.dataset.phase=x.key;
     const status=x.kind==='reference'?t.pathStageReference:

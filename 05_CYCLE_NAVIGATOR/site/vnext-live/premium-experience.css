@@ -918,3 +918,8 @@
 @media(prefers-reduced-motion:reduce){
  #view-path .path-source-summary-chevron{transition:none}
 }
+
+/* R10: no repeated unavailable stages or empty altseason card. */
+#view-path[data-cycle-ladder-state="UNAVAILABLE"] .path-legend,
+#view-path[data-cycle-ladder-state="UNAVAILABLE"] #premium-path-explainer,
+#view-path[data-cycle-altseason-state="UNAVAILABLE"] .path-alt-milestone{display:none!important}
