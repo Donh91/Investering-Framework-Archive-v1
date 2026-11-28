@@ -144,4 +144,4 @@ def test_adaptive_workflow_preserves_budgets_and_gates_each_lane_independently()
     assert 'VALIDATION_ELIGIBLE: ${{ steps.budget.outputs.validation_eligible }}' in text
     assert '--task DECISION_MISS_AUDIT --cap-usd 1.5 --reserve-usd 0.05' in text
     assert '--task EVIDENCE_GAP_VALIDATION --cap-usd 1.5 --reserve-usd 0.05' in text
-    assert '--hard-stop-usd 40 --reserve-usd 4.0' in text
+    assert "--hard-stop-usd \"$(if [ \"$(date -u +%Y-%m)\" = 2026-11 ]; then printf 42; else printf 40; fi)\" --reserve-usd 4.0" in text

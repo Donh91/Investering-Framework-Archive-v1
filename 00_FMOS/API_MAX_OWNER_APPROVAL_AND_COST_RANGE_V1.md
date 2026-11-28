@@ -1,5 +1,17 @@
 # API MAX, enkel ejergodkendelse og sikkert usikkerhedsinterval · v1
 
+## Midlertidig caller-grænse, ejerbeslutning 28. november 2026
+
+Kun for UTC-måneden 2026-11 hæves eksisterende workflow-callers med
+`--hard-stop-usd 40` til 42 USD. Fra reset 2026-12-01 00:00 UTC
+anvendes automatisk 40 USD igen, medmindre ejeren særskilt beslutter andet.
+Den kontoomfattende owner hard stop er fortsat 100 USD, normalt mål 50 USD,
+global reserve 4 USD, eksisterende lane-caps (SHADOW_COMPASS_V2 8 USD)
+og generisk enkeltkaldsgrænse 3 USD. Ingen eksisterende 30/50/100-callers,
+strengere reserver eller andre betalingsgates ændres.
+
+Kilde: [Shadow Compass v2 run 46042639884](https://github.com/Donh91/Investering-Framework-Archive-v1/actions/runs/46042639884): lane PASS, global guard BLOCKED ved eksponering 36.043742 USD og resterende 3.956258 USD. Ved samme eksponering giver 42 USD resterende 5.956258 USD. Dette er en beregning, ikke et produktions-PASS eller ny betalingsautoritet.
+
 ## Aktuel eksplicit ejerbeslutning, 13. november 2026
 
 **OVERRIDER KUN BELØBENE for det samlede API-månedsbudget i de
@@ -51,7 +63,7 @@ Et modelnavn er ikke et privilegium. Når eksempelvis `gpt-6.2-sol` findes hos u
 ```bash
 python scripts/api_agent/check_monthly_cost_guard.py \
   --receipt-root research/api_agent/outputs \
-  --hard-stop-usd 40 --reserve-usd 4 \
+  --hard-stop-usd "$(if [ "$(date -u +%Y-%m)" = 2026-11 ]; then printf 42; else printf 40; fi)" --reserve-usd 4 \
   --task SENIOR_REPAIR_AUDIT --model gpt-6.1-sol --effort max \
   --owner-work-id S1-MAX-APPROVED-20261106 \
   --input-token-upper 300000 --output-token-upper 45000

@@ -74,7 +74,7 @@ jobs:
           set -euo pipefail
           python scripts/api_agent/check_monthly_cost_guard.py \
             --receipt-root research/api_agent/outputs \
-            --hard-stop-usd 40 \
+            --hard-stop-usd "$(if [ "$(date -u +%Y-%m)" = 2026-11 ]; then printf 42; else printf 40; fi)" \
             --reserve-usd 0.50 \
             | tee runtime_cn_precision_learning_budget.json
 

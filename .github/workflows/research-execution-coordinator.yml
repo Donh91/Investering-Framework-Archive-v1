@@ -53,6 +53,8 @@ jobs:
 
       - name: Enforce research lane and monthly API hard stops
         run: |
+          set -o pipefail
+          mkdir -p runtime/research-automation
           python scripts/api_agent/check_api_lane_budget.py \
             --receipt-root research/api_agent/outputs \
             --task RESEARCH_AUTOMATION \
@@ -60,8 +62,8 @@ jobs:
             --reserve-usd 0.25
           python scripts/api_agent/check_monthly_cost_guard.py \
             --receipt-root research/api_agent/outputs \
-            --hard-stop-usd 40 \
-            --reserve-usd 4.0
+            --hard-stop-usd "$(if [ "$(date -u +%Y-%m)" = 2026-11 ]; then printf 42; else printf 40; fi)" \
+            --reserve-usd 4.0 | tee runtime/research-automation/monthly_guard.json
 
       - name: Select one heavy lane deterministically
         id: plan
@@ -216,7 +218,7 @@ jobs:
             'contract':'RESEARCH_AUTOMATION_COST_RECEIPT_v1','task':'RESEARCH_AUTOMATION','response_id':rid,
             'request_sha256':hashlib.sha256((rid+lane).encode()).hexdigest(),
             'lane':lane,'estimated_cost_usd':round(cost,8),'created_at_utc':now,
-            'monthly_hard_stop_usd':40.0,'lane_cap_usd':10.0,'automatic_budget_increase':False,
+            'monthly_hard_stop_usd':json.loads(Path('runtime/research-automation/monthly_guard.json').read_text())['effective_hard_stop_usd'],'lane_cap_usd':10.0,'automatic_budget_increase':False,
             'authority':{'framework_state_change':False,'portfolio_action':False,'market_rule_change':False,'canonical_promotion':False}
           }
           out.write_text(json.dumps(receipt,sort_keys=True,separators=(',',':'))+'\n')
