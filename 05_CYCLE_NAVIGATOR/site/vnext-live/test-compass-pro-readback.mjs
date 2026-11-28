@@ -55,6 +55,11 @@ assert.equal(compassProLabels('da').depth,'FORVENTET FALDDYBDE');
 assert.equal(compassProLabels('en').depth,'EXPECTED DRAWDOWN');
 assert.equal(run(view,official,at,'en').evidenceQuality,'Low');
 
+for(const lang of ['da','en']){
+ const inherited=structuredClone(official);inherited.full_stack={truth_banner:{inherited:true}};
+ const result=run(view,inherited,at,lang);assert.equal(result.severity,null);assert.match(result.riskLabel,/ikke fornyet|not refreshed/);assert.match(result.guidance,/Ingen handling baseret på nedarvet risiko|No action based on inherited risk/);assert.doesNotMatch(result.guidance,/trimliste|trim list/);assert.deepEqual(result.sourceWeekly,good.sourceWeekly);
+ inherited.full_stack.truth_banner.inherited=false;assert.equal(run(view,inherited,at,lang).severity,3);
+}
 const high=structuredClone(official);
 high.protection_tracker.pullback_risk_state='HIGH';
 high.protection_tracker.public_explanation.risk_state='HIGH';

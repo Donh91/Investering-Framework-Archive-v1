@@ -228,6 +228,7 @@ export function decisionModel(view,official,lang='da'){
  const eligible=view?.compass?.state==='FRESH'&&view?.compass?.permit_path_live_gates===true&&
    official?.contract==='PUBLIC_COMPASS_PROJECTION_v1'&&official?.data_status==='OK';
  const current=eligible?official:null;
+ const inherited=current?.full_stack?.truth_banner?.inherited===true;
  const bb=current?officialBullBear(current,'1_3d'):null;
  const risk=current?officialPullbackStage(current,{forecast_week:view.weekly?.forecast_week},lang):null;
  const riskIndex=risk?.status==='SOURCE_VALID'&&RISK.includes(risk.sourceRiskState)?
@@ -237,11 +238,11 @@ export function decisionModel(view,official,lang='da'){
   direction:current?(safe(current.market_now?.directional_state)||t.unavailable):t.unavailable,
   bull:bb?.bull??null,bear:bb?.bear??null,bias:bb?.bias??t.unavailable,
   riskIndex,riskState:riskIndex<0?t.unavailable:risk.sourceRiskState,
-  riskLabel:riskIndex<0?t.unavailable:risk.stageLabel,
+  riskLabel:inherited?risk.stageLabel:riskIndex<0?t.unavailable:risk.stageLabel,
   riskWindow:riskIndex<0?t.unavailable:(risk.etaLabel||t.unavailable),
   riskQuality:riskIndex<0?t.unavailable:risk.qualityLabel,
   sell:current?(safe(current.sell_assessment?.state)||t.unavailable):t.unavailable,
-  distribution:current?(safe(current.protection_tracker?.distribution_risk)||t.unavailable):t.unavailable
+  distribution:current&&!inherited?(safe(current.protection_tracker?.distribution_risk)||t.unavailable):t.unavailable
  };
 }
 export function pathModel(view,lang='da'){

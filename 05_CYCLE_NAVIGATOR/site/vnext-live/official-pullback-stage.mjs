@@ -39,7 +39,8 @@ export function officialPullbackStage(compass, weekly, lang='da') {
   const locale=lang==='en'?'en':'da';
   const timed=officialPullbackDisplay(compass, weekly, locale);
   const source=compass?.protection_tracker;
-  const phase=timed.state==='VALID' ? STAGES[timed.riskState] : null;
+  const inherited=compass?.full_stack?.truth_banner?.inherited===true;
+  const phase=!inherited&&timed.state==='VALID' ? STAGES[timed.riskState] : null;
   const quality=phase ? QUALITY[source?.confidence_quality] : null;
   const unavailable=locale==='da'?'Kan ikke vurderes':'Cannot be assessed';
   const unknownQuality=locale==='da'?'Evidenskvalitet ukendt':'Evidence quality unknown';
@@ -52,18 +53,18 @@ export function officialPullbackStage(compass, weekly, lang='da') {
     authority:'PRESENTATION_ONLY',
     sourceRiskState:phase ? timed.riskState : 'UNAVAILABLE',
     status:phase ? 'SOURCE_VALID' : 'UNAVAILABLE',
-    stageLabel:phase?.[locale] || unavailable,
+    stageLabel:inherited?(locale==='da'?'Tidligere risikovurdering, ikke fornyet':'Inherited risk, not refreshed'):(phase?.[locale] || unavailable),
     // "order" is an ordinal classification, NOT a progress fraction, %
     // probability, confidence score or a forecast of time remaining.
     ordinalRiskClass:phase?.order ?? null,
     windowKind:phase ? timed.windowKind : 'UNAVAILABLE',
-    etaLabel:phase ? timed.headline : timed.headline,
+    etaLabel:inherited?(locale==='da'?'Ingen aktuel risikovarsling':'No current risk watch'):timed.headline,
     proximityLabel:noOnset,
     qualityLabel:quality?.[locale] || unknownQuality,
     qualitySemantics:'EVIDENCE_QUALITY_NOT_PROBABILITY',
     sellPermission:false,
     confirmedMarketDecline:false,
-    explanation:timed.note,
+    explanation:inherited?(locale==='da'?'Ingen handling baseret på nedarvet risiko.':'No action based on inherited risk.'):timed.note,
     alertQualified:null,
     sourceWeek:phase ? timed.sourceWeek : null
   };
