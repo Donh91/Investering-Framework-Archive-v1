@@ -1,5 +1,7 @@
 # API MAX, enkel ejergodkendelse og sikkert usikkerhedsinterval · v1
 
+**Owner decision 2026-11-28 (M1):** only `weekly-api-calibration-shadow.yml` and `shadow-admission-ai-decider.yml` use November USD44; all other November USD42 callers remain unchanged. Both return to USD40 at 2026-12-01 00:00 UTC. Existing global USD100, reserves, single-request USD3 and lane caps are unchanged; no extra paid requests authorized.
+
 ## Midlertidig caller-grænse, ejerbeslutning 28. november 2026
 
 Kun for UTC-måneden 2026-11 hæves eksisterende workflow-callers med

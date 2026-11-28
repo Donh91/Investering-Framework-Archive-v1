@@ -137,3 +137,18 @@ def test_november_2026_caller_hard_stop_expires_at_utc_reset():
         result = subprocess.check_output(["bash", "-c", 'date() { printf "%s" "$MOCK_MONTH"; }; printf "%s" ' + selector], env={"MOCK_MONTH": month, "PATH": "/usr/bin:/bin"}, text=True)
         assert result == expected
     assert subprocess.check_output(["bash", "-c", 'date() { return 1; }; printf "%s" ' + selector], text=True) == "40"
+
+
+def test_mm_november_priority_is_limited_to_two_workflows():
+    import subprocess
+    priority = {"weekly-api-calibration-shadow.yml", "shadow-admission-ai-decider.yml"}
+    selector42 = '"$(if [ "$(date -u +%Y-%m)" = 2026-11 ]; then printf 42; else printf 40; fi)"'
+    selector44 = selector42.replace("printf 42", "printf 44")
+    workflows = ROOT / ".github/workflows"
+    assert {p.name for p in workflows.glob("*.yml") if selector44 in p.read_text()} == priority
+    for name in priority:
+        assert selector42 not in (workflows / name).read_text()
+    assert selector42 in (workflows / "shadow-compass-v2.yml").read_text()
+    for month, expected in (("2026-10", "40"), ("2026-11", "44"), ("2026-12", "40"), ("2027-11", "40")):
+        assert subprocess.check_output(["bash", "-c", 'date() { printf "%s" "$MOCK_MONTH"; }; printf "%s" ' + selector44], env={"MOCK_MONTH": month, "PATH": "/usr/bin:/bin"}, text=True) == expected
+    assert subprocess.check_output(["bash", "-c", 'date() { return 1; }; printf "%s" ' + selector44], text=True) == "40"
