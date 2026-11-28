@@ -13,7 +13,7 @@ const ACCEPTED=Object.freeze({
  official:['VERIFIED','DEGRADED'],
  auto_market_state:['HASH_VERIFIED','UNVERIFIED'],
  native:['SOURCE_ALIGNED','VERIFIED_NEWER_OR_DIFFERENT_SOURCE','UNVERIFIED'],
- shadow:['ALIGNED_RESEARCH','STALE_RESEARCH','UNVERIFIED'],
+ shadow:['ALIGNED_RESEARCH','FRESH_RESEARCH','STALE_RESEARCH','UNVERIFIED'],
  strategic:['BOUND_WEEKLY_ANCHOR','UNVERIFIED'],
  master_monday:['SOURCE_ALIGNED','UNVERIFIED'],
  cycle_navigator:['WEEKLY_POINTER_ALIGNED','UNVERIFIED']
@@ -29,6 +29,7 @@ const PUBLIC_STATUS_LABELS=Object.freeze({
  SOURCE_ALIGNED:['Kildeafstemt','Source aligned'],
  VERIFIED_NEWER_OR_DIFFERENT_SOURCE:['Verificeret anden kilde','Verified different source'],
  ALIGNED_RESEARCH:['Research afstemt','Research aligned'],
+ FRESH_RESEARCH:['Frisk research','Fresh research'],
  STALE_RESEARCH:['Research er forældet','Stale research'],
  BOUND_WEEKLY_ANCHOR:['Bundet til ugegrundlag','Bound to weekly evidence'],
  WEEKLY_POINTER_ALIGNED:['Ugepeger afstemt','Weekly pointer aligned'],
@@ -48,6 +49,14 @@ const LONG_DIRECTION_LABELS=Object.freeze({
 export function displayPublicStatus(value,lang='da'){
  const pair=PUBLIC_STATUS_LABELS[value];
  return pair?pair[lang==='en'?1:0]:(lang==='en'?'Unknown source status':'Ukendt kildestatus');
+}
+/** Display source times separately from freshness; UTC is explicit. */
+export function displaySourceRow(item,lang='da'){
+ const label=displayPublicStatus(item?.status,lang);
+ if(item?.id!=='shadow'||!['ALIGNED_RESEARCH','FRESH_RESEARCH','STALE_RESEARCH'].includes(item.status))return label;
+ const clock=v=>typeof v==='string'&&Number.isFinite(Date.parse(v))?new Date(v).toISOString().slice(11,16)+' UTC':(lang==='en'?'unavailable':'utilgængelig');
+ const relation=item.official_source_aligned===true?(lang==='en'?'same source':'samme datagrundlag'):item.official_source_aligned===false?(lang==='en'?'different source':'ikke samme datagrundlag'):(lang==='en'?'alignment unverified':'afstemning ikke verificeret');
+ return label+' · '+(lang==='en'?'based on market data from ':'bygger på markedsdata fra ')+clock(item.historical_source_asof_utc)+' · '+(lang==='en'?'Official Compass: ':'Officiel kompas: ')+clock(item.official_source_asof_utc)+' · '+relation;
 }
 /** Source-categorical confidence, not calibrated probability or a site judgment. */
 const SOURCE_CONFIDENCE_LABELS=Object.freeze({
@@ -120,7 +129,8 @@ export function sourceTrace(latest,compass,parsed){
   result.reason=!currentOfficial?'OFFICIAL_NOT_CURRENT_CONTEXT_ONLY':
     f.status==='COMPLETE'?'VERIFIED_ALL_REQUIRED_LAYERS':'SOME_LAYERS_MISSING_OR_DEGRADED';
   result.sources=STATES.map(([id,name])=>({
-    id,name,status:id==='official'&&!currentOfficial?'UNAVAILABLE':clean(id,f.source_status?.[id])
+    id,name,status:id==='official'&&!currentOfficial?'UNAVAILABLE':clean(id,f.source_status?.[id]),
+    ...(id==='shadow'&&f.shadow?.status===f.source_status?.shadow?{historical_source_asof_utc:f.shadow.historical_source_asof_utc,official_source_asof_utc:f.shadow.official_source_asof_utc,official_source_aligned:f.shadow.official_source_aligned}:{})
   }));
   const weeklySourceAligned=f.source_status?.cycle_navigator==='WEEKLY_POINTER_ALIGNED'&&
     Number.isInteger(f.weekly?.iso_week)&&Number.isInteger(f.weekly?.iso_year)&&

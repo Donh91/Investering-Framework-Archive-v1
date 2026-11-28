@@ -359,7 +359,7 @@ function pullbackCard(compass, readingState='UNAVAILABLE') {
 function compositeIntel(compass, readingState='UNAVAILABLE'){
  const f=compass?.full_stack;if(f?.contract!=='PUBLIC_COMPASS_FULL_STACK_READBACK_v1')return '';
  const verified=readingState==='CURRENT'&&compass?.data_status==='OK'&&f.source_status?.official==='VERIFIED';
- const sh=f.shadow||{},st=f.strategic||{},current=sh.status==='ALIGNED_RESEARCH',stale=sh.status==='STALE_RESEARCH';
+ const sh=f.shadow||{},st=f.strategic||{},current=['ALIGNED_RESEARCH','FRESH_RESEARCH'].includes(sh.status),stale=sh.status==='STALE_RESEARCH';
  const d=k=>{const h=sh?.horizons?.[k];return !h?'UNAVAILABLE':current?publicState(h.direction):stale?'STALE · '+publicState(h.direction):'UNVERIFIED';};
  const analysis=current&&sh.horizons?.['1_3d']?.interpretation?publicCompassText(sh.horizons['1_3d'].interpretation):
  stale?'A previous model outlook exists, but its market observations are stale. No fresh directional model edge is claimed.':
@@ -372,7 +372,7 @@ function compositeIntel(compass, readingState='UNAVAILABLE'){
  return '<section class="compass-synthesis" data-contract="PUBLIC_COMPASS_FULL_STACK_READBACK_v1" aria-label="Combined Compass intelligence">'
  +'<div class="synthesis-head"><div><span>COMBINED COMPASS INTELLIGENCE</span><strong>Official actions + independent model research</strong></div><small>'+esc(f.status==='COMPLETE'?'SOURCE-ALIGNED':'PARTIAL EVIDENCE')+'</small></div>'
  +'<div class="synthesis-proof"><div><span>OFFICIAL ACTION</span><strong>'+esc(verified?recommendation(compass.action_now).action:'UNAVAILABLE · NOT CURRENT')+'</strong></div>'
- +'<div><span>RESEARCH PERSPECTIVE</span><strong>'+esc(current?'Source-aligned model view':stale?'Stale model observation':'Not verified')+'</strong></div></div>'
+ +'<div><span>RESEARCH PERSPECTIVE</span><strong>'+esc(current?(sh.status==='ALIGNED_RESEARCH'?'Source-aligned model view':'Fresh model view · separate source alignment'):stale?'Stale model observation':'Not verified')+'</strong></div></div>'
  +'<div class="synthesis-horizons">'+lanes.map(([label,value])=>'<div><span>'+esc(label)+'</span><strong>'+esc(publicState(value))+'</strong></div>').join('')+'</div>'
  +'<p class="synthesis-analysis">'+esc(analysis)+'</p>'
  +'<small class="synthesis-boundary">MONDAY BASELINE · '+esc(mondayReading)+' · Frozen weekly context, not a current action.</small>'
