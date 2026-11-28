@@ -130,7 +130,7 @@ export function sourceTrace(latest,compass,parsed){
     f.status==='COMPLETE'?'VERIFIED_ALL_REQUIRED_LAYERS':'SOME_LAYERS_MISSING_OR_DEGRADED';
   result.sources=STATES.map(([id,name])=>({
     id,name,status:id==='official'&&!currentOfficial?'UNAVAILABLE':clean(id,f.source_status?.[id]),
-    ...(id==='shadow'&&f.shadow?.status===f.source_status?.shadow?{historical_source_asof_utc:f.shadow.historical_source_asof_utc,official_source_asof_utc:f.shadow.official_source_asof_utc,official_source_aligned:f.shadow.official_source_aligned}:{})
+    ...(id==='shadow'&&f.shadow&&f.shadow.status===f.source_status?.shadow?{historical_source_asof_utc:f.shadow.historical_source_asof_utc,official_source_asof_utc:f.shadow.official_source_asof_utc,official_source_aligned:f.shadow.official_source_aligned}:{})
   }));
   const weeklySourceAligned=f.source_status?.cycle_navigator==='WEEKLY_POINTER_ALIGNED'&&
     Number.isInteger(f.weekly?.iso_week)&&Number.isInteger(f.weekly?.iso_year)&&
