@@ -274,7 +274,7 @@ test('pullback first fold mirrors only eligible official PRO stages, never raise
  assert.match(runtime,/\$\('pro-guidance'\)\?\.textContent/);
  assert.match(runtime,/surface\.dataset\.current=stage\?'true':'false'/);
  assert.match(runtime,/const stage=!inherited&&sourceStage/);
- assert.match(runtime,/inherited\?\[\]:\[\.\.\.source\.children\]/);
+ assert.match(runtime,/if\(inherited\)\{copy\.dataset\.current='false';copy\.dataset\.prior='false';copy\.removeAttribute\('aria-current'\);\}/);
  assert.doesNotMatch(runtime,/const\s+pullbackThreshold\s*=/);
  assert.doesNotMatch(html,/eventProbability\s*:\s*\d/);
  const css=await read('./premium-tabs.css');

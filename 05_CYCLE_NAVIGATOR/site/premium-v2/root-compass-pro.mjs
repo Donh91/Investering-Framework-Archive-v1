@@ -340,8 +340,11 @@ function renderRiskQuick(){
  // Same official five source stages, never inferred from hourly prices.
  const source=$('premium-risk-steps'),target=$('cn-risk-quick-steps');
  if(source&&target){
-  target.replaceChildren(...(inherited?[]:[...source.children]).map(el=>{
-   const copy=el.cloneNode(true);copy.removeAttribute('id');return copy;
+  target.replaceChildren(...[...source.children].map(el=>{
+   const copy=el.cloneNode(true);copy.removeAttribute('id');
+   // Preserve the five explanatory stages, but never highlight inherited risk as current.
+   if(inherited){copy.dataset.current='false';copy.dataset.prior='false';copy.removeAttribute('aria-current');}
+   return copy;
   }));
  }
  const surface=$('compass-pro')?.querySelector('.cn-risk-quick');
