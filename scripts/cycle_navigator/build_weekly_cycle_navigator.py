@@ -21,6 +21,7 @@ from scripts.cycle_navigator.daily_path_recovery import recover_daily_path, reje
 from scripts.cycle_navigator.price_input_attestation import attest_completed_week, PriceEvidenceError, CONTRACT as ORIGINAL_PRICE_CONTRACT
 from scripts.cycle_navigator.deterministic_range_baseline import build_baseline, canonical as range_canonical, score_baseline
 from scripts.cycle_navigator.weekly_offline_issuer import build_offline_value, METHOD as OFFLINE_ISSUER_METHOD
+from scripts.cycle_navigator.range_freeze_baselines import freeze_baselines, row_benchmarks
 
 
 
@@ -129,6 +130,7 @@ def append_forward_ranges(
     week: int,
     generated_unix: int,
     freeze: dict[str, Any],
+    baseline_snapshot: dict[str, Any] | None = None,
 ) -> None:
     intraday = freeze.get("intraday_map") if isinstance(freeze.get("intraday_map"), dict) else {}
     # A full-week or day-window range is NOT prospectively frozen for its
@@ -179,6 +181,8 @@ def append_forward_ranges(
                 })
     if not rows:
         return
+    for row in rows:
+        row.update(row_benchmarks(baseline_snapshot, row["asset"], generated_unix))
     ledger = repo / "05_CYCLE_NAVIGATOR/forward_range_ledger/CN_FORWARD_RANGE_LEDGER_v2.jsonl"
     ledger.parent.mkdir(parents=True, exist_ok=True)
     existing: set[tuple[int, str, str, str]] = set()
@@ -1051,6 +1055,10 @@ def main() -> None:
         freeze, target_year, target_week,
         datetime.fromtimestamp(generated_unix, timezone.utc))
     source_manifest = {"daily_path_issuance": daily_path_issue, "daily_product_acceptance": daily_product, "daily_path_recovery": daily_recovery_receipt, "original_price_product_diagnostic": build_weekly_price_product_diagnostic(context, freeze, daily_product, daily_recovery_receipt), "issuer_method": OFFLINE_ISSUER_METHOD, "api_request_performed": False, "contract": "CYCLE_NAVIGATOR_SOURCE_MANIFEST_v1", "issue_number": issue, "public_issue_number": public_issue, "completed_iso_year": completed_year, "completed_iso_week": completed_week, "target_iso_year": target_year, "target_iso_week": target_week, "deterministic_range_baseline_persistence": {"forecast": range_forecast_persistence, "prior_score": prior_range_score_persistence}, "master_monday_dir": str(mm_dir.relative_to(repo)), "master_monday_files": {name: sha256_bytes((mm_dir / name).read_bytes()) for name in required}, "previous_issue_number": prev_issue or None, "previous_machine_available": prev_machine is not None, "previous_exact_text_available": prev_text is not None}
+    benchmark_snapshot = freeze_baselines(repo, year=target_year, week=target_week,
+                                         generated_unix=generated_unix, completed_capture=weekly_capture,
+                                         range_forecast=range_forecast)
+    source_manifest["range_benchmark_freeze"] = benchmark_snapshot
     scoring_valid_from_unix = ((generated_unix + 3599) // 3600) * 3600
     scoring_valid_from_utc = datetime.fromtimestamp(scoring_valid_from_unix, tz=timezone.utc).isoformat().replace("+00:00", "Z")
     package = {"contract": "CYCLE_NAVIGATOR_MACHINE_PACKAGE_v1", "generated_unix": generated_unix, "public_issue_number": public_issue, "authority": "USER_FACING_DERIVED_FROM_FINAL_MASTER_MONDAY", "publication_status": "X_READY_NOT_CONFIRMED_PUBLISHED", "source_manifest_sha256": sha256_bytes(canonical_bytes(source_manifest)), **value}
@@ -1086,6 +1094,8 @@ def main() -> None:
         "frozen_unix": generated_unix,
         "source_forecast_freeze_path": str((target_dir / "CYCLE_NAVIGATOR_FORECAST_FREEZE.json").relative_to(repo)),
         "source_forecast_freeze_sha256": pointer["forecast_freeze_sha256"],
+        "source_manifest_sha256": package["source_manifest_sha256"],
+        "range_benchmark_snapshot_sha256": benchmark_snapshot.get("snapshot_sha256"),
         "source_binding_path": str((target_dir / "CYCLE_NAVIGATOR_PUBLIC_SERIES_BINDING.json").relative_to(repo)),
         "daily_path_issuance": daily_path_issue,
         "daily_product_acceptance": daily_product,
@@ -1100,7 +1110,7 @@ def main() -> None:
     (target_dir / "CYCLE_NAVIGATOR_SITE_PUBLIC_FREEZE_RECEIPT.json").write_bytes(canonical_bytes(site_receipt))
     (target_dir / "CYCLE_NAVIGATOR_DELIVERY_POINTER.json").write_bytes(canonical_bytes(pointer))
     (repo / "05_CYCLE_NAVIGATOR/LATEST_CYCLE_NAVIGATOR_POINTER.json").write_bytes(canonical_bytes(pointer))
-    append_forward_ranges(repo, public_issue_number=public_issue, machine_issue_number=issue, year=target_year, week=target_week, generated_unix=generated_unix, freeze=freeze)
+    append_forward_ranges(repo, public_issue_number=public_issue, machine_issue_number=issue, year=target_year, week=target_week, generated_unix=generated_unix, freeze=freeze, baseline_snapshot=benchmark_snapshot)
 
     series_path = repo / "05_CYCLE_NAVIGATOR/public_series/CN_PUBLIC_SERIES_INDEX.json"
     series = maybe_json(series_path) or {
