@@ -139,6 +139,18 @@ class FredCsvCollectorTests(unittest.TestCase):
         self.assertEqual(registry["primary_source"]["source_id"], "FRED_CSV_MACRO_CORE")
         self.assertFalse(registry["authority"]["binding"])
 
+    def test_c5_registry_and_existing_scheduled_owner(self):
+        registry = json.loads((ROOT / "02_DATA_PING/data_terminal/source_registry/fred_csv_macro_core.json").read_text())
+        self.assertTrue({"VIXCLS", "VXVCLS"} <= set(registry["primary_source"]["series"]))
+        self.assertEqual(registry["primary_source"]["units"]["VXVCLS"], "INDEX")
+        self.assertEqual(registry["c5_owner_decision"]["publication"], "DERIVED_ONLY")
+        self.assertEqual(collector.UNITS["VXVCLS"], "INDEX")
+        workflow = (ROOT / ".github/workflows/daily-raw-owner-capture.yml").read_text()
+        self.assertIn("--series DGS2,DGS10,DTWEXBGS,VIXCLS,VXVCLS --output-dir fred-owner-output", workflow)
+        self.assertNotIn("            fred-owner-output/\n", workflow)
+        manual = (ROOT / ".github/workflows/data-terminal-shadow-manual.yml").read_text()
+        self.assertIn("if: github.event_name != 'workflow_dispatch' || inputs.mode != 'live'", manual)
+
     def test_manual_workflow_remains_dispatch_only_and_read_only(self):
         workflow = (ROOT / ".github/workflows/data-terminal-shadow-manual.yml").read_text()
         self.assertIn("workflow_dispatch:", workflow)

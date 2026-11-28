@@ -109,7 +109,7 @@ jobs:
           # the next successful tactical anchor if the last valid macro capture
           # has crossed the bounded 24h recovery threshold.
           if [ "${RUN_SLOW_LANE}" = "true" ]; then
-            run_owner fred_macro python scripts/data_terminal/fred_multiseries_live_adapter.py --series DGS2,DGS10,DTWEXBGS,VIXCLS --output-dir fred-owner-output
+            run_owner fred_macro python scripts/data_terminal/fred_multiseries_live_adapter.py --series DGS2,DGS10,DTWEXBGS,VIXCLS,VXVCLS --output-dir fred-owner-output
           else
             record_code fred_macro 78
           fi
@@ -242,7 +242,7 @@ jobs:
         with:
           name: daily-live-anchor-${{ github.run_id }}-${{ github.run_attempt }}
           path: |
-            fred-owner-output/
+            # FRED raw/snapshots remain transient; public Actions artifacts must not contain live FRED data.
             binance-spot-microstructure-output/
             okx-swap-owner-output/
             top100-breadth-owner-output/

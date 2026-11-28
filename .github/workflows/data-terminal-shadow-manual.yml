@@ -73,7 +73,8 @@ jobs:
           if result['status'] != 'PASS':
               raise SystemExit(1)
           PY
-      - name: Upload sanitized owner artifact
+      - name: Upload synthetic fixture artifact only
+        if: github.event_name != 'workflow_dispatch' || inputs.mode != 'live'
         uses: actions/upload-artifact@v4
         with:
           name: data-terminal-fred-owner-${{ github.run_id }}
