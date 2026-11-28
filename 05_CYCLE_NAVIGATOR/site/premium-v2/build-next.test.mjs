@@ -6,7 +6,8 @@ const here=new URL('./',import.meta.url);
 test('staged v2 asset list excludes AppDeploy demos and canonical root',()=>{
  const p=stagingPlan();
  assert.ok(p.to.endsWith('/site/dist/next'));
- assert.equal(p.assets.length,13);
+ assert.equal(p.assets.length,14);
+ assert.ok(p.assets.includes('system-cutover.mjs'));
  assert.ok(!approvedAssets.some(x=>x.includes('reference/')||x.includes('src/main.ts')));
 });
 test('original B and Proof imports resolve only to staged first-party sources',async()=>{
@@ -18,6 +19,8 @@ test('original B and Proof imports resolve only to staged first-party sources',a
  assert.match(js,/\.\/official-source-adapter\.mjs/);
  assert.match(proof,/\.\/price-range-proof\.mjs/);
  assert.match(proof,/\.\/public-source-links\.mjs/);
+ assert.match(js,/\.\.\/system-cutover\.mjs/);
+ assert.match(proof,/\.\.\/system-cutover\.mjs/);
  assert.doesNotMatch(html,/\.\.\/reference\/appdeploy-bc/);
  assert.doesNotMatch(js,/\bMath\.sin\s*\(/);
 });

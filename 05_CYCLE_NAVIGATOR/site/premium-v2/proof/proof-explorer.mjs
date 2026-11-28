@@ -4,6 +4,7 @@
  */
 import {sourceOnlyPriceRangeProof} from './price-range-proof.mjs';
 import {sourceReadbackProofRows} from './public-source-links.mjs';
+import {SYSTEM_CUTOVER_UTC,cohortLabel,currentNewScoreCount} from '../system-cutover.mjs';
 const $=id=>document.getElementById(id);
 const HOME='https://raw.githubusercontent.com/Donh91/CycleNavigator-scores/main/';
 const latest=new URL('../../data/latest.json',import.meta.url);
@@ -133,12 +134,19 @@ function display(){
   ' min · '+local('gyldig til','valid until')+' '+view.source_valid_until_utc:
   local('Observationstid og kildefriskhed utilgængelig.','Observation time and source freshness unavailable.');
  $('proof-status').textContent=view?.status==='PROVISIONAL_SOURCE_READBACK'?
-  local('FORELØBIG · '+view.forecast_week,'PROVISIONAL · '+view.forecast_week):
+  local('FORELØBIG · '+view.forecast_week,'PROVISIONAL · '+view.forecast_week)+' · '+cohortLabel(view.freeze_issued_at_utc,document.documentElement.lang):
   local('KILDE MANGLER','SOURCE MISSING');
  $('proof-method').textContent=local(
   'Prisinterval: 70 % dækning + 30 % Jaccard. D1–2/D3–4/D5–7 er kildeberegnede tal til dato; retning og fordel er en separat familie, som i dag afstår (ABSTAIN). Ingen afkastgaranti.',
   'Price Range: 70% containment + 30% Jaccard. D1–2/D3–4/D5–7 are source-reported interim readings; Direction/Edge is a separate ABSTAIN/Proof family. Not a return prediction.'
  );
+ const newCount=currentNewScoreCount(view);
+ const method=$('proof-method');
+ method.textContent+=' '+local(
+  'Systemskifte '+SYSTEM_CUTOVER_UTC+' (drift, ikke en ny prognosemetode). Nye kildeberegnede prisvinduer i denne uge: ',
+  'Operational system cutover '+SYSTEM_CUTOVER_UTC+' (not a new forecasting method). New-system source-reported price windows this week: ')+
+  (newCount===null?local('ikke verificeret','not verified'):String(newCount))+
+  '. '+local('Tidligere scorer er uændrede og tælles efter den oprindelige udstedelsestid.','Earlier scores are unchanged and grouped by their original issuance time.');
  document.querySelectorAll('[data-proof-step]').forEach(button=>{
   button.setAttribute('aria-pressed',String(button.dataset.proofStep===step));
  });

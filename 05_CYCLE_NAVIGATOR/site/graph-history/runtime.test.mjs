@@ -6,6 +6,7 @@ import vm from 'node:vm';
 import {readFileSync} from 'node:fs';
 import {fileURLToPath} from 'node:url';
 import {resolve} from 'node:path';
+import {SYSTEM_CUTOVER_UTC,issuanceCohort,currentNewScoreCount} from '../premium-v2/system-cutover.mjs';
 
 const root=fileURLToPath(new URL('../../../',import.meta.url));
 const page=readFileSync(resolve(root,'05_CYCLE_NAVIGATOR/site/graph-history/index.html'),'utf8');
@@ -241,4 +242,26 @@ test('original blue curve passes through all 7 points without overshoot; dots on
  segs.forEach((c,i)=>{const p0=knots[i],[,y1,,y2,,y3]=c,lo=Math.min(p0[1],y3)-0.5,hi=Math.max(p0[1],y3)+0.5;
   for(let j=0;j<=50;j++){const s=j/50,u=1-s,y=u*u*u*p0[1]+3*u*u*s*y1+3*u*s*s*y2+s*s*s*y3;assert.ok(y>=lo&&y<=hi,'BLUE_OVERSHOOT_'+i)}});
  const ys=closes.map((_,i)=>dots[i][1]);assert.equal(new Set(ys).size,7);
+});
+
+test('system cutover is one presentation-only line, with original issue cohorts and no score reconstruction',async()=>{
+ assert.match(javascript,new RegExp("SYSTEM_CUTOVER_UTC='"+SYSTEM_CUTOVER_UTC+"'"));
+ const d=fixture();const before={...syntheticWeek46(),week:'2026-W48',issued_at_utc:'2026-11-23T07:20:00Z',first_eligible_utc:'2026-11-23T08:00:00Z'};
+ const after={...syntheticWeek46(),week:'2026-W49',issued_at_utc:'2026-11-30T07:20:00Z',first_eligible_utc:'2026-11-30T08:00:00Z'};
+ d.weeks=[before,after];d.actual=[{time:'2026-11-28T01:00:00Z',close:78000}];
+ const r=await run(d);
+ assert.equal(r.elements.get('plot').children.filter(x=>x.attrs['data-system-cutover']===SYSTEM_CUTOVER_UTC).length,1);
+ assert.equal(r.blue.length,2);assert.equal(r.green.length,1);
+ assert.match(r.elements.get('archive').children[0].children[1].textContent,/Nyt system/);
+ assert.match(r.elements.get('archive').children[1].children[1].textContent,/Gammelt system/);
+ assert.match(r.elements.get('notice').textContent,/Nye originale prognoseuger siden systemskiftet: 1/);
+ assert.equal(issuanceCohort('2026-11-27T22:37:09Z'),'OLD_SYSTEM');
+ assert.equal(issuanceCohort(SYSTEM_CUTOVER_UTC),'NEW_SYSTEM');
+ assert.equal(issuanceCohort('2026-11-31T10:00:00Z'),'UNVERIFIED');
+ assert.equal(issuanceCohort(null),'UNVERIFIED');
+ const view={status:'PROVISIONAL_SOURCE_READBACK',freeze_issued_at_utc:before.issued_at_utc,window_items:[{source_reported_score_to_date:75}]};
+ assert.equal(currentNewScoreCount(view),0);
+ assert.equal(currentNewScoreCount({...view,freeze_issued_at_utc:after.issued_at_utc}),1);
+ assert.equal(currentNewScoreCount({...view,freeze_issued_at_utc:null}),null);
+ assert.equal(view.window_items[0].source_reported_score_to_date,75);
 });

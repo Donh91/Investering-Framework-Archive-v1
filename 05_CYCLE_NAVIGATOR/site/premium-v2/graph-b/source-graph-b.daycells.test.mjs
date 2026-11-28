@@ -3,6 +3,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import vm from 'node:vm';
+import {SYSTEM_CUTOVER_MS,SYSTEM_CUTOVER_UTC} from '../system-cutover.mjs';
 
 const HOUR=3600000,DAY=24*HOUR,START=Date.parse('2026-11-09T00:00:00Z');
 const iso=ms=>new Date(ms).toISOString().replace('.000Z','Z');
@@ -30,7 +31,7 @@ function harness(){
  let script=fs.readFileSync(new URL('./source-graph-b.mjs',import.meta.url),'utf8');
  const importLine="import {readOfficialGraphB,replayObservedUntil} from './official-source-adapter.mjs';";
  assert.ok(script.includes(importLine),'renderer import contract changed; update harness');
- script=script.replace(importLine,'');
+ script=script.replace(importLine,'').replace(/^import .*system-cutover\.mjs';\n/gm,'');
  script=script.replaceAll('import.meta.url',JSON.stringify('https://example.invalid/graph-b/source-graph-b.mjs'));
  const boundary="document.querySelectorAll('[data-asset]').forEach(b=>b.addEventListener";
  assert.ok(script.includes(boundary),'renderer entry boundary changed; update harness');
@@ -41,7 +42,7 @@ function harness(){
   return visible.length?[visible]:[];
  };
  const ctx=vm.createContext({
-  document:doc,URL,Intl,Date,console,
+  document:doc,URL,Intl,Date,console,SYSTEM_CUTOVER_MS,SYSTEM_CUTOVER_UTC,
   replayObservedUntil,
   readOfficialGraphB(){throw Error('NO_REAL_SOURCE_OR_NETWORK_IN_TEST');}
  });

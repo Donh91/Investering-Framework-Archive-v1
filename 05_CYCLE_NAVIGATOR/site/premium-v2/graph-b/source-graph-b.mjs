@@ -10,6 +10,7 @@
  * independent proof attestation or score engine.
  */
 import {readOfficialGraphB,replayObservedUntil} from './official-source-adapter.mjs';
+import {SYSTEM_CUTOVER_MS} from '../system-cutover.mjs';
 const $=id=>document.getElementById(id);
 const SVG='http://www.w3.org/2000/svg',HOUR=3600000,DAY=86400000;
 const SOURCE_RECHECK_MS=5*60*1000;
@@ -347,6 +348,13 @@ function plot(){
  };
  for(let i=0;i<5;i++){let py=28+(344/4)*i;addLine(14,py,986,py,false)}
  for(let i=1;i<7;i++)addLine(x(start+i*DAY),28,x(start+i*DAY),372,true);
+ // Operational transition marker only: no alteration of the frozen forecast or actual paths.
+ if(SYSTEM_CUTOVER_MS>=start&&SYSTEM_CUTOVER_MS<end){
+  const cx=x(SYSTEM_CUTOVER_MS),line=document.createElementNS(SVG,'line'),label=document.createElementNS(SVG,'text');
+  for(const [k,v] of [['x1',cx],['x2',cx],['y1',28],['y2',372],['stroke','#8a5a13'],['stroke-width',2],['stroke-dasharray','5 4'],['data-system-cutover','2026-11-27T22:37:10Z']])line.setAttribute(k,String(v));
+  for(const [k,v] of [['x',cx+(cx>780?-6:6)],['y',20],['text-anchor',cx>780?'end':'start'],['font-size',14],['fill','#8a5a13']])label.setAttribute(k,String(v));
+  label.textContent=t('Systemskifte · 27/11','System cutover · 27 Nov');grid.append(line,label);
+ }
  const axis=$('price-axis');axis.replaceChildren();
  for(let i=0;i<5;i++){const span=document.createElement('span');
   span.textContent=new Intl.NumberFormat(language==='da'?'da-DK':'en-US',{maximumFractionDigits:0}).format(hi-(hi-lo)*i/4);

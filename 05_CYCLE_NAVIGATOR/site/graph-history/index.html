@@ -109,6 +109,8 @@ const URL='../data/graph-history/timeline.json';
 const svg=document.getElementById('plot'), scroll=document.getElementById('scroll');
 const $=id=>document.getElementById(id);
 const NS='http://www.w3.org/2000/svg', DAY=86400000, HOUR=3600000;
+// Standalone History page; regression test binds this mirror to the shared root constant.
+const SYSTEM_CUTOVER_UTC='2026-11-27T22:37:10Z', SYSTEM_CUTOVER_MS=Date.parse(SYSTEM_CUTOVER_UTC);
 let data=null;
 function el(name,attributes={},text=''){
  const node=document.createElementNS(NS,name);
@@ -220,6 +222,12 @@ function draw(){
  for(const w of selected){const x=xf(isoWeekStart(w.week));
   el('line',{x1:x,y1:top,x2:x,y2:height-bottom,stroke:'#9aa8bb','stroke-dasharray':'3 7',opacity:'.9'});
   svgText(x+8,height-22,w.week,13);}
+ if(SYSTEM_CUTOVER_MS>=start&&SYSTEM_CUTOVER_MS<end){
+  const x=xf(SYSTEM_CUTOVER_MS);
+  el('line',{x1:x,y1:top,x2:x,y2:height-bottom,stroke:'#8a5a13','stroke-width':2,'stroke-dasharray':'5 4','data-system-cutover':SYSTEM_CUTOVER_UTC});
+  const label=svgText(x+(x>wide-180?-6:6),top-10,'Systemskifte · 27/11 22:37 UTC',12,x>wide-180?'end':'start');
+  label.setAttribute('fill','#8a5a13');
+ }
  el('path',{d:path(eligible,xf,yf,HOUR*1.5),fill:'none',stroke:'#099866','stroke-width':'2.8','stroke-linecap':'round','stroke-linejoin':'round'});
  // Thursday research is retained in the public evidence record, but NOT
  // drawn as a third graph curve on the original Monday forecast history.
@@ -229,7 +237,9 @@ function draw(){
  }
  if(eligible.length){const p=eligible.at(-1);el('circle',{cx:xf(p[0]),cy:yf(p[1]),r:5,fill:'#fff',stroke:'#099866','stroke-width':3});}
  const missing=selected.filter(w=>!comparableOriginal(w)).length;
- $('notice').textContent=(missing?`${missing} uge(r) uden original kildeudstedt, tidsverificeret og USDT-sammenlignelig dagsprognose. Ingen opdigtet blå kurve eller USD/USDT-omregning.`:'Alle viste uger har syv originale, valutasammenlignelige CN-dagspunkter.');
+ $('notice').textContent=(missing?`${missing} uge(r) uden original kildeudstedt, tidsverificeret og USDT-sammenlignelig dagsprognose. Ingen opdigtet blå kurve eller USD/USDT-omregning.`:'Alle viste uger har syv originale, valutasammenlignelige CN-dagspunkter.')+
+  ' · Nye originale prognoseuger siden systemskiftet: '+data.weeks.filter(w=>comparableOriginal(w)&&Date.parse(w.issued_at_utc)>=SYSTEM_CUTOVER_MS).length+
+  ' (udstedelser, ikke score).';
  }
 function table(){
  $('weeks').textContent=data.weeks.length;
@@ -240,7 +250,8 @@ function table(){
   const tr=document.createElement('tr');
   const issued=w.forecast_status==='PUBLISHED';
   const status=(issued?(comparableOriginal(w)?'7 originale, sammenlignelige punkter':'Original udstedt · ikke sammenlignelig med USDT'):'Ikke udstedt')+' · prognosevaluta '+(w.forecast_model_declared_quote||'UNAVAILABLE');
-  for(const value of [w.week,status,`${w.observed_hours}/168 · ${w.actual_status}`]){
+  const cohort=comparableOriginal(w)?(Date.parse(w.issued_at_utc)<SYSTEM_CUTOVER_MS?'Gammelt system':'Nyt system'):'Oprindelig sammenlignelig udstedelse ikke verificeret';
+  for(const value of [w.week,status+' · '+cohort,`${w.observed_hours}/168 · ${w.actual_status}`]){
    const td=document.createElement('td');td.textContent=value;tr.append(td);}
   body.append(tr);
  }
