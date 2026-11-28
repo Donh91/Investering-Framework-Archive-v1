@@ -760,6 +760,96 @@ class CompassEventRefreshTests(unittest.TestCase):
         self.assertIn("MARKET_STATE_CHANGED", out["cause_codes"])
 
 
+    def _bound_cn_change_case(self, *, risk="HIGH", new_hash="b", old_hash="a", status="PASS", prior_state=None):
+        def binding(value, st="PASS"):
+            return {"status": st, "machine_package": {"content_sha256": value * 64},
+                    "decision_projection_source": "MACHINE_PACKAGE", "issue_number": 47}
+        previous = compass(source_sha="same", protection={
+            "pullback_risk_state": "ELEVATED", "pullback_class": "UNKNOWN",
+            "distribution_risk": "NONE", "eta_window": "UNKNOWN",
+            "confidence_quality": "MEDIUM", "reentry_state": "INACTIVE",
+        })
+        previous["compass_id"] = "CMP-fixture-original"
+        previous["source_bindings"]["cycle_navigator"] = binding(old_hash)
+        a = auto_state(source_sha="same")
+        return dict(auto_state=a, auto_pointer={"packet_sha256": "same"},
+                    latest_compass=previous, entry_latest=entry(),
+                    prior_state=prior_state or {"last_heat_state": "NORMAL"},
+                    cn_package=cn_package(risk=risk), cn_binding=binding(new_hash, status),
+                    now=NOW)
+
+    def test_same_auto_new_bound_cn_escalation_is_admitted(self):
+        out = evaluate(**self._bound_cn_change_case())
+        self.assertTrue(out["dispatch"])
+        self.assertTrue(out["protective_bypass"])
+        self.assertTrue(out["cn_only_context_change"])
+        self.assertEqual(out["cause_codes"], ["PROTECTION_STATE_CHANGED"])
+        self.assertEqual(out["current_protection_tracker"]["pullback_risk_state"], "HIGH")
+        self.assertTrue(out["protection_event_sha256"])
+
+    def test_same_auto_same_or_ineligible_cn_does_not_dispatch(self):
+        for change in ("same", "rejected", "missing_hash", "legacy_prior"):
+            with self.subTest(change=change):
+                kw = self._bound_cn_change_case()
+                if change == "same":
+                    kw["cn_binding"]["machine_package"]["content_sha256"] = "a" * 64
+                elif change == "rejected":
+                    kw["cn_binding"]["status"] = "FAIL"
+                elif change == "missing_hash":
+                    kw["cn_binding"].pop("machine_package")
+                else:
+                    kw["latest_compass"]["source_bindings"].pop("cycle_navigator")
+                out = evaluate(**kw)
+                self.assertFalse(out["dispatch"])
+                self.assertEqual(out["reason"], "LATEST_COMPASS_ALREADY_BINDS_CURRENT_OWNER_PACKET")
+
+    def test_cn_change_without_material_protection_change_stays_silent(self):
+        out = evaluate(**self._bound_cn_change_case(risk="ELEVATED"))
+        self.assertTrue(out["cn_only_context_change"])
+        self.assertFalse(out["dispatch"])
+
+    def test_rejected_cn_cannot_supply_high_on_fresh_auto(self):
+        kw = self._bound_cn_change_case(status="FAIL")
+        kw["auto_state"]["packet_sha256"] = "fresh"
+        kw["auto_pointer"]["packet_sha256"] = "fresh"
+        out = evaluate(**kw)
+        self.assertEqual(out["current_protection_tracker"]["pullback_risk_state"], "UNAVAILABLE")
+        self.assertIsNone(out["protection_event_sha256"])
+
+    def test_pending_cn_episode_dedupes_but_worse_state_reassesses(self):
+        first = evaluate(**self._bound_cn_change_case())
+        state = {
+            "last_heat_state": "NORMAL",
+            "last_requested_source_sha": "same",
+            "last_request_at_utc": NOW.isoformat(),
+            "last_requested_cn_context_sha256": first["cn_context_sha256"],
+            "last_requested_protection_event_sha256": first["protection_event_sha256"],
+        }
+        for risk, digest in (("HIGH", "b"), ("HIGH", "c"), ("CONFIRMED", "c")):
+            with self.subTest(risk=risk, digest=digest):
+                kw = self._bound_cn_change_case(risk=risk, new_hash=digest, prior_state=state)
+                kw["now"] = NOW + timedelta(minutes=5)
+                out = evaluate(**kw)
+                if risk == "HIGH":
+                    self.assertFalse(out["dispatch"])
+                    self.assertEqual(out["reason"], "PROTECTION_REQUEST_IN_FLIGHT")
+                else:
+                    self.assertTrue(out["dispatch"])
+                    self.assertTrue(out["protective_bypass"])
+                    self.assertNotEqual(out["protection_event_sha256"], first["protection_event_sha256"])
+        kw = self._bound_cn_change_case(prior_state=state)
+        kw["now"] = NOW + timedelta(minutes=25)
+        out = evaluate(**kw)
+        self.assertTrue(out["dispatch"])
+        self.assertIn("PRIOR_REQUEST_NOT_BOUND_RETRY", out["cause_codes"])
+
+    def test_workflow_persists_candidate_only_after_actual_dispatch_acceptance(self):
+        from pathlib import Path
+        workflow = (Path(__file__).resolve().parents[2] / ".github/workflows/compass-event-refresh.yml").read_text()
+        block = workflow.split("- name: Persist event watcher state after request acceptance", 1)[1].split("- name:", 1)[0]
+        self.assertIn("if: steps.decide.outputs.dispatch != 'true' || steps.compass_dispatch.outputs.accepted == 'true'", block)
+
+
 def load_tests(loader, standard_tests, pattern):
     """Execute source-continuity standing guards in the existing native CI job.
 

@@ -323,6 +323,30 @@ def _protective_transition(
     return False
 
 
+def _bound_cn_context_sha(binding: Any) -> str | None:
+    """Identity of an admitted CN projection; legacy/incomplete bindings are unknown."""
+    if not isinstance(binding, Mapping) or binding.get("status") != "PASS":
+        return None
+    machine = nh.nested(binding, "machine_package", "content_sha256")
+    addendum = nh.nested(binding, "decision_projection_addendum", "content_sha256")
+    source = binding.get("decision_projection_source")
+    issue = binding.get("issue_number")
+    def valid_sha(value: Any) -> bool:
+        return isinstance(value, str) and len(value) == 64 and all(x in "0123456789abcdef" for x in value)
+    if not valid_sha(machine) or isinstance(issue, bool) or not isinstance(issue, (int, str)) or not str(issue).strip():
+        return None
+    if source == "MACHINE_PACKAGE":
+        addendum = None
+    elif source != "HASH_BOUND_COMPATIBILITY_ADDENDUM" or not valid_sha(addendum):
+        return None
+    return nh.digest(nh.canon({
+        "machine_package_sha256": machine,
+        "projection_addendum_sha256": addendum,
+        "projection_source": source,
+        "issue_number": issue,
+    }))
+
+
 def evaluate(
     *,
     auto_state: Mapping[str, Any],
@@ -403,11 +427,19 @@ def evaluate(
         }
 
     missing_freeze = _missing_scheduled_freeze(now, latest_compass.get("issued_at_utc"))
+    cn_ok = isinstance(cn_package, Mapping) and str((cn_binding or {}).get("status") or "") == "PASS"
+    cn_context_sha = _bound_cn_context_sha(cn_binding) if cn_ok else None
+    prior_cn_context_sha = _bound_cn_context_sha(nh.nested(latest_compass, "source_bindings", "cycle_navigator"))
+    cn_only_change = bool(
+        source_sha == compass_source_sha and missing_freeze is None
+        and cn_context_sha is not None and prior_cn_context_sha is not None
+        and cn_context_sha != prior_cn_context_sha
+    )
     # Matching source hashes normally suppress duplicate work. Exception:
     # a genuinely missed scheduled publication is a separate liveness event,
     # even when its last source packet remains time-valid. Freshness and CN
     # admission gates still apply below; no source/forecast is backdated.
-    if source_sha == compass_source_sha and missing_freeze is None:
+    if source_sha == compass_source_sha and missing_freeze is None and not cn_only_change:
         return {
             "contract": CONTRACT,
             "evaluated_at_utc": now.isoformat().replace("+00:00", "Z"),
@@ -438,22 +470,25 @@ def evaluate(
         and missing_freeze is not None
         and last_requested_source == source_sha
     )
+    same_source_cn_request = bool(
+        cn_only_change and last_requested_source == source_sha
+        and prior_state.get("last_requested_cn_context_sha256") == cn_context_sha
+    )
     request_unbound = bool(
         last_request_age is not None
         and (latest_issued is None or latest_issued < parse_utc(last_request_at))
-        and (source_sha != compass_source_sha or same_source_missed_request)
+        and (source_sha != compass_source_sha or same_source_missed_request or same_source_cn_request)
     )
     request_in_flight = bool(request_unbound and last_request_age < REQUEST_RETRY_SECONDS)
     request_retry_due = bool(request_unbound and last_request_age >= REQUEST_RETRY_SECONDS)
 
-    cn_ok = isinstance(cn_package, Mapping) and str((cn_binding or {}).get("status") or "") == "PASS"
     owner_ok = nh._health_ok(auto_state, now)
     current_data_status = "OK" if owner_ok and cn_ok else "DEGRADED"
     action = nh.action_context(auto_state, as_of=now)
     market = nh.derive_market_now(auto_state, action, as_of=now)
     ladder = nh.capitalization_ladder(auto_state, action, market, as_of=now)
     protection = nh.protection_tracker(
-        auto_state, action, market, cn_package, as_of=now, prior_compass=latest_compass
+        auto_state, action, market, cn_package if cn_ok else None, as_of=now, prior_compass=latest_compass
     )
 
     # Standing source-continuity rule (see constants). Preserve the original
@@ -519,11 +554,15 @@ def evaluate(
     if missing_freeze is not None and current_data_status == "OK":
         causes.append("SCHEDULED_FREEZE_MISSING")
 
+    # A CN-only exception is not permission to re-credit unchanged Auto
+    # momentum, heat, action or ladder as fresh evidence.
+    if cn_only_change:
+        causes = [x for x in causes if x in {"PROTECTION_STATE_CHANGED", "REENTRY_REVIEW_OPENED"}]
     if request_retry_due and causes:
         causes.insert(0, "PRIOR_REQUEST_NOT_BOUND_RETRY")
 
     current_action = str(action.get("NOW") or "")
-    protective = _protective_transition(
+    non_cn_protective = _protective_transition(
         latest_compass=latest_compass,
         current_data_status=current_data_status,
         current_action=current_action,
@@ -532,22 +571,50 @@ def evaluate(
         heat=heat,
         last_heat=last_heat,
     )
+    if cn_only_change:
+        non_cn_protective = False
+    protective = non_cn_protective
+    protection_event_sha = None
     if isinstance(previous_protection, Mapping):
         old_risk = str(previous_protection.get("pullback_risk_state") or "NORMAL")
         new_risk = str(protection.get("pullback_risk_state") or "NORMAL")
-        if nh.PROTECTION_RANK.get(new_risk, -1) > nh.PROTECTION_RANK.get(old_risk, -1):
-            protective = True
         old_dist = str(previous_protection.get("distribution_risk") or "NONE")
         new_dist = str(protection.get("distribution_risk") or "NONE")
         dist_rank = {"NONE": 0, "WARNING": 1, "CONFIRMED": 2, "UNKNOWN": -1}
-        if dist_rank.get(new_dist, -1) > dist_rank.get(old_dist, -1):
+        cn_escalation = (
+            cn_ok and owner_ok and (
+                nh.PROTECTION_RANK.get(new_risk, -1) > nh.PROTECTION_RANK.get(old_risk, -1)
+                or dist_rank.get(new_dist, -1) > dist_rank.get(old_dist, -1)
+            )
+        )
+        if cn_escalation:
             protective = True
+            # Same semantic escalation from the same outstanding Official
+            # issue remains one event even if a new Auto packet arrives.
+            if cn_context_sha is not None and latest_issued is not None:
+                protection_event_sha = nh.digest(nh.canon({
+                    "prior_compass_id": latest_compass.get("compass_id"),
+                    "prior_issued_at": latest_compass.get("issued_at_utc"),
+                    "old_risk": old_risk, "old_distribution": old_dist,
+                    "new_risk": new_risk, "new_distribution": new_dist,
+                    "new_class": protection.get("pullback_class"),
+                }))
+    same_pending_protection = bool(
+        protection_event_sha is not None
+        and protection_event_sha == prior_state.get("last_requested_protection_event_sha256")
+        and last_request_age is not None and 0 <= last_request_age < REQUEST_RETRY_SECONDS
+        and latest_issued is not None and latest_issued < parse_utc(last_request_at)
+    )
     cooldown_age = last_request_age
     suppressed: list[str] = []
     reason = "NO_MATERIAL_CHANGE"
     dispatch = bool(causes)
     seconds_to_scheduled = _seconds_to_next_scheduled_compass(now)
-    if dispatch and request_in_flight and not protective:
+    if dispatch and same_pending_protection and not non_cn_protective:
+        suppressed = list(causes)
+        dispatch = False
+        reason = "PROTECTION_REQUEST_IN_FLIGHT"
+    elif dispatch and request_in_flight and not protective:
         suppressed = list(causes)
         dispatch = False
         reason = "REQUEST_IN_FLIGHT"
@@ -600,6 +667,9 @@ def evaluate(
         },
         "last_request_age_seconds": cooldown_age,
         "last_requested_source_sha": last_requested_source or None,
+        "cn_context_sha256": cn_context_sha,
+        "cn_only_context_change": cn_only_change,
+        "protection_event_sha256": protection_event_sha,
         "source_packet_sha256": source_sha,
         "latest_compass_source_packet_sha256": compass_source_sha or None,
         "current_data_status": current_data_status,
@@ -662,6 +732,14 @@ def run(repo_root: Path, output_root: Path, now: datetime | None = None) -> dict
         "last_heat_state": heat,
         "last_requested_source_sha": requested_sha,
         "last_request_at_utc": requested_at,
+        "last_requested_cn_context_sha256": (
+            decision.get("cn_context_sha256") if decision.get("dispatch")
+            else (prior_state or {}).get("last_requested_cn_context_sha256")
+        ),
+        "last_requested_protection_event_sha256": (
+            decision.get("protection_event_sha256") if decision.get("dispatch")
+            else (prior_state or {}).get("last_requested_protection_event_sha256")
+        ),
         # Legacy aliases retained for old readers. They mean workflow dispatch
         # accepted, not that a new Compass necessarily finished binding yet.
         "last_dispatched_source_sha": requested_sha,

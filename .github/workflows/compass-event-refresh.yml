@@ -102,6 +102,9 @@ jobs:
           echo "accepted=true" >> "$GITHUB_OUTPUT"
           echo "EVENT_DRIVEN_COMPASS_REQUEST_ACCEPTED causes=${{ steps.decide.outputs.causes }}"
       - name: Persist event watcher state after request acceptance
+        # The Python evaluator stages candidate files before dispatch. A
+        # declined dispatch must not advance the accepted request or banner.
+        if: steps.decide.outputs.dispatch != 'true' || steps.compass_dispatch.outputs.accepted == 'true'
         shell: bash
         run: |
           git config user.name framework-data-bot
