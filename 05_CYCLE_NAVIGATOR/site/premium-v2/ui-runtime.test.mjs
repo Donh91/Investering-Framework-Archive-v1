@@ -3,6 +3,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import {readFile} from 'node:fs/promises';
 import vm from 'node:vm';
+import {SYSTEM_CUTOVER_UTC,SYSTEM_CUTOVER_MS,cohortLabel,currentNewScoreCount} from './system-cutover.mjs';
 import {readOfficialCompassPath} from './compass/official-compass-path.mjs';
 import {readOfficialGraphB,replayObservedUntil} from './graph-b/official-source-adapter.mjs';
 import {sourceOnlyPriceRangeProof} from './proof/price-range-proof.mjs';
@@ -78,6 +79,7 @@ async function harness(path,{latest=snapshot(),fetcher=null,sourceTransform=null
   fetch:(...args)=>fetchImpl(...args),URL,Date:Clock,Intl,AbortSignal,CustomEvent:class{constructor(type){this.type=type}},
   setTimeout:timer,clearTimeout:id=>timers.delete(id),setInterval:timer,clearInterval:id=>timers.delete(id),
   readOfficialCompassPath,readOfficialGraphB,replayObservedUntil,sourceOnlyPriceRangeProof,
+  SYSTEM_CUTOVER_UTC,SYSTEM_CUTOVER_MS,cohortLabel,currentNewScoreCount,
   sourceReadbackProofRows:()=>[],console,navigator:{}};
  let source=(await readFile(new URL(path,import.meta.url),'utf8'))
   .replace(/^import .*;\n/gm,'').replaceAll('import.meta.url',JSON.stringify('https://test.invalid/next/assets/app.js'));
