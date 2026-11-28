@@ -76,11 +76,11 @@ export function kompasTruthBanner(compass,{nowMs=Date.now(),lang='da',weeklyAlig
   if(!valid||source.inherited!==true)return {state,text:labels[state]};
   const p=source.origin;
   if(!weeklyAligned||!positiveInt(p?.public_issue_number)||!/^\d{4}-\d{2}-\d{2}$/.test(p?.issued_date_utc))
-    return {state,text:labels[state]};
+    return {state,inherited:true,text:labels[state]+' · '+(en?'Inherited risk origin unavailable':'Oprindelse for tidligere risikovurdering ukendt')};
   const date=p.issued_date_utc+' UTC';
   const risk=en?'Risk assessment carried forward from '+date+' (issue #'+p.public_issue_number+'), not refreshed.':
     'Risikovurdering nedarvet fra '+date+' (udgave #'+p.public_issue_number+'), ikke fornyet.';
-  return {state,text:risk+' · '+labels[state]};
+  return {state,inherited:true,text:risk+' · '+(state==='FRESH'?(en?'Current observation data only':'Kun aktuelle observationsdata'):labels[state])};
 }
 
 const HOUR_MS=3600000;
