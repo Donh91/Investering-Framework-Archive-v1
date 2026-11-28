@@ -258,9 +258,10 @@ console.log('FULL_STACK_READBACK_REGRESSION_PASS');
 
 // M3: independent freshness clock, verified historical packet and separate alignment.
 for(const [issueAge,packetAge,expected] of [[20,1,'STALE_RESEARCH'],[1,13,'STALE_RESEARCH'],[1,1,'FRESH_RESEARCH'],[1,-1,'STALE_RESEARCH'],[-1,1,'STALE_RESEARCH']]){
- const f=fixture(),now=Date.now(),issued=new Date(now-issueAge*3600000).toISOString(),asof=new Date(now-(issueAge+packetAge)*3600000).toISOString();
+ const f=fixture(),now=Date.parse(f.pointers.get('auto').packet_generated_at_utc),issued=new Date(now-issueAge*3600000).toISOString(),asof=new Date(now-(issueAge+packetAge)*3600000).toISOString();
  const path='04_MARKET_LEARNING/entry_signals/auto_market_state/runs/historical.json';
- const packet=signed({contract:'AUTO_MARKET_STATE_PACKET_v1',packet_generated_at_utc:asof},'packet_sha256');
+ const packet=signed({contract:'AUTO_MARKET_STATE_PACKET_v1',packet_generated_at_utc:asof,fixture_source_identity:'historical-distinct'},'packet_sha256');
+ assert.notEqual(packet.hash,f.pointers.get('auto').packet_sha256);
  f.files.set(resolve(f.root,path),packet.raw);f.forecast.issued_at_utc=issued;
  f.forecast.source_bindings.auto_market_state={packet_path:path,packet_sha256:packet.hash,packet_generated_at_utc:asof};f.installForecast();
  const result=await f.run();assert.equal(result.shadow.status,expected);assert.equal(result.shadow.current_source_aligned,false);assert.equal(result.shadow.official_source_aligned,false);
