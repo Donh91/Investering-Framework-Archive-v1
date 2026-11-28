@@ -635,6 +635,7 @@ try{
        sourceState:el?.dataset.sourceState,
        groupRows:el?.querySelectorAll('.swing-grid-row').length||0,
        pendingCells:el?.querySelectorAll('.swing-unknown').length||0,
+       notIssued:el?.querySelector('.swing-not-issued')?.textContent||'',
        contract:el?.dataset.contract
       };
      })(),
@@ -700,7 +701,8 @@ try{
      'ROOT_KOMPAS_DIAL_PRESENT:'+JSON.stringify(report.noDial));
    assert.ok(report.swing.exists&&report.swing.visible&&report.swing.outsideDisclosure&&
      report.swing.contract==='CN_SWING_ROTATION_READBACK_V1'&&
-     report.swing.groupRows===4&&report.swing.pendingCells===12&&
+     report.swing.groupRows===4&&report.swing.pendingCells===0&&
+     /Kompas PRO 2\.0 gruppesignaler er ikke udstedt endnu|Compass PRO 2\.0 group signals are not issued yet/.test(report.swing.notIssued)&&
      ['OFFICIAL_NOW_CONTEXT_ONLY','UNAVAILABLE'].includes(report.swing.sourceState),
      'ROOT_SWING_CANONICAL_NOT_RENDERED:'+JSON.stringify(report.swing));
 

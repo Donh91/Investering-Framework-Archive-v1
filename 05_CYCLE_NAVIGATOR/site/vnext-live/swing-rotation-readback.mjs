@@ -77,6 +77,12 @@ const make=(tag,className,content)=>{
  if(content!==undefined)el.textContent=content;
  return el;
 };
+// Collapse only the wholly unissued sector-by-horizon grid, never a verified reading.
+export function allSwingFutureUnissued(model){
+ return model?.contract==='CN_SWING_ROTATION_READBACK_V1'&&model.sectorHorizonStatus==='NOT_ISSUED'&&Array.isArray(model.rows)&&model.rows.length===GROUPS.length&&
+  model.rows.every((row,i)=>row.key===GROUPS[i].key&&Array.isArray(row.future)&&row.future.length===HORIZONS.length&&
+   row.future.every((cell,i)=>cell.key===HORIZONS[i].key&&cell.status==='NOT_ISSUED'));
+}
 export function renderSwingRotation(container,model,{lang='da'}={}){
  if(!container)return;
  container.replaceChildren();
@@ -100,20 +106,23 @@ export function renderSwingRotation(container,model,{lang='da'}={}){
  }
  container.append(context);
  const ledger=make('div','swing-ledger');
- const grid=make('div','swing-grid');
+ const collapse=allSwingFutureUnissued(model);
+ const grid=make('div','swing-grid'+(collapse?' swing-grid-current-only':''));
  grid.setAttribute('role','table');
  grid.setAttribute('aria-label',t('Officiel status nu per kapitalgruppe; fremtidige gruppesignaler er endnu ikke udstedt',
  'Official current posture per capitalization group; future class signals are not issued'));
  const header=make('div','swing-grid-header');
  header.setAttribute('role','row');
+ if(collapse)header.style.gridTemplateColumns='minmax(0,1.4fr) minmax(0,1fr)';
  for(const text of [t('Kapitalgruppe','Capital group'),t('Status nu','Now'),
-  ...HORIZONS.map(h=>lang==='en'?h.en:h.da)]){
+  ...(collapse?[]:HORIZONS.map(h=>lang==='en'?h.en:h.da))]){
   const c=make('div','swing-colhead',text);c.setAttribute('role','columnheader');header.append(c);
  }
  grid.append(header);
  for(const row of model?.rows||[]){
   const line=make('div','swing-grid-row'+(row.isMicro?' swing-micro':''));
   line.setAttribute('role','row');
+  if(collapse)line.style.gridTemplateColumns='minmax(0,1.4fr) minmax(0,1fr)';
   const label=make('div','swing-group');
   label.setAttribute('role','rowheader');
   label.append(make('strong','',row.label),make('small','',row.sizeReference));
@@ -122,7 +131,7 @@ export function renderSwingRotation(container,model,{lang='da'}={}){
   const text=make('strong','swing-action swing-action-'+row.sourceAction.toLowerCase().replaceAll('_','-'),row.nowLabel);
   status.append(text);
   status.setAttribute('role','cell');line.append(status);
-  for(const unused of row.future){
+  for(const unused of (collapse?[]:row.future)){
    const col=make('div','swing-unknown',t('Afventer','Pending'));
    col.setAttribute('role','cell');
    col.title=t('Ingen kildeudstedt prognose for dette segment og denne periode',
@@ -133,7 +142,10 @@ export function renderSwingRotation(container,model,{lang='da'}={}){
  }
  ledger.append(grid);
  container.append(ledger);
+ if(collapse)container.append(make('p','swing-explainer swing-not-issued',
+  t('Kompas PRO 2.0 gruppesignaler er ikke udstedt endnu (12 fremtidssignaler mangler en verificeret kilde).',
+    'Compass PRO 2.0 group signals are not issued yet (12 forward signals have no verified source).')));
  container.append(make('p','swing-explainer',
-  t('Øverst: officiel markedsretning for 1–3 dage, 5–7 dage og 2–3 uger. Nederst: hver kapitalgruppes aktuelle status, ikke en prognose. De 12 gruppespecifikke fremtidssignaler er ikke udstedt. Størrelsesintervallerne er kun branchemæssige pejlemærker, ikke kildens officielle grænser. Memes har fortsat eget signal.',
-    'Top: official market-wide direction for 1–3 days, 5–7 days and 2–3 weeks. Below: each group’s current status, not a forecast. The 12 group-specific forward signals are not issued. Size ranges are industry references, not source-owner thresholds. Memes remains independent.')));
+  t('Øverst: officiel markedsretning for 1–3 dage, 5–7 dage og 2–3 uger. Nederst: hver kapitalgruppes aktuelle status, ikke en prognose. Størrelsesintervallerne er kun branchemæssige pejlemærker, ikke kildens officielle grænser. Memes har fortsat eget signal.',
+    'Top: official market-wide direction for 1–3 days, 5–7 days and 2–3 weeks. Below: each group’s current status, not a forecast. Size ranges are industry references, not source-owner thresholds. Memes remains independent.')));
 }
