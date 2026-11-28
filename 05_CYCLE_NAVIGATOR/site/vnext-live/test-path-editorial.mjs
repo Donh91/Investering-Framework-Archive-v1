@@ -2,7 +2,7 @@
 import assert from 'node:assert/strict';
 import {readFileSync} from 'node:fs';
 import {fileURLToPath} from 'node:url';
-import {pathModel,pathRotationDisplay,pathSourceReadback} from './premium-experience.mjs';
+import {pathModel,pathRotationDisplay,pathSourceReadback,cycleLadderDisplay} from './premium-experience.mjs';
 
 const page=readFileSync(fileURLToPath(new URL('./index.html',import.meta.url)),'utf8');
 const css=readFileSync(fileURLToPath(new URL('./premium-experience.css',import.meta.url)),'utf8');
@@ -50,6 +50,14 @@ assert.equal(pathRotationDisplay(pathModel(base,'da'),'da')[5].action,'HOLD');
 assert.notEqual(pathRotationDisplay(pathModel(base,'da'),'da')[5].action,
  pathRotationDisplay(pathModel(base,'da'),'da')[6].action);
 
+for(const lang of ['da','en']){
+ const valid=cycleLadderDisplay(pathModel(base,lang),lang);assert.equal(valid.collapsed,false);assert.equal(valid.hideAltseason,false);
+ const missing=clone(base);missing.path.current_checkpoint=null;missing.path.next_checkpoint=null;missing.path.altseason.status='UNAVAILABLE';
+ const unavailable=cycleLadderDisplay(pathModel(missing,lang),lang);assert.equal(unavailable.collapsed,true);assert.equal(unavailable.hideAltseason,true);assert.match(unavailable.message,/altseason/i);
+ missing.path.altseason.status='WATCH_ONLY';const watch=cycleLadderDisplay(pathModel(missing,lang),lang);assert.equal(watch.collapsed,true);assert.equal(watch.hideAltseason,false);
+ missing.path.state='UNAVAILABLE';assert.equal(cycleLadderDisplay(pathModel(missing,lang),lang).hideAltseason,true);
+}
+assert.match(css,/data-cycle-altseason-state="UNAVAILABLE"/);
 const good=pathSourceReadback(base,latest,'da',Date.parse('2026-11-05T08:00:00Z'));
 assert.equal(good.eligible,true);
 assert.equal(good.weekly,'CN #32 · 2026-W45');
