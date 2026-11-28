@@ -1,0 +1,38 @@
+{
+  "authority": {
+    "automatic_promotion": false,
+    "automatic_repository_write": false,
+    "automatic_skill_activation": false,
+    "canonical_effect": false,
+    "portfolio_execution": false
+  },
+  "changed_paths": [
+    "scripts/research/research_action_receipt_v1.py",
+    "scripts/research/research_meta_orchestrator.py",
+    "scripts/research/validate_research_meta_orchestrator.py"
+  ],
+  "contract": "OPERATIONAL_EPISODE_v1",
+  "dominant_path_prefix": "scripts",
+  "episode_id": "OE-f40faa70ceb61d5b",
+  "evidence_limits": [
+    "Merged commit proves accepted repository change, not causal effectiveness by itself.",
+    "No failed approach is inferred unless separately evidenced.",
+    "No chain-of-thought or raw prompt is stored."
+  ],
+  "failed_approaches": [],
+  "failure_signature": null,
+  "operation_type": "RESEARCH",
+  "outcome": "MERGED_TO_MAIN",
+  "resolution_summary": "* Add bounded WIRE-0 owner receipt reader * Consume receipt in existing meta orchestrator * Test valid, forged, edited, missing and wrong-action receipts * fix(WIRE-0): retain historical claims without granting scientific authority * fix(WIRE-0): distinguish native event head from publication custody * test(research): make receipt rejection controls discriminate (Claude R1) --------- Co-authored-by: Claude <noreply@anthropic.com>",
+  "reusable_pattern": null,
+  "source_blob_shas": {
+    "scripts/research/research_action_receipt_v1.py": "23229a7f2a5b841f12c7cad2e5d4585ce84829d9",
+    "scripts/research/research_meta_orchestrator.py": "7e6380e3e410ff89f9da89bbf2992e80000394af",
+    "scripts/research/validate_research_meta_orchestrator.py": "74ab0d5cdf8f5ac1172c8307831c299cc43e8fc2"
+  },
+  "source_commit_sha": "f40faa70ceb61d5be44a27390dba53307cf28613",
+  "source_kind": "MERGED_MAIN_COMMIT",
+  "source_timestamp": "2026-11-27T12:19:52+01:00",
+  "task_class": "GENERAL_FRAMEWORK",
+  "task_summary": "WIRE-0: read exact original-owner research action receipts (#2356)"
+}

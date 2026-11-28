@@ -9,16 +9,16 @@
   "authority": "ADVISORY_ORCHESTRATION_ONLY",
   "clusters": [],
   "contract": "AUTOMATION_INTELLIGENT_ORCHESTRATION_PLAN_v1",
-  "fingerprint": "0d5fbc720363c09a2454cf41c539f4dceaa5d1ea0dbbc57d2f2a0aa56e7b6eea",
+  "fingerprint": "511ecb9bbfb28dd78f59a8d321911ac31e642b53fe385464d98bcd40b97de2a4",
   "fleet": {
-    "amber_count": 20,
-    "green_count": 186,
-    "red_count": 0,
+    "amber_count": 13,
+    "green_count": 190,
+    "red_count": 4,
     "scheduled_workflow_count": 58,
-    "workflow_count": 206,
+    "workflow_count": 207,
     "writer_count": 68
   },
-  "generated_at_utc": "2026-11-24T03:06:04Z",
+  "generated_at_utc": "2026-11-28T00:14:07Z",
   "guardrails": {
     "astra_periodic_use": false,
     "batch_before_model_call": true,
@@ -30,11 +30,111 @@
     "no_market_or_portfolio_authority": true,
     "no_repository_write_authority_for_models": true
   },
-  "items": [],
-  "material_delta": false,
+  "items": [
+    {
+      "cluster_id": null,
+      "existing_remediation": {
+        "finding": "REPEATED_CONSECUTIVE_FAILURES",
+        "route": "CODEX_PR",
+        "signature": "49bea51fd3a3137ce79f",
+        "state": "CODEX_READY"
+      },
+      "failure_streak": 3,
+      "findings": [
+        "LATEST_RUN_FAILED",
+        "REPEATED_CONSECUTIVE_FAILURES"
+      ],
+      "latest_head_sha": "4474cd8df74f39d8699f59b1c1519698eb96a362",
+      "latest_run_id": 45940883344,
+      "latest_run_url": "https://github.com/Donh91/Investering-Framework-Archive-v1/actions/runs/45940883344",
+      "model_lane": "NONE",
+      "openai_enabled": true,
+      "recent_failure_count": 3,
+      "route": "FOLLOW_EXISTING_REMEDIATION",
+      "scheduled": true,
+      "workflow": "adaptive-evidence-gap.yml",
+      "write_target_class": "DIRECT_MAIN",
+      "writer_group": "framework-main-writer"
+    },
+    {
+      "cluster_id": null,
+      "existing_remediation": {
+        "finding": "REPEATED_CONSECUTIVE_FAILURES",
+        "route": "CODEX_PR",
+        "signature": "0d688464738b7ea9bbb5",
+        "state": "CODEX_READY"
+      },
+      "failure_streak": 12,
+      "findings": [
+        "LATEST_RUN_FAILED",
+        "REPEATED_CONSECUTIVE_FAILURES"
+      ],
+      "latest_head_sha": "83029be4bb0cf5dfa78fde582f1623aa9c14e1fe",
+      "latest_run_id": 46079525000,
+      "latest_run_url": "https://github.com/Donh91/Investering-Framework-Archive-v1/actions/runs/46079525000",
+      "model_lane": "NONE",
+      "openai_enabled": true,
+      "recent_failure_count": 13,
+      "route": "FOLLOW_EXISTING_REMEDIATION",
+      "scheduled": true,
+      "workflow": "daily-director-shadow.yml",
+      "write_target_class": "DIRECT_MAIN",
+      "writer_group": "framework-main-writer"
+    },
+    {
+      "cluster_id": null,
+      "existing_remediation": {
+        "finding": "REPEATED_CONSECUTIVE_FAILURES",
+        "route": "CODEX_PR",
+        "signature": "0e7231042813ac834d36",
+        "state": "CODEX_READY"
+      },
+      "failure_streak": 6,
+      "findings": [
+        "LATEST_RUN_FAILED",
+        "REPEATED_CONSECUTIVE_FAILURES"
+      ],
+      "latest_head_sha": "e90ff3ec83ec017267ec4a41ddceb8b1b07b8b7a",
+      "latest_run_id": 46046943854,
+      "latest_run_url": "https://github.com/Donh91/Investering-Framework-Archive-v1/actions/runs/46046943854",
+      "model_lane": "NONE",
+      "openai_enabled": true,
+      "recent_failure_count": 6,
+      "route": "FOLLOW_EXISTING_REMEDIATION",
+      "scheduled": true,
+      "workflow": "research-execution-coordinator.yml",
+      "write_target_class": "DIRECT_MAIN",
+      "writer_group": "framework-main-writer"
+    },
+    {
+      "cluster_id": null,
+      "existing_remediation": {
+        "finding": "SCHEDULE_STALE",
+        "route": "CODEX_PR",
+        "signature": "f5d79a5472c3be598fd6",
+        "state": "CODEX_READY"
+      },
+      "failure_streak": 1,
+      "findings": [
+        "LATEST_RUN_FAILED"
+      ],
+      "latest_head_sha": "e90ff3ec83ec017267ec4a41ddceb8b1b07b8b7a",
+      "latest_run_id": 46042639884,
+      "latest_run_url": "https://github.com/Donh91/Investering-Framework-Archive-v1/actions/runs/46042639884",
+      "model_lane": "NONE",
+      "openai_enabled": true,
+      "recent_failure_count": 6,
+      "route": "FOLLOW_EXISTING_REMEDIATION",
+      "scheduled": true,
+      "workflow": "shadow-compass-v2.yml",
+      "write_target_class": "DIRECT_MAIN",
+      "writer_group": "${{ github.event_name == 'pull_request' && format('{0}-pr-{1}', github.workflow, github.event.pull_request.number) || 'framework-main-writer' }}"
+    }
+  ],
+  "material_delta": true,
   "routing_summary": {
     "authoritative_input_unknown_count": 0,
-    "existing_remediation_count": 0,
+    "existing_remediation_count": 4,
     "luna_triage_count": 0,
     "shared_head_cluster_count": 0,
     "sol_6_1_diagnosis_count": 0
@@ -44,6 +144,6 @@
     "new_diagnosis_eligible": true,
     "remediation": "VALID"
   },
-  "source_health_generated_at_utc": "2026-11-24T02:59:07.327352Z",
-  "source_health_status": "AMBER"
+  "source_health_generated_at_utc": "2026-11-28T00:09:13.070320Z",
+  "source_health_status": "RED"
 }

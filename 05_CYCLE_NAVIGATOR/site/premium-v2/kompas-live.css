@@ -139,3 +139,8 @@ body.premium-next #cn-live-forecast .cn-live-foot{margin:0;font-size:12px;line-h
  body.premium-next #cn-live-forecast[data-state="OK"] .cn-live-asof::before{animation:kl-pulse 2.4s var(--kl-ease) infinite}
 }
 @keyframes kl-pulse{0%{box-shadow:0 0 0 0 rgba(217,58,47,.45)}70%,100%{box-shadow:0 0 0 7px rgba(217,58,47,0)}}
+
+/* M3: unavailable is one compact status, not an empty desktop chart column. */
+body.premium-next #cn-live-forecast:not([data-state="OK"]){grid-template-columns:minmax(0,1fr);grid-template-rows:auto;min-height:0;align-content:start}
+body.premium-next #cn-live-forecast:not([data-state="OK"]) .cn-live-main{gap:8px;min-height:0}
+body.premium-next #cn-live-forecast:not([data-state="OK"]) .cn-live-foot{grid-column:1;margin:0}

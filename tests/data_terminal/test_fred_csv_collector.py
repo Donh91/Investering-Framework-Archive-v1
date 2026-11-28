@@ -73,6 +73,21 @@ class FredCsvCollectorTests(unittest.TestCase):
                 collector.parse_fred_csv(bad.read_bytes(), SERIES)
             self.assertEqual(ctx.exception.status, "SCHEMA_DRIFT")
 
+    def test_non_finite_observation_fails_closed_even_with_prior_valid_row(self):
+        for raw in ("NaN", "nan", "Inf", "-Inf", "Infinity", "1e309", "-1e309"):
+            with self.subTest(raw=raw):
+                payload = f"DATE,VIXCLS\n2026-07-17,18\n2026-07-18,{raw}\n".encode()
+                with self.assertRaises(collector.CollectorError) as ctx:
+                    collector.parse_fred_csv(payload, "VIXCLS")
+                self.assertEqual(ctx.exception.status, "SCHEMA_DRIFT")
+
+    def test_finite_values_and_missing_marker_preserve_existing_semantics(self):
+        payload = b"DATE,DGS2,VIXCLS\n2026-07-17,-0.25,18.25\n2026-07-18,0,.\n"
+        rows, missing = collector.parse_fred_csv(payload, ("DGS2", "VIXCLS"))
+        self.assertEqual([row.value for row in rows["DGS2"]], [-0.25, 0])
+        self.assertEqual([row.value for row in rows["VIXCLS"]], [18.25])
+        self.assertEqual(missing, [{"field": "VIXCLS", "source_date": "2026-07-18", "status": "UNKNOWN"}])
+
     def test_duplicate_timestamp_is_rejected(self):
         payload = b"DATE,DGS2,DGS10,DTWEXBGS,VIXCLS\n2026-07-17,1,2,3,4\n2026-07-17,1,2,3,4\n"
         with self.assertRaises(collector.CollectorError) as ctx:

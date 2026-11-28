@@ -1,5 +1,6 @@
 import assert from 'node:assert/strict';
 import {forwardOutlook} from './forward-outlook.mjs';
+import {sourceTrace} from './source-trace.mjs';
 const latest={schema:'CN_PUBLIC_SNAPSHOT_V2',
  public_series:{current_public_projection:{forecast_week:'2026-W43',public_issue_number:30}}};
 const compass={contract:'PUBLIC_COMPASS_PROJECTION_v1',
@@ -41,3 +42,49 @@ assert.equal(filtered.strategic.falsifiers.length,1);
 const forged=structuredClone(compass);forged.full_stack.strategic.authority='NEW_SITE_FORECAST_ENGINE';
 assert.equal(forwardOutlook(latest,forged,trace).strategic.available,false);
 console.log('PASS 13 forward outlook positive / negative source, no-price, no-private, false-provenance checks');
+
+/* Exercise the real sourceTrace -> forwardOutlook join, not a hand-written
+ * trace that already assumes the desired owner. Synthetic public fixtures. */
+const joinedLatest={...latest,pointer:{iso_year:2026,iso_week:43}};
+const joinedCompass=structuredClone(compass);
+joinedCompass.full_stack.status='PARTIAL_OR_DEGRADED';
+joinedCompass.full_stack.source_status.official='VERIFIED';
+Object.assign(joinedCompass.full_stack.weekly,{iso_year:2026,iso_week:43,direction_2_3w:'MIXED'});
+joinedCompass.full_stack.strategic.horizon_21_30d.direction='MIXED';
+const parsed={delivery_health:'FRESH',weekly:{state:'OK',forecast_week:'2026-W43',public_issue_number:30},
+ compass:{state:'FRESH',permit_path_live_gates:true}};
+const evaluation=Date.parse('2026-10-19T09:00:00Z');
+const joined=(c=joinedCompass,l=joinedLatest,p=parsed)=>{
+ const t=sourceTrace(l,c,p);
+ return {trace:t,model:forwardOutlook(l,c,t,{nowMs:evaluation})};
+};
+const positive=joined();
+assert.equal(positive.trace.long_horizons[1].owner,'CYCLE_NAVIGATOR_STRATEGIC_CONTEXT');
+assert.equal(positive.model.strategic.available,true);
+assert.equal(positive.model.strategic.btc_direction,'MIXED');
+assert.equal(positive.model.price_path_status,'NOT_ISSUED');
+assert.equal(positive.trace.decision_authority,'OFFICIAL_COMPASS_ONLY');
+const expiredDaily=joined(joinedCompass,joinedLatest,{...parsed,compass:{state:'EXPIRED',permit_path_live_gates:false}});
+assert.equal(expiredDaily.trace.official_current,false);
+assert.equal(expiredDaily.model.strategic.available,true);
+for(const mutate of [
+ c=>{c.full_stack.source_status.strategic='UNVERIFIED'},
+ c=>{c.full_stack.source_status.cycle_navigator='UNVERIFIED'},
+ c=>{c.full_stack.strategic.authority='OFFICIAL_ACTION'},
+ c=>{c.full_stack.strategic.status='UNVERIFIED'},
+ c=>{c.full_stack.weekly.iso_week=42},
+ c=>{c.weekly_context.public_issue_number=29},
+ c=>{c.full_stack.strategic.horizon_21_30d.direction='BUY'},
+ c=>{c.full_stack.strategic.horizon_21_30d.direction='UNAVAILABLE'},
+ c=>{c.full_stack.strategic.issued_at_utc='2026-10-20T09:00:00Z'}
+]){
+ const c=structuredClone(joinedCompass);mutate(c);
+ assert.equal(joined(c).model.strategic.available,false);
+}
+assert.equal(joined(joinedCompass,joinedLatest,{...parsed,delivery_health:'STALE'}).model.strategic.available,false);
+assert.equal(joined(joinedCompass,{...joinedLatest,pointer:{iso_year:2026,iso_week:42}}).model.strategic.available,false);
+for(const d of ['UP','DOWN','SIDEWAYS','MIXED','NO_EDGE']){
+ const c=structuredClone(joinedCompass);c.full_stack.strategic.horizon_21_30d.direction=d;
+ assert.equal(joined(c).model.strategic.direction,d);
+}
+console.log('PASS 21 joined strategic source controls (synthetic, no forecast authority)');

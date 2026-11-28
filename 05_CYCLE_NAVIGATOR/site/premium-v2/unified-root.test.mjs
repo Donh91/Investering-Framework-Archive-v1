@@ -164,7 +164,10 @@ test('design keeps W44 without invented daily forecast, and source-issued 7d pat
  assert.match(runtime,/renderQuickDecision\(\)/);
  assert.match(runtime,/renderRiskQuick\(\)/);
  assert.match(runtime,/renderAltMilestone\(\)/);
- assert.match(runtime,/No verified ETA/);
+ assert.match(runtime,/altseasonDisplay\(feeds\?\.latest,feeds\?\.compass/);
+ const alt=await import('../cycle-participation.mjs');
+ assert.equal(alt.altseasonDisplay(null,null,{lang:'en'}).eta,'No verified ETA');
+ assert.equal(alt.altseasonDisplay(null,null,{lang:'da'}).eta,'Ingen verificeret ETA');
 });
 
 
@@ -877,3 +880,45 @@ test('official horizon clock anchors to issuance, never silently rolls on page r
 });
 
 test('one model-view cycle map precedes detailed PATH rail',()=>{const html=buildUnifiedRootHtml(original,pro);assert.equal(id(html,'cn-cycle-map'),1);assert.ok(html.indexOf('id="official-path-view"')<html.indexOf('id="cn-cycle-map"'));assert.ok(html.indexOf('id="cn-cycle-map"')<html.indexOf('id="premium-path-rail"'));assert.match(html,/data-contract="CN_WHERE_ARE_WE_MAP_v1"/);});
+
+
+test('single source participation readback is wired into the actual public cycle card',async()=>{
+ const html=buildUnifiedRootHtml(original,pro);
+ for(const name of ['cn-map-participation','cn-map-participation-details'])assert.equal(id(html,name),1,name);
+ assert.match(html,/id="cn-map-participation" hidden/);
+ const runtime=await read('./root-compass-pro.mjs');
+ assert.ok(runtime.includes('renderCycleParticipation(document,feeds?.latest,feeds?.compass,{lang})'));
+});
+
+
+test('Official identity cannot be established by matching missing, empty or malformed values',()=>{
+ const now=Date.parse('2026-11-26T19:35:00Z');
+ const expiredAt=Date.parse('2026-11-26T22:00:00Z');
+ const c={contract:'PUBLIC_COMPASS_PROJECTION_v1',data_status:'OK',compass_id:'CMP-20261126-fixture',
+  issued_at_utc:'2026-11-26T19:17:53Z',
+  weekly_context:{status:'ALIGNED',forecast_week:'2026-W48'},
+  full_stack:{official_freshness:{valid_until_utc:'2026-11-26T21:00:00Z'}},
+  action_now:'HOLD_WAIT',horizons:{NEXT_1_3D:{expected_direction:'DOWN'}}};
+ const v={compass:{state:'FRESH',permit_path_live_gates:true,compass_id:c.compass_id},
+  weekly:{forecast_week:'2026-W48'}};
+ assert.equal(currentCompass({compass:c,view:v,now}),true);
+ assert.equal(expiredOfficial({compass:c,view:v,now:expiredAt}),true);
+ assert.equal(currentCompass({compass:c,view:v,now:Date.parse(c.full_stack.official_freshness.valid_until_utc)}),false);
+ for(const value of [undefined,null,'',' ',0,123,' CMP-1','CMP-1 ']){
+  const compass={...c,compass_id:value},view={...v,compass:{...v.compass,compass_id:value}};
+  assert.equal(currentCompass({compass,view,now}),false);
+  assert.equal(expiredOfficial({compass,view,now:expiredAt}),false);
+  assert.equal(readHorizon({compass,view,now}).current,false);
+ }
+ for(const value of [undefined,null,'',' ',48,'W48','2026-W00','2026-W54','2026-W8']){
+  const compass={...c,weekly_context:{...c.weekly_context,forecast_week:value}},
+   view={...v,weekly:{forecast_week:value}};
+  assert.equal(currentCompass({compass,view,now}),false);
+  assert.equal(expiredOfficial({compass,view,now:expiredAt}),false);
+  assert.equal(readHorizon({compass,view,now}).hasDirection,false);
+ }
+ for(const badNow of [String(now),String(expiredAt),Infinity,NaN,null]){
+  assert.equal(currentCompass({compass:c,view:v,now:badNow}),false);
+  assert.equal(expiredOfficial({compass:c,view:v,now:badNow}),false);
+ }
+});
