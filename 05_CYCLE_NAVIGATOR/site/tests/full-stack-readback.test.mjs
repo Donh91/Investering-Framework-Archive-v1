@@ -266,3 +266,19 @@ for(const [issueAge,packetAge,expected] of [[20,1,'STALE_RESEARCH'],[1,13,'STALE
  const result=await f.run();assert.equal(result.shadow.status,expected);assert.equal(result.shadow.current_source_aligned,false);assert.equal(result.shadow.official_source_aligned,false);
  assert.equal(result.shadow.authority,'RESEARCH_ONLY_NO_ACTION_PERMISSION');
 }
+
+// Exercise actual retained /legacy/ renderer, not just the new root consumer.
+{
+ const legacy=await readFile(new URL('../compass-product-v5.js',import.meta.url),'utf8');
+ const context={esc:v=>String(v??''),words:v=>String(v??''),copy:v=>String(v??''),friendlyAction:v=>v};
+ vm.createContext(context);vm.runInContext(legacy.slice(legacy.indexOf('function fullStackSection('),legacy.indexOf('\nfunction render(c,e)'))+';globalThis.renderLegacy=fullStackSection;',context);
+ const render=status=>context.renderLegacy({data_status:'OK',full_stack:{contract:'PUBLIC_COMPASS_FULL_STACK_READBACK_v1',source_status:{official:'VERIFIED'},official_action:'HOLD',shadow:{status,horizons:{'1_3d':{direction:'UP',interpretation:'Verified fixture narrative'}}}}});
+ assert.match(render('FRESH_RESEARCH'),/Fresh research · separate source/);
+ assert.match(render('FRESH_RESEARCH'),/Verified fixture narrative/);
+ assert.match(render('FRESH_RESEARCH'),/<span>1–3D<\/span><strong>UP<\/strong>/);
+ assert.match(render('ALIGNED_RESEARCH'),/Source-aligned outlook/);
+ assert.match(render('STALE_RESEARCH'),/STALE · UP/);
+ assert.doesNotMatch(render('STALE_RESEARCH'),/Verified fixture narrative/);
+ assert.match(render('UNVERIFIED'),/<span>1–3D<\/span><strong>UNVERIFIED<\/strong>/);
+ assert.doesNotMatch(render('UNVERIFIED'),/Verified fixture narrative/);
+}
