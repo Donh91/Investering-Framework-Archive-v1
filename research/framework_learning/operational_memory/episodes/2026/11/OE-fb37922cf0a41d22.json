@@ -1,0 +1,48 @@
+{
+  "authority": {
+    "automatic_promotion": false,
+    "automatic_repository_write": false,
+    "automatic_skill_activation": false,
+    "canonical_effect": false,
+    "portfolio_execution": false
+  },
+  "changed_paths": [
+    "00_FMOS/S1/BOOTSTRAP.txt",
+    "00_FMOS/S1/REVIEWED_MERGE_LANE.json",
+    "00_FMOS/S1/REVIEW_ADMISSION.md",
+    "00_FMOS/S1/RUNTIME_CONTRACT.json",
+    "00_FMOS/S1/TICK.md",
+    "scripts/governance/check_codex_review_finality.py",
+    "tests/governance/test_codex_review_finality.py",
+    "tests/governance/test_codex_review_finality_native.json"
+  ],
+  "contract": "OPERATIONAL_EPISODE_v1",
+  "dominant_path_prefix": "00_FMOS",
+  "episode_id": "OE-fb37922cf0a41d22",
+  "evidence_limits": [
+    "Merged commit proves accepted repository change, not causal effectiveness by itself.",
+    "No failed approach is inferred unless separately evidenced.",
+    "No chain-of-thought or raw prompt is stored."
+  ],
+  "failed_approaches": [],
+  "failure_signature": null,
+  "operation_type": "UPDATE",
+  "outcome": "MERGED_TO_MAIN",
+  "resolution_summary": "check_codex_review_finality.decision() required a completed exact-head codex-review-state strictly BEFORE the positive receipt. Natively Codex keeps ONE state comment per PR, edits it in place (content dated by updated_at), posts the receipt first and edits the state to completed 1-3 s later; an automatic re-review after ready_for_review edits the state again and posts no receipt. Replay of all 285 Codex-reviewed PRs updated since 2026-10-15: main admits 0; 90 fail POSITIVE_WITHOUT_EXACT_HEAD_COMPLETION, incl. #2323 #2324 #2325 at their exact heads. Fix: the receipt also binds when the LATEST ",
+  "reusable_pattern": null,
+  "source_blob_shas": {
+    "00_FMOS/S1/BOOTSTRAP.txt": "5d5cb1bdcbd5fa0167eeaf38325e4f62fbe50f7d",
+    "00_FMOS/S1/REVIEWED_MERGE_LANE.json": "547420aa5cdaafe07c249bc0bea720fb466e86bb",
+    "00_FMOS/S1/REVIEW_ADMISSION.md": "b6ec7cd1259ee66d3f1cddf785b073c4de3f1fc5",
+    "00_FMOS/S1/RUNTIME_CONTRACT.json": "d58bb63aad48318db3e75baa6e1932767bc0a352",
+    "00_FMOS/S1/TICK.md": "71ffad63cd8756c1445c0ba5c604a4f057e8cb9b",
+    "scripts/governance/check_codex_review_finality.py": "5239f26c3178d1d215ca3686f55fa132cc776cd2",
+    "tests/governance/test_codex_review_finality.py": "5b3abc34ee5b396512c000558f009c03c24e108f",
+    "tests/governance/test_codex_review_finality_native.json": "5f47e8d95e1cbf5185368f75d7a930e6e1825b90"
+  },
+  "source_commit_sha": "fb37922cf0a41d2247ab4301104f57a773e9bfe4",
+  "source_kind": "MERGED_MAIN_COMMIT",
+  "source_timestamp": "2026-11-28T01:54:04+01:00",
+  "task_class": "GENERAL_FRAMEWORK",
+  "task_summary": "governance: admit Codex reviews in their native order (receipt, then in-place state edit) (#2385)"
+}

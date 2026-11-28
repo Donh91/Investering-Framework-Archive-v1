@@ -1,7 +1,7 @@
 {
   "agent_calls": {
     "astra_required": false,
-    "luna_required": false,
+    "luna_required": true,
     "max_luna_calls_this_run": 1,
     "max_sol_calls_this_run": 1,
     "sol_6_1_required": false
@@ -9,7 +9,7 @@
   "authority": "ADVISORY_ORCHESTRATION_ONLY",
   "clusters": [],
   "contract": "AUTOMATION_INTELLIGENT_ORCHESTRATION_PLAN_v1",
-  "fingerprint": "511ecb9bbfb28dd78f59a8d321911ac31e642b53fe385464d98bcd40b97de2a4",
+  "fingerprint": "8ae8571d7103f54d480b99a4d9bf853e9e197ac291e0cf3548b7f583a3d6c681",
   "fleet": {
     "amber_count": 13,
     "green_count": 190,
@@ -18,7 +18,7 @@
     "workflow_count": 207,
     "writer_count": 68
   },
-  "generated_at_utc": "2026-11-28T00:14:07Z",
+  "generated_at_utc": "2026-11-28T12:15:05Z",
   "guardrails": {
     "astra_periodic_use": false,
     "batch_before_model_call": true,
@@ -109,10 +109,10 @@
     {
       "cluster_id": null,
       "existing_remediation": {
-        "finding": "SCHEDULE_STALE",
-        "route": "CODEX_PR",
-        "signature": "f5d79a5472c3be598fd6",
-        "state": "CODEX_READY"
+        "finding": "LATEST_RUN_FAILED",
+        "route": "OBSERVE",
+        "signature": "01d220f80d3d3fde5d05",
+        "state": "OBSERVED"
       },
       "failure_streak": 1,
       "findings": [
@@ -121,10 +121,10 @@
       "latest_head_sha": "e90ff3ec83ec017267ec4a41ddceb8b1b07b8b7a",
       "latest_run_id": 46042639884,
       "latest_run_url": "https://github.com/Donh91/Investering-Framework-Archive-v1/actions/runs/46042639884",
-      "model_lane": "NONE",
+      "model_lane": "GPT_6_LUNA",
       "openai_enabled": true,
       "recent_failure_count": 6,
-      "route": "FOLLOW_EXISTING_REMEDIATION",
+      "route": "LUNA_TRIAGE",
       "scheduled": true,
       "workflow": "shadow-compass-v2.yml",
       "write_target_class": "DIRECT_MAIN",
@@ -134,8 +134,8 @@
   "material_delta": true,
   "routing_summary": {
     "authoritative_input_unknown_count": 0,
-    "existing_remediation_count": 4,
-    "luna_triage_count": 0,
+    "existing_remediation_count": 3,
+    "luna_triage_count": 1,
     "shared_head_cluster_count": 0,
     "sol_6_1_diagnosis_count": 0
   },

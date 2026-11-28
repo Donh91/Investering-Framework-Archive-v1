@@ -1,0 +1,48 @@
+{
+  "authority": {
+    "automatic_promotion": false,
+    "automatic_repository_write": false,
+    "automatic_skill_activation": false,
+    "canonical_effect": false,
+    "portfolio_execution": false
+  },
+  "changed_paths": [
+    "05_CYCLE_NAVIGATOR/autonomous_calibration_v1/POLICY.json",
+    "scripts/cycle_navigator/build_weekly_cycle_navigator.py",
+    "scripts/cycle_navigator/range_benchmark_outcome_join.py",
+    "scripts/cycle_navigator/range_freeze_baselines.py",
+    "scripts/research/cycle_navigator_calibration_controller.py",
+    "tests/cycle_navigator/test_range_benchmark_outcome_join.py",
+    "tests/cycle_navigator/test_range_freeze_baselines.py",
+    "tests/research/test_cn_r6_live_ledger.py"
+  ],
+  "contract": "OPERATIONAL_EPISODE_v1",
+  "dominant_path_prefix": "scripts",
+  "episode_id": "OE-dbf940a43052b8fb",
+  "evidence_limits": [
+    "Merged commit proves accepted repository change, not causal effectiveness by itself.",
+    "No failed approach is inferred unless separately evidenced.",
+    "No chain-of-thought or raw prompt is stored."
+  ],
+  "failed_approaches": [],
+  "failure_signature": null,
+  "operation_type": "UPDATE",
+  "outcome": "MERGED_TO_MAIN",
+  "resolution_summary": "* R6 #1479: draft live freeze ledger reader and outcome-blind coverage * R6 #1479: freeze retained snapshot ATR and previous-week benchmarks on new rows * R6 #1479: join future frozen benchmarks to mature retained scorecard windows, diagnostic only * R6: bind new site receipt to benchmark manifest and cover complete diagnostic join",
+  "reusable_pattern": null,
+  "source_blob_shas": {
+    "05_CYCLE_NAVIGATOR/autonomous_calibration_v1/POLICY.json": "6926c666f4570a59fe07bbd42658f2d26df93990",
+    "scripts/cycle_navigator/build_weekly_cycle_navigator.py": "29a7f5c64eb09363086913c0d475380e2f376c31",
+    "scripts/cycle_navigator/range_benchmark_outcome_join.py": "b0687f1324f5b3bcc814c4ac04865bfee2fdbf69",
+    "scripts/cycle_navigator/range_freeze_baselines.py": "4240e1778c655ba2de0a5d7814a78716c88c32ce",
+    "scripts/research/cycle_navigator_calibration_controller.py": "d75b334a73619892fea274aeb9942730d5d51c49",
+    "tests/cycle_navigator/test_range_benchmark_outcome_join.py": "0d8134de0ee9f0c7f70bbb1d3a738f29b918e49f",
+    "tests/cycle_navigator/test_range_freeze_baselines.py": "a93e1cf0ad4d34f78a11eb19873959e4a948f567",
+    "tests/research/test_cn_r6_live_ledger.py": "01837d507343ec89c571c543078008f437ea4bb3"
+  },
+  "source_commit_sha": "dbf940a43052b8fba2ec81c6827f9572f4f022c7",
+  "source_kind": "MERGED_MAIN_COMMIT",
+  "source_timestamp": "2026-11-28T10:53:01+01:00",
+  "task_class": "CYCLE_NAVIGATOR",
+  "task_summary": "R6 #1479: live v2 freeze ledger calibration reader (partial, HOLD) (#2380)"
+}

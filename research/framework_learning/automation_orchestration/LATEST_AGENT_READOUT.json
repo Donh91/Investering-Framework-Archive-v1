@@ -1,7 +1,7 @@
 {
   "authority": "ADVISORY_ORCHESTRATION_ONLY",
   "contract": "AUTOMATION_INTELLIGENT_ORCHESTRATION_READOUT_v1",
-  "generated_at_utc": "2026-11-28T00:18:39Z",
+  "generated_at_utc": "2026-11-28T12:20:49Z",
   "guardrails": {
     "astra_periodic_use": false,
     "batch_before_model_call": true,
@@ -13,13 +13,37 @@
     "no_market_or_portfolio_authority": true,
     "no_repository_write_authority_for_models": true
   },
-  "luna_triage": null,
+  "luna_triage": {
+    "evidence_against": [
+      "No run logs, error message, failed job or step, dependency status, or comparison with prior runs is supplied.",
+      "The failure streak is 1, so this item alone does not establish a persistent failure.",
+      "The recent_failure_count is 6, but its time window and scope are unspecified; it cannot establish persistence for this workflow."
+    ],
+    "evidence_for": [
+      "Workflow shadow-compass-v2.yml has a reported latest run failure (run 46042639884) and finding LATEST_RUN_FAILED.",
+      "The item reports recent_failure_count 6, which may indicate broader recurring failures, though its scope is unclear.",
+      "Existing remediation is already OBSERVED with route OBSERVE; no further remediation authority is indicated."
+    ],
+    "forecast_candidates": [],
+    "hypotheses": [
+      "Failure class is undetermined: the supplied status does not distinguish transient execution noise from missing evidence, dependency failure, or a code defect.",
+      "The single-item failure streak is consistent with a transient failure, but the recent failure count warrants checking whether failures share a cause.",
+      "Next inspection should be by the existing owner of shadow-compass-v2.yml; that owner's identity is not supplied. GPT_6_LUNA is identified as the model lane, not explicitly as the workflow owner."
+    ],
+    "status": "DEGRADED",
+    "summary": "Triage is limited by the absence of run-level diagnostic evidence. Inspect the failed run and compare the six recent failures for a common cause. Preserve the existing OBSERVED remediation state; do not create duplicate remediation.",
+    "uncertainties": [
+      "Whether the six recent failures belong to this workflow and what period they cover.",
+      "The failed job or step, error details, and any dependency or runner health signals.",
+      "The identity of the existing workflow owner."
+    ]
+  },
   "note": "Agent outputs are evidence/diagnosis only. Remediation Maturation remains the sole CODEX_READY authority.",
-  "plan_fingerprint": "511ecb9bbfb28dd78f59a8d321911ac31e642b53fe385464d98bcd40b97de2a4",
+  "plan_fingerprint": "8ae8571d7103f54d480b99a4d9bf853e9e197ac291e0cf3548b7f583a3d6c681",
   "routing_summary": {
     "authoritative_input_unknown_count": 0,
-    "existing_remediation_count": 4,
-    "luna_triage_count": 0,
+    "existing_remediation_count": 3,
+    "luna_triage_count": 1,
     "shared_head_cluster_count": 0,
     "sol_6_1_diagnosis_count": 0
   },
