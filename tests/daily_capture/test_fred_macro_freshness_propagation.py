@@ -4,7 +4,7 @@ import tempfile
 import unittest
 from pathlib import Path
 
-from scripts.daily_capture.build_capture_index import latest_fred_values
+from scripts.daily_capture.build_capture_index import latest_fred_values, public_fred_values
 
 
 class FredMacroFreshnessPropagationTests(unittest.TestCase):
@@ -79,6 +79,14 @@ class FredMacroFreshnessPropagationTests(unittest.TestCase):
                 self.assertEqual(values[series]["retrieval_timestamp"], retrieval)
                 self.assertIsInstance(values[series]["freshness_seconds"], int)
                 self.assertIsInstance(values[series]["stale_after_seconds"], int)
+
+    def test_public_c5_projection_never_contains_raw_vix_series(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            for series in ("DGS2", "VIXCLS", "VXVCLS"):
+                self._write_series(root, series, [("2026-09-07", "18.5")])
+            self.assertEqual(set(latest_fred_values(root)), {"DGS2", "VIXCLS", "VXVCLS"})
+            self.assertEqual(set(public_fred_values(root)), {"DGS2"})
 
     def test_missing_owner_health_keeps_value_without_inferred_freshness(self):
         with tempfile.TemporaryDirectory() as tmp:

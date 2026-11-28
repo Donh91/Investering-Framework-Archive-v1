@@ -139,6 +139,13 @@ def latest_fred_values(directory: Path) -> dict[str, Any]:
     return values
 
 
+def public_fred_values(directory: Path) -> dict[str, Any]:
+    # C5 owner decision: no raw VIX/VIX3M observations in new public captures.
+    # Legacy other macro fields are unchanged; derived C5 state has its own seam.
+    return {key: value for key, value in latest_fred_values(directory).items()
+            if key not in {"VIXCLS", "VXVCLS"}}
+
+
 def extract_cfgi(directory: Path) -> dict[str, Any]:
     snapshot = read_json(directory / "owner_snapshot.json")
     if not isinstance(snapshot, dict):
@@ -313,7 +320,7 @@ def extract_metrics(root: Path) -> dict[str, Any]:
             "authority": "LOWER_GRADE_SHADOW_CONTEXT_ONLY",
         }
 
-    metrics["macro"] = latest_fred_values(root / "fred-owner-output")
+    metrics["macro"] = public_fred_values(root / "fred-owner-output")
     metrics["sentiment"]["cfgi"] = extract_cfgi(root / "cfgi-owner-output")
     return metrics
 

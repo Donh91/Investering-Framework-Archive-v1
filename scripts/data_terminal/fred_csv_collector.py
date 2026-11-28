@@ -21,7 +21,7 @@ DEFAULT_SERIES = ("DGS2", "DGS10", "DTWEXBGS", "VIXCLS")
 DEFAULT_URL = "https://fred.stlouisfed.org/graph/fredgraph.csv?id={series}"
 DEFAULT_STALE_AFTER_SECONDS = 7 * 24 * 60 * 60
 USER_AGENT = "Investering-Data-Terminal-Shadow/0.2 (+https://github.com/Donh91/Investering-Framework-Archive-v1)"
-UNITS = {"DGS2": "PERCENT", "DGS10": "PERCENT", "DTWEXBGS": "INDEX", "VIXCLS": "INDEX"}
+UNITS = {"DGS2": "PERCENT", "DGS10": "PERCENT", "DTWEXBGS": "INDEX", "VIXCLS": "INDEX", "VXVCLS": "INDEX"}
 
 
 class CollectorError(RuntimeError):

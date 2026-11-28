@@ -4,12 +4,13 @@
   "primary_source": {
     "source_id": "FRED_CSV_MACRO_CORE",
     "provider": "Federal Reserve Bank of St. Louis FRED",
-    "series": ["DGS2", "DGS10", "DTWEXBGS", "VIXCLS"],
+    "series": ["DGS2", "DGS10", "DTWEXBGS", "VIXCLS", "VXVCLS"],
     "units": {
       "DGS2": "PERCENT",
       "DGS10": "PERCENT",
       "DTWEXBGS": "INDEX",
-      "VIXCLS": "INDEX"
+      "VIXCLS": "INDEX",
+      "VXVCLS": "INDEX"
     },
     "transport": "PUBLIC_CSV_HTTPS",
     "url_template": "https://fred.stlouisfed.org/graph/fredgraph.csv?id={series}",
@@ -20,6 +21,26 @@
     "capture_mode": "SYNCHRONIZED_MULTI_SERIES_PAYLOAD",
     "stale_after_seconds": 604800,
     "revision_policy": "APPEND_ONLY_RECEIPTS_PRESERVE_PRIOR_PAYLOAD_HASHES"
+  },
+  "c5_owner_decision": {
+    "decision_date": "2026-11-28",
+    "owner_id": "fred_macro",
+    "owner_enabled": true,
+    "schedule": "EXISTING_DAILY_SLOW_MACRO_AND_BOUNDED_RECOVERY",
+    "rights_status": "OWNER_ACCEPTED_INTERNAL_USE",
+    "publication": "DERIVED_ONLY",
+    "c5_series": ["VIXCLS", "VXVCLS"],
+    "raw_destination": "TRANSIENT_JOB_ONLY",
+    "open_endpoints_only": true,
+    "c3_replacement": {
+      "retired_source": "Ironflow",
+      "replacement": "EXISTING_OKX_REALIZED_LIQUIDATION_COLLECTOR",
+      "rights_status": "OWNER_ACCEPTED_INTERNAL_USE",
+      "publication": "DERIVED_ONLY"
+    },
+    "owner_issue": 1596,
+    "kompas_pr": 2318,
+    "decision_receipts": [7238000544, 7238000932]
   },
   "materialization": {
     "raw_payload_required": true,

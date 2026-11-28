@@ -29,6 +29,7 @@ SERIES_STALE_AFTER_SECONDS = {
     "DGS2": 7 * 24 * 60 * 60,
     "DGS10": 7 * 24 * 60 * 60,
     "VIXCLS": 7 * 24 * 60 * 60,
+    "VXVCLS": 7 * 24 * 60 * 60,
     "DTWEXBGS": 10 * 24 * 60 * 60,
 }
 
