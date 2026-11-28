@@ -1,5 +1,8 @@
 import unittest
 from datetime import datetime, timezone
+from pathlib import Path
+from tempfile import TemporaryDirectory
+from scripts.daily_capture import pullback_forensics_collector as pfr
 from scripts.daily_capture.c5_context import fred_from_payload, session_close, window_aggregates, valid_seal
 
 
@@ -28,10 +31,27 @@ class C5ContextTests(unittest.TestCase):
         end = datetime(2026, 11, 28, 12, tzinfo=timezone.utc)
         event = {"event_id":"one", "event_timestamp_ms":int(end.timestamp()*1000), "inst_id":"BTC-USDT-SWAP",
                  "pos_side":"long","notional_usd":3000,"notional_method":"OKX_CONTRACT_UNIT_NORMALIZATION_v1","source_payload_sha256":"a"*64}
-        captures = [{"observed_at_utc":end.isoformat(), "lane1_liquidations":{"BTC":{"status":"PASS"}}}]
-        result = window_aggregates([event, dict(event)], captures, end, "BTC", 24, 28)
-        self.assertEqual(result["long_notional_usd"],3000)
-        self.assertEqual(result["pressure_class"],"UNAVAILABLE")
-        self.assertEqual(window_aggregates([event], [], end, "BTC", 24, 28)["status"],"UNAVAILABLE")
-        with self.assertRaises(ValueError):
-            window_aggregates([event, dict(event,notional_usd=5000)], captures, end, "BTC", 24, 28)
+        captures = [{"observed_at_utc":end.isoformat(), "lane1_liquidations":{"BTC":{"status":"PASS",
+            "persisted_rolling_aggregates":{"captured_event_count_24h":1,"event_count_24h":1,
+                "long_liq_usd_24h":3000,"short_liq_usd_24h":0}}}}]
+        with TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            prior = root / "liquidations/2026/11/27.jsonl.gz"
+            current = root / "liquidations/2026/11/28.jsonl.gz"
+            pfr.write_deterministic_gzip_jsonl(prior, [])
+            pfr.write_deterministic_gzip_jsonl(current, [event])
+            result = window_aggregates([event, dict(event)], captures, end, "BTC", 24, 28, root)
+            self.assertEqual(result["long_notional_usd"],3000)
+            self.assertEqual(result["pressure_class"],"UNAVAILABLE")
+            self.assertEqual(window_aggregates([event], [], end, "BTC", 24, 28, root)["status"],"UNAVAILABLE")
+            with self.assertRaises(ValueError):
+                window_aggregates([event, dict(event,notional_usd=5000)], captures, end, "BTC", 24, 28, root)
+            # Even with PASS receipts, missing shards and truncated persisted
+            # rows must not become 0 USD or LOW pressure.
+            current.unlink()
+            missing = window_aggregates([], captures, end, "BTC", 24, 28, root)
+            self.assertEqual(missing["reason"],"OKX_PERSISTED_EVENT_EVIDENCE_UNVERIFIED")
+            self.assertNotIn("long_notional_usd",missing)
+            pfr.write_deterministic_gzip_jsonl(current, [])
+            self.assertEqual(window_aggregates([], captures, end, "BTC", 24, 28, root)["status"],"UNAVAILABLE")
+            self.assertEqual(window_aggregates([dict(event,notional_usd=1000)], captures, end, "BTC", 24, 28, root)["status"],"UNAVAILABLE")

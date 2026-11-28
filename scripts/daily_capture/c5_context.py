@@ -198,7 +198,39 @@ def asset_pass(row, asset):
     return row.get("lane1_liquidations", {}).get(asset, {}).get("status") == "PASS"
 
 
-def window_aggregates(events, captures, end, asset, hours, baseline_windows):
+def persisted_window_verified(directory, selected, captures, left, right, asset):
+    # The collector's missing-file behavior is deliberately permissive. C5
+    # cannot distinguish a missing shard from zero activity without evidence.
+    # Refuse missing days (even possible zero days) rather than invent zeros.
+    cursor = left.date()
+    while cursor <= right.date():
+        shard = directory / "liquidations" / f"{cursor:%Y}" / f"{cursor:%m}" / f"{cursor:%d}.jsonl.gz"
+        if not shard.is_file():
+            return False
+        cursor += timedelta(days=1)
+    # Every successful capture inside the window binds rolling 24h counts and
+    # notionals. Later captures can add events, so historical totals must at
+    # least reproduce the receipt, never be smaller. No claim of completeness.
+    checks = [r for r in captures if asset_pass(r, asset) and left < utc(r["observed_at_utc"]) <= right]
+    if not checks:
+        return False
+    for r in checks:
+        agg = r["lane1_liquidations"][asset].get("persisted_rolling_aggregates", {})
+        ts = int(utc(r["observed_at_utc"]).timestamp()*1000)
+        sample = [v for v in selected.values() if ts-86400000 <= v[0] <= ts]
+        count = agg.get("captured_event_count_24h")
+        if type(count) is not int or count < 0 or agg.get("event_count_24h") != count or len(sample) < count:
+            return False
+        for side in ("long", "short"):
+            expected = agg.get(f"{side}_liq_usd_24h")
+            if type(expected) not in (int, float) or not math.isfinite(expected) or expected < 0:
+                return False
+            if round(sum(v[2] for v in sample if v[1] == side), 2) < expected:
+                return False
+    return True
+
+
+def window_aggregates(events, captures, end, asset, hours, baseline_windows, directory):
     end = utc(end)
     selected = {}
     for row in events:
@@ -231,11 +263,13 @@ def window_aggregates(events, captures, end, asset, hours, baseline_windows):
     delta = timedelta(hours=hours)
     if not covered(end-delta, end):
         return {"status": "UNAVAILABLE", "reason": "OKX_CAPTURE_COVERAGE_GAP", "pressure_class": "UNAVAILABLE"}
+    if not persisted_window_verified(directory, selected, captures, end-delta, end, asset):
+        return {"status": "UNAVAILABLE", "reason": "OKX_PERSISTED_EVENT_EVIDENCE_UNVERIFIED", "pressure_class": "UNAVAILABLE"}
     long, short = totals(end-delta, end)
     base = []
     for i in range(1, baseline_windows+1):
         right = end-i*delta
-        if covered(right-delta, right):
+        if covered(right-delta, right) and persisted_window_verified(directory, selected, captures, right-delta, right, asset):
             base.append(sum(totals(right-delta, right)))
     # Preregistered context-only bands: lower bound vs prior disjoint windows.
     reference = median(base) if len(base) == baseline_windows else 0
@@ -271,14 +305,14 @@ def liquidation_context(root, cutoff):
                         captures.append(rec)
                 except (OSError, KeyError, TypeError, ValueError):
                     continue
-        events = pfr.load_events_since(directory, observed, 35*24)
+        events = pfr.load_events_since(directory, observed, 36*24)
         assets = {}
         for asset in ("BTC", "ETH"):
             if not asset_pass(latest, asset):
                 assets[asset] = {"status": "UNAVAILABLE", "reason": "OKX_LATEST_ASSET_CAPTURE_FAILED"}
                 continue
-            assets[asset] = {"24h": window_aggregates(events, captures, observed, asset, 24, 28),
-                             "7d": window_aggregates(events, captures, observed, asset, 168, 4)}
+            assets[asset] = {"24h": window_aggregates(events, captures, observed, asset, 24, 28, directory),
+                             "7d": window_aggregates(events, captures, observed, asset, 168, 4, directory)}
         # Hash input identities, capture receipts and normalized event evidence;
         # only the digest and derived rounded aggregates leave this function.
         source_hash = digest({"latest": latest["payload_sha256"],
@@ -286,7 +320,7 @@ def liquidation_context(root, cutoff):
                               "event_bindings": sorted([(r["event_id"], r["event_timestamp_ms"], r["inst_id"], r["pos_side"], r["notional_usd"], r["source_payload_sha256"]) for r in events])})
         available = any(v.get(h, {}).get("status") == "AVAILABLE_LOWER_BOUND" for v in assets.values() for h in ("24h", "7d"))
         return seal({"status": "AVAILABLE_LOWER_BOUND" if available else "UNAVAILABLE",
-                     "reason": "OKX_OBSERVED_LOWER_BOUND_NOT_TOTAL_MARKET" if available else "OKX_CAPTURE_COVERAGE_GAP",
+                     "reason": "OKX_OBSERVED_LOWER_BOUND_NOT_TOTAL_MARKET" if available else "OKX_CAPTURE_OR_PERSISTED_EVIDENCE_GAP",
                      "authority": NON_SCORING, "scoring_allowed": False,
                      "source_class": "OKX_REALIZED_CAPTURED_LIQUIDATIONS", "pit_method": "NATIVE_CAPTURE",
                      "capture_run_id": run, "source_sha256": source_hash, "as_of_utc": iso(observed), "assets": assets})
