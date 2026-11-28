@@ -111,7 +111,7 @@ class FrameworkLearningSupervisorTest(unittest.TestCase):
         self.assertIn("contains(github.event.comment.body, '[SENIOR_REPAIR_AUDIT]')", text)
         self.assertIn('--task SENIOR_REPAIR_AUDIT', text)
         self.assertIn('--cap-usd 10.0', text)
-        self.assertIn('--hard-stop-usd 40', text)
+        self.assertIn("--hard-stop-usd \"$(if [ \"$(date -u +%Y-%m)\" = 2026-11 ]; then printf 42; else printf 40; fi)\"", text)
         self.assertIn('--reserve-usd 4.0', text)
         self.assertIn('comment-${COMMENT_ID}', text)
         self.assertIn('senior_repair_audit_dispatch.py validate', text)

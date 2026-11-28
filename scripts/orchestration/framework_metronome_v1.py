@@ -31,6 +31,13 @@ Targets (deliberately minimal; everything else already chains from these):
              8 commits / 300+ files); from :27 one deferral could miss :45 (review of this change).
              A dispatched run always builds (read-only token, no secrets); the push/workflow_run fallback
              builds only when no cron or manual run happened in the last hour, so it stays quiet.
+  S1EXEC     s1-executor.yml (no inputs) for the ACTUAL publication: the newest s1-tick-brief.yml run on main that
+             completed with success at most S1EXEC_MAX_AGE_MINUTES ago and whose publish log says WRITTEN, while
+             no executor attempt is proven to have evaluated it, none is active and none is unknown (s1exec_due). GitHub creates no workflow_run event for a run started with this
+             workflow token, so the brief runs dispatched above never started the executor by themselves. The
+             executor resolves that brief from the published issue, proves its run natively and evaluates a brief
+             run at most once (its own rule); its job token stays read-only (SHADOW). Next tick after the brief:
+             ~10 min, inside the decision's 20-minute execution window.
 
 Fail-closed rules:
   - mode is read from 00_FMOS/METRONOME_MODE_v1.json on main; ACTIVE, ACTIVE_DATA (hourly data owners only) or else SHADOW
@@ -46,11 +53,13 @@ import argparse
 import datetime as dt
 import json
 import os
+import re
 import sys
 import time
 import urllib.error
 import urllib.request
 from typing import Any, Iterable
+from urllib.parse import urlsplit
 from zoneinfo import ZoneInfo
 
 CONTRACT = "FRAMEWORK_METRONOME_TICK_v1"
@@ -83,8 +92,11 @@ MONDAY = {"key": "MONDAY", "workflow": "weekly-api-calibration-shadow.yml", "inp
 # The S1 tick brief (evidence only; read-only build, issues:write publish of its own issue only). Its cron is '18 * * * *'.
 S1BRIEF = {"key": "S1BRIEF", "workflow": "s1-tick-brief.yml", "inputs": {}, "from_minute": 20, "serves_from_minute": 18}
 S1BRIEF_BUILDING_EVENTS = ("schedule", "workflow_dispatch")   # these always build; push/workflow_run mostly do not
+# The S1 executor (SHADOW, read-only job token). Dispatched once per completed, successful building brief run (above).
+S1EXEC = {"key": "S1EXEC", "workflow": "s1-executor.yml", "inputs": {}}
+S1EXEC_MAX_AGE_MINUTES = 20           # 00_FMOS/S1 EXECUTE_MAX_AGE_MINUTES: an older decision is refused (BRIEF_STALE) anyway
 DISPATCH_ALLOWLIST = {HOURLY["workflow"], RECOVERY["workflow"], CLOSE_WORKFLOW, MONDAY["workflow"], S1BRIEF["workflow"],
-                      SELF_WORKFLOW}
+                      S1EXEC["workflow"], SELF_WORKFLOW}
 
 
 def utc(value: str) -> dt.datetime:
@@ -154,6 +166,141 @@ def s1brief_due(now: dt.datetime, runs: list[dict]) -> tuple[bool, str]:
                 return False, "ALREADY_RAN_THIS_HOUR"
         except (KeyError, TypeError, ValueError, AttributeError):
             return False, "RUN_ROW_UNREADABLE"   # conservative: an unreadable row suppresses, never doubles
+    return True, "DUE"
+
+
+S1EXEC_PUBLICATION_READS = 3          # fresh successful brief runs inspected for the ACTUAL publication (2 reads each)
+S1EXEC_ATTEMPT_READS = 6              # executor run attempts classified for that publication (2 reads each)
+EXECUTE_STEP = "Execute the one decided action (re-verified natively; writes only when the switch on main is LIVE)"
+HEALTH_LINE = re.compile(r"S1_EXECUTOR_HEALTH (\{[^\n]*\})")
+EVALUATED, NOT_EVALUATED, UNKNOWN, ACTIVE = "EVALUATED", "PROVEN_NOT_EVALUATED", "UNKNOWN", "ACTIVE"
+
+
+def publication_of(reader: Any, run: dict) -> str:
+    """WRITTEN when this brief run's own publish job log says it wrote the brief (S1_TICK_BRIEF_PUBLISHED run=<id>
+    result=WRITTEN), NONE when its publish job was skipped or logged NOT_PUBLISHED, else UNKNOWN. The run row alone
+    cannot tell: a push or workflow_run fallback run that built nothing also concludes success."""
+    jobs = reader.jobs(run["id"], None)
+    if not isinstance(jobs, list):
+        return UNKNOWN
+    pub = [j for j in jobs if isinstance(j, dict) and j.get("name") == "publish"]
+    if not pub:
+        return "NONE" if any(isinstance(j, dict) and j.get("name") == "build" for j in jobs) else UNKNOWN
+    if len(pub) > 1 or pub[0].get("status") != "completed":
+        return UNKNOWN
+    if pub[0].get("conclusion") == "skipped":
+        return "NONE"
+    if pub[0].get("conclusion") != "success" or type(pub[0].get("id")) is not int:
+        return UNKNOWN
+    text = reader.log(pub[0]["id"])
+    if not isinstance(text, str):
+        return UNKNOWN
+    wrote = re.findall(rf"S1_TICK_BRIEF_PUBLISHED issue=\d+ run={run['id']} result=WRITTEN\b", text)
+    skipped = re.findall(rf"S1_TICK_BRIEF_NOT_PUBLISHED issue=\S+ run={run['id']} result=SKIPPED\b", text)
+    if len(wrote) == 1 and not skipped:
+        return "WRITTEN"
+    if len(skipped) == 1 and not wrote:
+        return "NONE"
+    return UNKNOWN
+
+
+def attempt_state(reader: Any, run: dict, n: int, brief: dict) -> str:
+    """What executor run `run` attempt `n` did for publication `brief` (a brief run row): EVALUATED, PROVEN_NOT_EVALUATED,
+    UNKNOWN or ACTIVE. The same evidence as the executor's own once-only rule (s1_executor_v1 evaluated_before): its
+    execute job and that job's ONE S1_EXECUTOR_HEALTH line, bound to the run and the attempt."""
+    jobs = reader.jobs(run["id"], n)
+    if not isinstance(jobs, list):
+        return UNKNOWN
+    ex = [j for j in jobs if isinstance(j, dict) and j.get("name") == "execute"]
+    if not ex:
+        return NOT_EVALUATED if run.get("status") == "completed" and run.get("conclusion") in ("skipped", "cancelled") else UNKNOWN
+    if len(ex) > 1:
+        return UNKNOWN
+    j, steps = ex[0], ex[0].get("steps") if isinstance(ex[0].get("steps"), list) else []
+    started = any(isinstance(st, dict) and st.get("status") in ("in_progress", "completed") and st.get("conclusion") != "skipped" for st in steps)
+    if j.get("status") != "completed":
+        return ACTIVE
+    if j.get("conclusion") == "skipped" or (j.get("conclusion") == "cancelled" and not started and j.get("started_at") is None):
+        return NOT_EVALUATED
+    step = [st for st in steps if isinstance(st, dict) and st.get("name") == EXECUTE_STEP]
+    if len(step) == 1 and step[0].get("status") == "completed" and step[0].get("conclusion") == "skipped":
+        return NOT_EVALUATED                                     # failed before the execute step ran
+    if type(j.get("id")) is not int:
+        return UNKNOWN
+    text = reader.log(j["id"])
+    found = HEALTH_LINE.findall(text) if isinstance(text, str) else []
+    try:
+        line = json.loads(found[0]) if len(found) == 1 else None
+    except ValueError:
+        line = None
+    if not isinstance(line, dict) or str(line.get("run")) != str(run["id"]) or str(line.get("attempt")) != str(n) \
+            or not isinstance(line.get("result"), str):
+        return UNKNOWN
+    result, brief_run, brief_attempt = line["result"], line.get("brief_run"), line.get("brief_attempt")
+    if str(brief_run) == str(brief["id"]) and brief_attempt in (None, "", str(brief.get("run_attempt", 1))):
+        if not result.startswith("NO_DECISION(") or result.startswith("NO_DECISION(already_evaluated="):
+            return EVALUATED
+        return UNKNOWN                                           # the executor refused this publication: no blind retry
+    if result.startswith(f"NO_DECISION(brief_run={brief['id']}:"):
+        return UNKNOWN                                           # a dispatched run that could not prove this brief run
+    if brief_run in (None, "") and not result.startswith("NO_DECISION("):
+        return UNKNOWN                                           # a crash line names no brief
+    return NOT_EVALUATED                                         # it was about another brief (e.g. NO_DECISION(published_run=...))
+
+
+def s1exec_due(now: dt.datetime, brief_runs: list[dict], exec_runs: list[dict], reader: Any = None) -> tuple[bool, str]:
+    """Liveness round (L1, FA-P2-02 recovery, Bridge #173/7215315226). Due when the ACTUAL publication P is fresh and no
+    executor attempt is proven to have evaluated it, none is active and none is unknown:
+      P   the newest brief run that completed with success at most S1EXEC_MAX_AGE_MINUTES ago AND whose own publish
+          job logged WRITTEN (a fallback run that built nothing is skipped over; at most S1EXEC_PUBLICATION_READS runs)
+      every attempt of every executor run created since P's run was created is classified (attempt_state, at most
+          S1EXEC_ATTEMPT_READS): EVALUATED -> ALREADY_EVALUATED; ACTIVE (or an active run) -> TARGET_ACTIVE; UNKNOWN ->
+          EVALUATION_UNKNOWN; only when every one is PROVEN_NOT_EVALUATED (or there is none) -> DUE.
+    UNKNOWN fails closed and expires with the window: an old brief is never re-run, the next publication is the
+    recovery. A dispatched executor still applies its own once-only rule. Re-dispatches per publication are bounded by
+    the window: at most ceil(20 / tick period) + 1. Any read failure is UNKNOWN for this target only."""
+    if any_active(exec_runs):
+        return False, "TARGET_ACTIVE"
+    if reader is None:
+        return False, "EVALUATION_UNREAD"
+    try:
+        ok = [r for r in brief_runs or [] if r.get("status") == "completed" and r.get("conclusion") == "success"]
+        if not ok:
+            return False, "NO_BRIEF_RUN"
+        ok.sort(key=lambda r: utc(r["created_at"]), reverse=True)
+        fresh = [r for r in ok if now - utc(r["updated_at"]) <= dt.timedelta(minutes=S1EXEC_MAX_AGE_MINUTES)]
+        if not fresh:
+            return False, "BRIEF_TOO_OLD"
+        pub = None
+        for r in fresh[:S1EXEC_PUBLICATION_READS]:
+            state = publication_of(reader, r)
+            if state == UNKNOWN:
+                return False, "PUBLICATION_UNKNOWN"
+            if state == "WRITTEN":
+                pub = r
+                break
+        if pub is None:
+            return False, "NO_FRESH_PUBLICATION"
+        since = utc(pub["created_at"])
+        attempts = []
+        for e in exec_runs or []:
+            if utc(e["created_at"]) < since:
+                continue
+            last = e.get("run_attempt", 1)
+            if type(last) is not int or last < 1:
+                return False, "EVALUATION_UNKNOWN"
+            attempts += [(e, n) for n in range(1, last + 1)]
+        if len(attempts) > S1EXEC_ATTEMPT_READS:
+            return False, "EVALUATION_UNKNOWN"
+        states = [attempt_state(reader, e, n, pub) for e, n in attempts]
+    except (KeyError, TypeError, ValueError, AttributeError):
+        return False, "RUN_ROW_UNREADABLE"
+    if EVALUATED in states:
+        return False, "ALREADY_EVALUATED"
+    if ACTIVE in states:
+        return False, "TARGET_ACTIVE"
+    if UNKNOWN in states:
+        return False, "EVALUATION_UNKNOWN"
     return True, "DUE"
 
 
@@ -250,7 +397,7 @@ def monday_due(now: dt.datetime, runs: list[dict], close_runs: list[dict] | None
 # Master Monday stay log-only.
 # Anything but an exact known mode is SHADOW.
 MODES = ("ACTIVE", "ACTIVE_DATA")
-DATA_TARGET_KEYS = frozenset({"HOURLY", "RECOVERY", "S1BRIEF"})
+DATA_TARGET_KEYS = frozenset({"HOURLY", "RECOVERY", "S1BRIEF", "S1EXEC"})
 
 
 def read_mode(doc: Any) -> str:
@@ -275,7 +422,8 @@ def wait_minutes(environment: Any) -> int | None:
 def decide(now: dt.datetime, *, mode: str, hourly_runs: list[dict], monday_runs: list[dict],
            self_runs: list[dict], self_run_id: int | None, environment: Any,
            recovery_runs: list[dict] | None = None, close_runs: list[dict] | None = None,
-           s1brief_runs: list[dict] | None = None) -> dict:
+           s1brief_runs: list[dict] | None = None, s1exec_runs: list[dict] | None = None,
+           s1exec_reader: Any = None) -> dict:
     """Pure decision. Returns dispatches (may be empty), would_dispatch and loop decision."""
     plan: dict[str, Any] = {"contract": CONTRACT, "now_utc": iso(now), "mode": mode,
                             "targets": {}, "dispatch": [], "would_dispatch": [], "next_tick": False,
@@ -288,6 +436,7 @@ def decide(now: dt.datetime, *, mode: str, hourly_runs: list[dict], monday_runs:
         (FINAL, lambda: final_due(now, close_runs)),
         (MONDAY, lambda: monday_due(now, monday_runs, close_runs)),
         (S1BRIEF, lambda: s1brief_due(now, s1brief_runs or [])),
+        (S1EXEC, lambda: s1exec_due(now, s1brief_runs or [], s1exec_runs or [], s1exec_reader)),
     )
     for target, fn in checks:
         due, reason = fn()
@@ -310,8 +459,53 @@ def decide(now: dt.datetime, *, mode: str, hourly_runs: list[dict], monday_runs:
     return plan
 
 
+class _LogRedirect(urllib.request.HTTPRedirectHandler):
+    """Follow a job-log redirect only to GitHub's log storage, and never forward the token to another host."""
+
+    def redirect_request(self, req, fp, code, msg, headers, newurl):
+        target = urlsplit(newurl)
+        host = target.hostname or ""
+        azure = re.fullmatch(r"productionresultssa[0-9]{1,3}[.]blob[.]core[.]windows[.]net", host) is not None
+        if target.scheme != "https" or target.username or target.password or target.port not in (None, 443) \
+                or not (host == "api.github.com" or host.endswith(".githubusercontent.com") or azure):
+            raise ValueError("JOB_LOG_REDIRECT_HOST_UNVERIFIED")
+        follow = super().redirect_request(req, fp, code, msg, headers, newurl)
+        if follow is not None and host != urlsplit(req.full_url).hostname:
+            for store in (follow.headers, follow.unredirected_hdrs):
+                for key in list(store):
+                    if key.casefold() in ("authorization", "proxy-authorization", "cookie"):
+                        del store[key]
+        return follow
+
+
+class S1ExecReader:
+    """The S1EXEC target's reads (jobs, logs), each failure an unread (None) for THAT target only: the other targets
+    and the loop never fail because of it. Capped: S1EXEC_PUBLICATION_READS and S1EXEC_ATTEMPT_READS pairs."""
+
+    MAX_READS = 2 * (S1EXEC_PUBLICATION_READS + S1EXEC_ATTEMPT_READS)
+
+    def __init__(self, gh: Any):
+        self.gh, self.reads = gh, 0
+
+    def _call(self, fn, *args):
+        if self.reads >= self.MAX_READS:
+            return None
+        self.reads += 1
+        try:
+            return fn(*args)
+        except Exception:  # noqa: BLE001  (unread: UNKNOWN for S1EXEC)
+            return None
+
+    def jobs(self, run_id, attempt):
+        return self._call(getattr(self.gh, "jobs", None) or (lambda *a: None), run_id, attempt)
+
+    def log(self, job_id):
+        return self._call(getattr(self.gh, "log", None) or (lambda *a: None), job_id)
+
+
 class Github:
-    """Minimal client: GET runs/environment/mode file, POST workflow dispatches. Nothing else."""
+    """Minimal client: GET runs/environment/mode file, GET the S1 brief/executor jobs and job logs, POST workflow
+    dispatches. Nothing else."""
 
     READ_BUDGET_SECONDS = 90  # total wall-clock budget for all reads in one tick (fail closed when spent)
 
@@ -324,6 +518,8 @@ class Github:
             (method == "GET" and route.startswith(f"/repos/{self.repo}/actions/workflows/") and "/runs?" in route)
             or (method == "GET" and route == f"/repos/{self.repo}/environments/{ENVIRONMENT}")
             or (method == "GET" and route == f"/repos/{self.repo}/contents/{MODE_PATH}?ref=main")
+            # liveness round (L1): the S1 brief's publish log and the executor's job logs (actions: read, held already)
+            or (method == "GET" and re.fullmatch(rf"/repos/{re.escape(self.repo)}/actions/runs/\d{{1,20}}(?:/attempts/\d{{1,3}})?/jobs\?per_page=30", route) is not None)
             or (method == "POST" and route.startswith(f"/repos/{self.repo}/actions/workflows/")
                 and route.endswith("/dispatches")
                 and route.split("/")[-2] in DISPATCH_ALLOWLIST)
@@ -375,6 +571,28 @@ class Github:
         if type(count) is not int or count < 0 or len(rows) != min(count, 30):
             raise ValueError(f"WORKFLOW_RUNS_COUNT_CONTRADICTION:count={count!r}:len={len(rows)}")
         return rows
+
+    def jobs(self, run_id: int, attempt: int | None) -> Any:
+        """The jobs of one run (latest attempt) or of one attempt; a malformed answer raises."""
+        tail = f"/attempts/{int(attempt)}" if attempt is not None else ""
+        doc = self._req("GET", f"/repos/{self.repo}/actions/runs/{int(run_id)}{tail}/jobs?per_page=30")
+        if not isinstance(doc, dict) or not isinstance(doc.get("jobs"), list) or doc.get("total_count") != len(doc["jobs"]):
+            raise ValueError("JOBS_INVALID_SHAPE")
+        return doc["jobs"]
+
+    def log(self, job_id: int) -> str:
+        """One job's log (GET actions/jobs/<id>/logs). GitHub redirects to its log storage: only GitHub's own storage
+        hosts are followed and the token is never sent to the second host. Size-capped; read budget applies."""
+        if time.monotonic() >= self.deadline:
+            raise TimeoutError("READ_BUDGET_EXCEEDED")
+        req = urllib.request.Request(f"https://api.github.com/repos/{self.repo}/actions/jobs/{int(job_id)}/logs", method="GET", headers={
+            "Accept": "application/vnd.github+json", "Authorization": "Bearer " + self.token,
+            "X-GitHub-Api-Version": "2022-11-28", "User-Agent": "framework-metronome-v1"})
+        with urllib.request.build_opener(_LogRedirect()).open(req, timeout=max(1.0, min(30.0, self.deadline - time.monotonic()))) as r:
+            raw = r.read(4 * 1024 * 1024 + 1)
+        if len(raw) > 4 * 1024 * 1024:
+            raise ValueError("JOB_LOG_TOO_LARGE")
+        return raw.decode("utf-8", "replace")
 
     def environment(self) -> Any:
         try:
@@ -432,6 +650,7 @@ def run(gh, now: dt.datetime, self_run_id: int | None, clock=None) -> dict:
         ("MONDAY", MONDAY["workflow"]),
         ("CLOSE", CLOSE_WORKFLOW),
         ("S1BRIEF", S1BRIEF["workflow"]),
+        ("S1EXEC", S1EXEC["workflow"]),
     ):
         raw_runs[name] = read(name, lambda wf=workflow: gh.runs(wf), [])
         if not isinstance(raw_runs[name], list):
@@ -460,7 +679,9 @@ def run(gh, now: dt.datetime, self_run_id: int | None, clock=None) -> dict:
                   environment=environment,
                   recovery_runs=production_runs(raw_runs["RECOVERY"]),
                   close_runs=production_runs(raw_runs["CLOSE"]),
-                  s1brief_runs=production_runs(raw_runs["S1BRIEF"]))
+                  s1brief_runs=production_runs(raw_runs["S1BRIEF"]),
+                  s1exec_runs=production_runs(raw_runs["S1EXEC"]),
+                  s1exec_reader=S1ExecReader(gh))
     plan["read_status"] = "DEGRADED" if failed_reads else "PASS"
     plan["failed_reads"] = sorted(failed_reads)
     if failed_reads:

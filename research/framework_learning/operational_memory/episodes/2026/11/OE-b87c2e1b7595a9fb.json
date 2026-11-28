@@ -1,0 +1,52 @@
+{
+  "authority": {
+    "automatic_promotion": false,
+    "automatic_repository_write": false,
+    "automatic_skill_activation": false,
+    "canonical_effect": false,
+    "portfolio_execution": false
+  },
+  "changed_paths": [
+    "00_FMOS/S1/BOOTSTRAP.txt",
+    "00_FMOS/S1/REVIEWED_MERGE_LANE.json",
+    "00_FMOS/S1/RUNTIME_CONTRACT.json",
+    "AGENTS.md",
+    "scripts/governance/s1_executor_v1.py",
+    "scripts/governance/s1_tick_brief_v1.py",
+    "tests/governance/test_s1_executor_v1.py",
+    "tests/governance/test_s1_review_dispatch_gates_v1.py",
+    "tests/governance/test_s1_review_dispatch_v1.py",
+    "tests/governance/test_s1_reviewed_merge_lane_v1.py"
+  ],
+  "contract": "OPERATIONAL_EPISODE_v1",
+  "dominant_path_prefix": "tests",
+  "episode_id": "OE-b87c2e1b7595a9fb",
+  "evidence_limits": [
+    "Merged commit proves accepted repository change, not causal effectiveness by itself.",
+    "No failed approach is inferred unless separately evidenced.",
+    "No chain-of-thought or raw prompt is stored."
+  ],
+  "failed_approaches": [],
+  "failure_signature": "high-impact-s1-option-exact-head-codex-review",
+  "operation_type": "FIX",
+  "outcome": "MERGED_TO_MAIN",
+  "resolution_summary": "* S1: owner option B exact-head review dispatch in SHADOW Native probe and LIVE remain gated. No workflow changes. S1-Authored-By: 6ae5fd466b48819187abc224ec0f1c5f * fix(s1): option B review dispatch: keep every request stop-only, contain dispatch stops, CI contract tests On top of ChatGPT's #2377 head 84386db6 (native CI: 5 failed, job 140554378739). Failures classified: 1. OfflineSignalCannotBeForged (NONE vs SILENT): REGRESSION. request_row() made an unverified bot `@codex review` invisible. In codex_review() and the finality rule a request can only STOP (pending, the \"nobody asked\" offline",
+  "reusable_pattern": null,
+  "source_blob_shas": {
+    "00_FMOS/S1/BOOTSTRAP.txt": "0a6d13fd39b4d386ebc216fffa8e862e655d0237",
+    "00_FMOS/S1/REVIEWED_MERGE_LANE.json": "595bcc01f479b6d63569635b3697ed289c2bce0b",
+    "00_FMOS/S1/RUNTIME_CONTRACT.json": "85169a92a36476222710067ed8768097d54bb7f1",
+    "AGENTS.md": "a274067714788c07e24532f8a0dd60cecf63ef41",
+    "scripts/governance/s1_executor_v1.py": "dc65ce62b1d3f8d4173f6eb8ec6c7bfbe67d3f25",
+    "scripts/governance/s1_tick_brief_v1.py": "5188b7faad4ceb9ba573ab83fd237588f086a3e1",
+    "tests/governance/test_s1_executor_v1.py": "4d6c2482757a6a106003ecfea2161da5d825b489",
+    "tests/governance/test_s1_review_dispatch_gates_v1.py": "5aeb6bcf79fe226cc1c2e7d35f72609bbddeab21",
+    "tests/governance/test_s1_review_dispatch_v1.py": "6c7fc6e96a6372295d5a8209d7f3ead3dde71a07",
+    "tests/governance/test_s1_reviewed_merge_lane_v1.py": "15083be9a54a25fa26c2a092a8e02c125477891b"
+  },
+  "source_commit_sha": "b87c2e1b7595a9fb52e9aa6d1d52271271dc5b37",
+  "source_kind": "MERGED_MAIN_COMMIT",
+  "source_timestamp": "2026-11-27T19:51:52+01:00",
+  "task_class": "AUTOMATION_REMEDIATION",
+  "task_summary": "HIGH_IMPACT: S1 option B exact-head Codex review dispatch (SHADOW) (#2377)"
+}

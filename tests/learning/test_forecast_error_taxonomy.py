@@ -101,4 +101,55 @@ class TaxonomyTests(unittest.TestCase):
             self.assertEqual(r['original_result_counts'],{'MISS':1})
             self.assertEqual(r,build_report(fr,out))
 
+    def test_duplicate_and_conflicting_outcomes_cannot_inflate_learning(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp); fr = root/'f'; out = root/'o'; fr.mkdir(); out.mkdir()
+            f, o = self.pair()
+            (fr/'f.json').write_text(json.dumps(f))
+            (out/'o.json').write_text(json.dumps(o))
+            for other in (dict(o), dict(o, result='HIT'),
+                          dict(o, forecast_sha256='other-version'),
+                          dict(o, contract='MATURED_OUTCOME_v2')):
+                (out/'copy.json').write_text(json.dumps(other))
+                with self.assertRaisesRegex(ValueError, 'duplicate_outcome_forecast_id'):
+                    build_report(fr, out)
+            f2 = dict(f, forecast_id='F2')
+            o2 = dict(o, forecast_id='F2', forecast_sha256=owner.sha(f2))
+            (fr/'f2.json').write_text(json.dumps(f2))
+            (out/'copy.json').write_text(json.dumps(o2))
+            self.assertEqual(build_report(fr, out)['original_result_counts'], {'MISS': 2})
+
+    def test_ambiguous_json_fails_in_both_source_roots(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp); fr = root/'f'; out = root/'o'; fr.mkdir(); out.mkdir()
+            cases = [
+                ('{"contract":"other","contract":"other"}', 'duplicate_json_key'),
+                ('{"contract":"other","nested":{"a":1,"a":2}}', 'duplicate_json_key'),
+                ('{"contract":"other","n":NaN}', 'nonfinite_json_number'),
+                ('{"contract":"other","n":Infinity}', 'nonfinite_json_number'),
+                ('{"contract":"other","n":-Infinity}', 'nonfinite_json_number'),
+                ('{"contract":"other","n":1e999}', 'nonfinite_json_number'),
+                ('[]', 'source_json_object_required'),
+            ]
+            for directory in (fr, out):
+                path = directory/'bad.json'
+                for raw, reason in cases:
+                    with self.subTest(directory=directory.name, raw=raw):
+                        path.write_text(raw)
+                        with self.assertRaisesRegex(ValueError, reason):
+                            build_report(fr, out)
+                path.unlink()
+
+    def test_invalid_outcome_ids_and_overlapping_roots(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp); fr = root/'f'; out = root/'o'; fr.mkdir(); out.mkdir()
+            _, o = self.pair()
+            for value in (None, '', '  ', False, [], 1):
+                (out/'o.json').write_text(json.dumps(dict(o, forecast_id=value)))
+                with self.assertRaisesRegex(ValueError, 'invalid_outcome_forecast_id'):
+                    build_report(fr, out)
+            for left, right in ((fr, fr), (fr, fr/'child'), (fr/'child', fr)):
+                with self.assertRaisesRegex(ValueError, 'source_roots_overlap'):
+                    build_report(left, right)
+
 if __name__ == '__main__': unittest.main()

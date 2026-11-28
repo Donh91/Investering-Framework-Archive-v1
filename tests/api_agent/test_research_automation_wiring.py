@@ -95,7 +95,7 @@ def test_workflow_uses_single_writer_lock_budget_guard_and_one_lane_selector():
     assert "cancel-in-progress: false" in text
     assert "research_execution_coordinator.py" in text
     assert "check_monthly_cost_guard.py" in text
-    assert "--hard-stop-usd 40" in text
+    assert "--hard-stop-usd \"$(if [ \"$(date -u +%Y-%m)\" = 2026-11 ]; then printf 42; else printf 40; fi)\"" in text
     assert "--cap-usd 10.0" in text
     assert "--reserve-usd 0.25" in text
     assert "--reserve-usd 4.0" in text
@@ -127,3 +127,13 @@ def test_workflow_specific_provider_secrets_are_runtime_only():
         assert f"secrets.{secret_name}" in text
     assert "git add .env" not in text
     assert "echo $DUNE_API_KEY" not in text
+
+
+def test_november_2026_caller_hard_stop_expires_at_utc_reset():
+    import subprocess
+
+    selector = "\"$(if [ \"$(date -u +%Y-%m)\" = 2026-11 ]; then printf 42; else printf 40; fi)\""
+    for month, expected in (("2026-10", "40"), ("2026-11", "42"), ("2026-12", "40"), ("2027-11", "40")):
+        result = subprocess.check_output(["bash", "-c", 'date() { printf "%s" "$MOCK_MONTH"; }; printf "%s" ' + selector], env={"MOCK_MONTH": month, "PATH": "/usr/bin:/bin"}, text=True)
+        assert result == expected
+    assert subprocess.check_output(["bash", "-c", 'date() { return 1; }; printf "%s" ' + selector], text=True) == "40"

@@ -108,6 +108,8 @@ def world():
         "issue_comments": [], "issue_comments_complete": True,
         "health_runs": [health], "health_runs_complete": True,
         "rulesets_1": [], "rulesets_2": [], "rulesets_complete": True,
+        # the executor watchdog's record (fix round 4, #8): the previous run published a decision and its execute job succeeded
+        "executor_watch": {"runs": [{"run": 554, "at": ts(65), "publish": "success", "execute": "success", "complete": True, "health": "OK"}], "listed": 1},
         "pulls": [pull()], "pulls_complete": True, "pr": {7: pr_data()},
         # read_c1b's record (W2b D1): main equals the previous brief's checked_through, nothing to scan
         "c1b": {"checked_through": MAIN, "from": MAIN, "halt": None, "complete": True, "reason": None, "stop": None},
@@ -126,7 +128,8 @@ def entry(brief, n=7):
 
 
 def top(brief):
-    return brief["next"][0] if brief["next"] else None
+    ranked = brief.get("ranked") or brief["next"]              # section 0.2i: while the executor is LIVE the ranked list is B.ranked
+    return ranked[0] if ranked else None
 
 
 class CleanWorld(unittest.TestCase):
@@ -672,8 +675,18 @@ class Reviews(unittest.TestCase):
         self.assertFalse(any(x["action"].startswith("MERGE") for x in b["next"]))
         later = [{"id": 1, "user": OWNER, "commit_id": HEAD, "state": "CHANGES_REQUESTED"}, {"id": 2, "user": OWNER, "commit_id": HEAD, "state": "APPROVED"}]
         self.assertEqual(entry(brief_of(lambda w: w["pr"][7].update(reviews=later)))["open"], [])
+        # a CHANGES_REQUESTED made on an OLDER commit still stands (review of #2337, finding P1-2): as on GitHub itself
+        # only the same reviewer's approval or a dismissal lifts it; a new push never does
         other = [{"id": 1, "user": OWNER, "commit_id": "c" * 40, "state": "CHANGES_REQUESTED"}]
-        self.assertEqual(entry(brief_of(lambda w: w["pr"][7].update(reviews=other)))["open"], [])
+        b = brief_of(lambda w: w["pr"][7].update(reviews=other))
+        self.assertEqual(entry(b)["open"], ["C5:changes_requested"])
+        self.assertFalse(any(x["action"].startswith("MERGE") for x in b["next"]))
+        lifted = other + [{"id": 2, "user": OWNER, "commit_id": HEAD, "state": "APPROVED"}]
+        self.assertEqual(entry(brief_of(lambda w: w["pr"][7].update(reviews=lifted)))["open"], [])
+        dismissed = [{"id": 1, "user": OWNER, "commit_id": "c" * 40, "state": "DISMISSED"}]
+        self.assertEqual(entry(brief_of(lambda w: w["pr"][7].update(reviews=dismissed)))["open"], [])
+        by_another = other + [{"id": 2, "user": {"login": "someone"}, "commit_id": HEAD, "state": "APPROVED"}]
+        self.assertEqual(entry(brief_of(lambda w: w["pr"][7].update(reviews=by_another)))["open"], ["C5:changes_requested"])
 
     def test_codex_never_reviews_a_head_it_addressed(self):
         # R1 P1-3: an "@codex address" on the PR makes the head CODEX_AUTHORED even when the commits carry another login
@@ -691,7 +704,7 @@ class Reviews(unittest.TestCase):
         # R2 N2: a Codex "usage limit" reply must not let S1 ask again every hour at the same head
         def m(w):
             next(j for jobs in w["pr"][7]["jobs"].values() for j in jobs if j["name"] == "test").update(conclusion="failure")
-            w["pr"][7]["comments"] = [comment(20, "@codex address the failing test", minutes_ago=200), comment(21, "usage limit reached", CODEX, minutes_ago=190)]
+            w["pr"][7]["comments"] = [comment(20, "@codex address the failing test", minutes_ago=200), comment(21, "You have reached your Codex usage limits for code reviews.", CODEX, minutes_ago=190)]
         b = brief_of(m)
         self.assertEqual((entry(b)["writer"], entry(b)["address_at_head"], b["next"]), (None, True, []))
         def new_head(w):
@@ -923,6 +936,13 @@ class Signals(unittest.TestCase):
         self.assertIn("merged=1 ", brief_of(lambda w: w.update(issue_comments=merges))["status_lines"][2])
 
 
+def carry(b, current_body, number=5, **change):
+    """Fix round 7 (R6-SH2): brief b as a build that carried exactly the published body `current_body` writes it: the
+    exact predecessor tuple and that generation + 1."""
+    t = dict(B.brief_tuple({"number": number, "body": current_body}), **change)
+    return dict(b, c1b=dict(b["c1b"], prev=t), generation=t["generation"] + 1)
+
+
 class Publish(unittest.TestCase):
     class Fake:
         def __init__(self, issues):
@@ -956,9 +976,9 @@ class Publish(unittest.TestCase):
     def test_duplicates_are_closed_never_deleted(self):
         gh = self.Fake([{"number": 3001, "user": dict(BOT)}, {"number": 3000, "user": dict(BOT)}])
         B.publish(gh, self.body)
-        self.assertEqual([(m, u) for m, u, _ in gh.writes], [("PATCH", "issues/3001"), ("PATCH", "issues/3000")])
-        self.assertEqual(gh.writes[0][2]["state"], "closed")
-        self.assertFalse(any(m == "DELETE" for m, _u, _d in gh.writes))
+        # fix round 7 (R6-SH2): an extra issue whose ledger this build did not carry (here: no body) is never closed
+        self.assertEqual([(m, u) for m, u, _ in gh.writes], [("PATCH", "issues/3000")])
+        self.assertFalse(any(m == "DELETE" for m, _u, _d in gh.writes))   # closing a carried one: test_s1_fix7_publisher_v1
 
     def test_refusals(self):
         with self.assertRaises(SystemExit):
@@ -994,8 +1014,11 @@ class CollectReplay(unittest.TestCase):
                 return self.d["detail"]
             if path == "issues":                                     # W2b C1b: the previous brief, at this same main
                 return [self.previous_issue()]
+            if path == "actions/workflows/s1-executor.yml/runs":     # the executor watchdog (fix round 4; fix round 6: its own workflow)
+                return {"workflow_runs": []}
             if path == "actions/runs/554":
                 return {"id": 554, "path": B.WORKFLOW_PATH, "repository": {"full_name": B.REPO}, "head_branch": "main",
+                        "head_repository": {"full_name": B.REPO}, "event": "schedule", "run_attempt": 1,
                         "head_sha": self.main, "status": "completed", "conclusion": "success",
                         "run_started_at": ts(70), "updated_at": ts(60)}
             raise AssertionError(path)                               # v3.2: the REST compare is never read
@@ -1013,11 +1036,14 @@ class CollectReplay(unittest.TestCase):
             table = {f"issues/{B.OWNER_ISSUE}/comments": self.w["issue_comments"], "rulesets": [], "pulls": self.w["pulls"],
                      "pulls/7/files": self.d["files"], "pulls/7/commits": self.d["commits"], "issues/7/comments": self.d["comments"],
                      "pulls/7/reviews": [], "pulls/7/comments": [], "actions/runs": self.d["runs"],
+                     # Codex's activity in the whole repository (read_codex_feed): its comments on the one PR of this world
+                     "issues/comments": [c for c in self.d["comments"] if c.get("user") == CODEX] + list(self.w.get("codex_elsewhere") or []),
+                     "pulls/comments": [],
                      f"commits/{HEAD}/check-runs": self.d["check_runs"], f"commits/{HEAD}/statuses": []}
             if path.startswith("actions/workflows/automation-production-health.yml/runs"):
                 return self.w["health_runs"], True
             if path.startswith("actions/runs/") and path.endswith("/jobs"):
-                return self.d["jobs"][int(path.split("/")[2])], True
+                return self.d["jobs"].get(int(path.split("/")[2]), []), True   # fix round 5: an executor run's jobs (LogReader): none here
             return table[path], True
 
         def text(self, path):
@@ -1069,8 +1095,52 @@ class CollectReplay(unittest.TestCase):
         self.assertTrue(brief["complete"])
         self.assertEqual((top(brief)["action"], top(brief)["pr"]), ("MERGE", 7))
         self.assertEqual(entry(brief)["behind"], 3)
-        self.assertEqual(B.parse_body(B.render(brief))["next"][0]["head"], HEAD)
+        self.assertEqual(top(B.parse_body(B.render(brief)))["head"], HEAD)
         self.assertLess(fake.calls, 40)
+
+    def test_collect_proves_an_actions_bot_outcome_post_by_reading_its_run(self):
+        # AGENTS.md section 0.2i (review of #2337, finding P2-4): every workflow with issues: write posts as the
+        # Actions bot, so a bot post settles an intent only when the run it names is a run of THIS workflow on main.
+        intent = comment(300, f"S1_LANE_MERGE_INTENT_v1\npr: 9\nhead: {'e' * 40}\nloop={'4' * 40}\nexecutor: GITHUB run=540\ncontract=44444444", BOT, 30)
+        done = comment(301, "S1_OP_DONE_v1\nintent: 300\nresult: ABSENT\nevidence: pr=9 not_merged\nexecutor: GITHUB run=540\ncontract=44444444", BOT, 29)
+        run540 = {"id": 540, "path": B.EXECUTOR_WORKFLOW_PATH, "head_branch": "main", "event": "workflow_run", "status": "completed", "created_at": ts(32),   # fix round 6 (F2)
+                  "updated_at": ts(28), "repository": {"full_name": B.REPO}, "head_repository": {"full_name": B.REPO}}
+
+        def with_runs(runs):
+            def m(fake):
+                fake.w["issue_comments"] = [intent, done]
+                real = fake.get
+
+                def get(path, params=None):
+                    if path == "actions/runs/540":
+                        fake.calls += 1
+                        fake.paths.append(path)
+                        if 540 not in runs:
+                            raise urllib.error.HTTPError(path, 404, "Not Found", {}, None)
+                        return runs[540]
+                    if path == "pulls/9":                                # fix round 5 (P1-05): ABSENT must be true natively: PR 9 is open
+                        fake.calls += 1
+                        fake.paths.append(path)
+                        return {"number": 9, "merged": False, "state": "open", "merge_commit_sha": None, "head": {"sha": "e" * 40}}
+                    return real(path, params)
+                fake.get = get
+            return m
+        snap, fake, _seen = self.run_collect(with_runs({540: run540}))
+        self.assertEqual((snap["executor_runs"], snap["errors"]), ({"540": run540}, []))
+        self.assertEqual(fake.paths.count("actions/runs/540"), 1)       # ONE read serves the intent and its outcome
+        self.assertEqual(B.build_brief(snap)["open_intents"], [])        # proven: settled
+        # a run of another workflow file: the build goes on and the intent stays open (no merge while it is)
+        snap, fake, _seen = self.run_collect(with_runs({540: dict(run540, path=".github/workflows/hourly-sequence-capture.yml")}))
+        self.assertEqual([i["id"] for i in B.build_brief(snap)["open_intents"]], [300])
+        # the run does not exist at all: the same, and never an error of the build
+        snap, fake, _seen = self.run_collect(with_runs({}))
+        self.assertEqual((snap["executor_runs"], snap["errors"]), ({"540": None}, []))
+        brief = B.build_brief(snap)
+        self.assertEqual(([i["id"] for i in brief["open_intents"]], brief["complete"]), ([300], True))
+        # no Actions-bot outcome post on the ledger: not one extra read
+        snap, fake, _seen = self.run_collect()
+        self.assertEqual(snap["executor_runs"], {})
+        self.assertNotIn("actions/runs/540", fake.paths)
 
     def test_depth_reads_take_same_repository_prs_most_recently_updated_first(self):
         saved = B.MAX_DEPTH_PRS
@@ -1166,7 +1236,7 @@ class WorkflowFile(unittest.TestCase):
         self.assertEqual(due["permissions"], {"contents": "read", "issues": "read", "actions": "read"})   # read the workflow's own run list
         self.assertEqual(build["needs"], "due")
         self.assertIn("needs.due.outputs.due == 'true'", build["if"])
-        self.assertEqual(sorted(self.doc["jobs"]), ["build", "due", "publish"])
+        self.assertEqual(sorted(self.doc["jobs"]), ["build", "due", "publish"])   # fix round 6 (F2): the executor is s1-executor.yml (test_s1_executor_v1.py)
         for job in (due, build, pub):
             for step in job["steps"]:
                 if str(step.get("uses", "")).startswith("actions/checkout@"):
@@ -1176,12 +1246,14 @@ class WorkflowFile(unittest.TestCase):
             for step in job["steps"]:
                 self.assertNotIn("continue-on-error", step)
                 if "uses" in step:
-                    self.assertRegex(step["uses"], r"^actions/(checkout@v4|setup-python@v5)$")
+                    # LIVE v1 (gate 11): pinned by commit SHA (checkout v4.4.0 = the v4 tag, setup-python v5.6.0 = the v5 tag)
+                    self.assertRegex(step["uses"], r"^actions/(checkout@11d5960a326750d5838078e36cf38b85af677262|setup-python@a26af69be951a213d495a4c3e4e4022e16d87065)$")
         self.assertFalse(pub["steps"][0]["with"]["persist-credentials"])
-        self.assertNotIn("concurrency", self.doc)                    # v3.2 fix pass: only the build job is serialised
-        self.assertEqual(self.doc["jobs"]["build"]["concurrency"], {"group": "s1-tick-brief", "cancel-in-progress": False})
-        self.assertEqual(self.doc["jobs"]["due"]["concurrency"], {"group": "s1-tick-brief-due-${{ github.event_name }}", "cancel-in-progress": True})   # A12: coalescing per event kind; a push never cancels the cron run's check
-        self.assertNotIn("concurrency", self.doc["jobs"]["publish"])
+        # fix round 7 (R6-SH1): the WHOLE run is one serialized critical section (build -> publish), never cancelled once
+        # running; no job-level group (inside the run group it would deadlock)
+        self.assertEqual(self.doc["concurrency"], {"group": "s1-tick-brief", "cancel-in-progress": False})
+        for job in self.doc["jobs"].values():
+            self.assertNotIn("concurrency", job)
 
     def test_schedule_lands_before_the_tick(self):
         minutes = sorted(int(c["cron"].split()[0]) for c in self.doc[True]["schedule"])
@@ -1202,7 +1274,7 @@ class WorkflowFile(unittest.TestCase):
 
     def test_the_script_writes_only_in_publish(self):
         source = (ROOT / "scripts/governance/s1_tick_brief_v1.py").read_text(encoding="utf-8")
-        head, tail = source.split("def publish(gh, body, now=None):", 1)
+        head, tail = source.split("def publish(gh, body, now=None, result=None):", 1)   # fix round 8: WRITTEN/SKIPPED
         self.assertEqual(re.findall(r'_request\("(\w+)"', head), ["GET", "POST"])                   # get, graphql (a read query); text() is a GET with its own opener
         self.assertEqual(head.count('method="GET"'), 1)
         self.assertEqual(sorted(set(re.findall(r'_request\("(\w+)"', tail))), ["PATCH", "POST", "PUT"])
@@ -2201,10 +2273,11 @@ class FreshnessFallback(unittest.TestCase):
         self.assertEqual(self.text.count("github.event.workflow_run"), 4)
         self.assertNotIn("pull_request_target", self.text)
         self.assertNotIn("actions: write", self.text)
-        self.assertNotIn("concurrency", self.doc)                    # v3.2 fix pass: only the build job is serialised
-        self.assertEqual(self.doc["jobs"]["build"]["concurrency"], {"group": "s1-tick-brief", "cancel-in-progress": False})
-        self.assertEqual(self.doc["jobs"]["due"]["concurrency"], {"group": "s1-tick-brief-due-${{ github.event_name }}", "cancel-in-progress": True})   # A12: coalescing per event kind; a push never cancels the cron run's check
-        self.assertNotIn("concurrency", self.doc["jobs"]["publish"])
+        # fix round 7 (R6-SH1): the WHOLE run is one serialized critical section (build -> publish), never cancelled once
+        # running; no job-level group (inside the run group it would deadlock)
+        self.assertEqual(self.doc["concurrency"], {"group": "s1-tick-brief", "cancel-in-progress": False})
+        for job in self.doc["jobs"].values():
+            self.assertNotIn("concurrency", job)
 
     def test_a_trigger_run_started_by_workflow_dispatch_is_accepted(self):
         # Live 2026-11-18: the hourly work is dispatched (workflow_dispatch) by the Framework Metronome while GitHub's
@@ -2659,8 +2732,10 @@ class RedTeamFixes(unittest.TestCase):
         self.assertGreaterEqual(len(switch["pins"]), 9)              # more pins than the six the old F5 named
 
     def test_a14_a_delayed_publish_never_replaces_a_newer_brief(self):
-        newer = B.render(dict(brief_of(), generated_at=ts(3), run_id=777))
-        older = B.render(dict(brief_of(), generated_at=ts(20)))
+        # fix round 6: a brief replaces the published one only when its build carried exactly that one (B.c1b.prev)
+        base = B.render(dict(brief_of(), generated_at=ts(40), run_id=553))
+        older = B.render(carry(dict(brief_of(), generated_at=ts(20)), base))
+        newer = B.render(carry(dict(brief_of(), generated_at=ts(3), run_id=777), older))
         real_run = {"id": 777, "path": B.WORKFLOW_PATH, "repository": {"full_name": B.REPO}, "status": "completed", "run_started_at": ts(12), "updated_at": ts(2)}
         class Gh:
             def __init__(self, body, run=real_run, updated=ts(2)): self.body, self.run, self.updated, self.writes, self.reads = body, run, updated, [], []
@@ -2675,22 +2750,28 @@ class RedTeamFixes(unittest.TestCase):
             def _request(self, method, url, data=None): self.writes.append((method, url)); return b"{}", {}
         gh = Gh(newer)
         self.assertEqual(B.publish(gh, older, NOW), 5)
-        self.assertEqual((gh.writes, gh.reads), ([], ["issues", "actions/runs/777"]))        # build A's late publish does not overwrite build B's brief; ONE run read
+        self.assertEqual((gh.writes, gh.reads), ([], ["issues"]))        # build A's late publish does not overwrite build B's brief (fix round 6: it never carried it)
+        gh = Gh(newer)
+        self.assertEqual(B.publish(gh, B.render(carry(B.parse_body(older), newer)), NOW), 5)
+        self.assertEqual((gh.writes, gh.reads), ([], ["issues", "actions/runs/777"]))        # A14 also holds on its own: an older brief never replaces a newer one; ONE run read
         gh = Gh(older)
         B.publish(gh, newer, NOW)
         self.assertEqual((gh.writes, gh.reads), ([("PATCH", "issues/5")], ["issues"]))       # the usual case: no run read at all
         for current in ("not a brief", B.render(dict(brief_of(), generated_at="garbage"))):
             gh = Gh(current)
-            B.publish(gh, older, NOW)
+            # fix round 6: by the build that read it (previous_brief() reads any bot body that parses; its B.c1b.prev names it)
+            parsed = B.parse_body(current)
+            B.publish(gh, older if parsed is None else B.render(carry(B.parse_body(older), current)), NOW)
             self.assertEqual(gh.writes, [("PATCH", "issues/5")])     # an unreadable current body is replaced
         gh = Gh(newer)
-        B.publish(gh, newer, NOW)
-        self.assertEqual(len(gh.writes), 1)                          # the same age, a real brief: written (a re-run of the same build)
+        B.publish(gh, B.render(carry(B.parse_body(newer), newer)), NOW)
+        self.assertEqual(len(gh.writes), 1)                          # the same age, a real brief that carried it: written (a re-run of the same build)
 
     def test_f1_a_forged_or_future_dated_body_never_stops_the_publish(self):
         # Final round F1: the monotonic rule must not become a trap. A body that is not provably a newer brief of this
-        # workflow is overwritten, whatever its generated_at says.
-        older = B.render(dict(brief_of(), generated_at=ts(20)))
+        # workflow is overwritten, whatever its generated_at says. Fix round 6: by a build that read it as its predecessor
+        # (every build does: previous_brief() reads any bot-written body that parses), so B.c1b.prev names it.
+        older = B.render(dict(brief_of(), generated_at=ts(20), c1b=dict(brief_of()["c1b"], prev={"run_id": 777, "issue": 5})))
         real_run = {"id": 777, "path": B.WORKFLOW_PATH, "repository": {"full_name": B.REPO}, "status": "completed", "run_started_at": ts(12), "updated_at": ts(2)}
         future = B.iso(NOW + timedelta(days=365))
         class Gh:
@@ -2717,11 +2798,17 @@ class RedTeamFixes(unittest.TestCase):
                  "run_id_not_a_number": (body(run_id="abc"), real_run, ts(2))}
         for name, (current, run, updated) in cases.items():
             gh = Gh(current, run, updated)
-            B.publish(gh, older, NOW)
+            rid = (B.parse_body(current) or {}).get("run_id")             # fix round 6: the build that read it carried it
+            older_brief = B.parse_body(older)
+            B.publish(gh, B.render(carry(older_brief, current)) if type(rid) is int else older, NOW)
             self.assertEqual(gh.writes, [("PATCH", "issues/5")], name)       # overwritten: the next publish is never blocked
         gh = Gh(body(), dict(real_run, status="in_progress", updated_at=ts(9)), ts(2))
         B.publish(gh, older, NOW)
         self.assertEqual(gh.writes, [])                              # the newer build is still running its publish job: a real brief, kept
+        blind = B.render(dict(brief_of(), generated_at=ts(20)))      # fix round 6: a build that did not carry the published body keeps it
+        gh = Gh(body(generated_at=future), real_run, ts(2))
+        B.publish(gh, blind, NOW)
+        self.assertEqual(gh.writes, [])
         self.assertTrue(B.keep_published(Gh(body(), real_run, ts(2)), {"updated_at": ts(2)}, B.parse_body(body()), NOW))
         self.assertEqual(yaml.safe_load((ROOT / B.WORKFLOW_PATH).read_text(encoding="utf-8"))["jobs"]["publish"]["permissions"],
                          {"contents": "read", "issues": "write", "actions": "read"})
@@ -2877,7 +2964,7 @@ class ApiBudgetAndRateLimits(unittest.TestCase):
     def test_the_publish_budget_covers_its_writes(self):
         self.assertEqual(B.PUBLISH_API_CALLS, 25)
         source = (ROOT / "scripts/governance/s1_tick_brief_v1.py").read_text(encoding="utf-8")
-        self.assertIn("publish(GitHub(token, budget=PUBLISH_API_CALLS), body)", source)
+        self.assertIn("publish(GitHub(token, budget=PUBLISH_API_CALLS), body, result=outcome)", source)
         self.assertNotIn("budget=20", source)
         writes = []
         class Gh(B.GitHub):
@@ -2891,8 +2978,8 @@ class ApiBudgetAndRateLimits(unittest.TestCase):
                 writes.append(method)
                 return b"{}", {}
         body = B.render(dict(brief_of(), generated_at=ts(3)))
-        self.assertEqual(B.publish(Gh("t", budget=B.PUBLISH_API_CALLS), body), 1)      # 1 read + 19 closes + 1 update = 21 calls
-        self.assertEqual(len(writes), 20)
+        self.assertEqual(B.publish(Gh("t", budget=B.PUBLISH_API_CALLS), body), 1)      # at most 1 read + 19 closes + 1 update = 21 calls
+        self.assertEqual(len(writes), 1)   # fix round 7 (R6-SH2): extras whose ledger this build did not carry stay open
 
 
 class T3CompactDrift(unittest.TestCase):

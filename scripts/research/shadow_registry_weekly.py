@@ -117,6 +117,68 @@ def iso_week(now):
     return f'{y}-W{w:02d}'
 
 
+
+# Original WIRE-0 action, frozen source-main audit. These are evidence pins,
+# not a new evaluator or authorization to score the legacy family.
+CN_RECOVERY_ACTION = '13d1b85e8767f77d95a3'
+CN_RECOVERY_SOURCE = '4c1b652a80e791aa2a4efc83aff2bdb347889a8d5359685af78117ae2c0dd36c'
+CN_SOURCE_MAIN = 'b3b0a6fe94192c323079d36dc17bfb944ab6df85'
+CN_DEFINITION = '04_MARKET_LEARNING/cycle_navigator/2026-W32/CYCLE_NAVIGATOR_19.md'
+CN_RECOVERY_PINS = {
+    CN_DEFINITION: '29423de7bb551f2f51a206fea6640a714d2f0607',
+    '03_WEEKLY_OPERATIONS/cycle_navigator/2026-W31/2026-07-27__cycle-navigator-18__freeze.json': '13b3f3d31328502492d954b4a6aab6131fd6140c',
+    '03_WEEKLY_OPERATIONS/forecast_ledger/scoring/2026-08-03__forecast-score-2026-w31__transparent-audit.md': '5d875eaeb67b9824344f8c7c97aaee3d3efda919',
+    '04_MARKET_LEARNING/master_monday/2026-W32/MASTER_MONDAY_CALIBRATION_SCORECARD.json': '4cb38d79d5e867d9b3047a43ab9122d555f5f74f',
+    '05_CYCLE_NAVIGATOR/public_scorecards/2026/W46/CN33_PUBLIC_SCORECARD.json': '1fbde6e227549c5f39410018aac164e541786351',
+    'scripts/cycle_navigator/materialize_public_scorecard.py': '6464022f0bca17fa277517973aa47b823f6631e3',
+}
+
+
+def cn_recovery_binding(sensor, root=None):
+    """Report an exact source block, never pretend a modern scorer is the legacy evaluator."""
+    root = (root or ROOT).resolve()
+    result = {'status': 'UNAVAILABLE', 'scientific_validity': 'NOT_CERTIFIED_BY_REGISTRY',
+              'action_id': CN_RECOVERY_ACTION, 'source_fingerprint': CN_RECOVERY_SOURCE,
+              'source_main': CN_SOURCE_MAIN, 'reason': 'CN_RECOVERY_SOURCE_CONTRACT_MISMATCH'}
+    if (sensor.get('sensor_id') != 'CYCLE_NAVIGATOR_RESEARCH_FAMILY'
+            or sensor.get('evaluator') != 'NONE_RECOVERY_REQUIRED'
+            or sensor.get('source_definition_paths') != [CN_DEFINITION]
+            or sensor.get('outcome_horizons') != []
+            or sensor.get('intended_horizon') != 'UNRECOVERED_AT_FAMILY_LEVEL'
+            or sensor.get('forward_observation_enabled') is not False):
+        return result
+    verified = {}
+    for rel, expected in CN_RECOVERY_PINS.items():
+        path = root / rel
+        try:
+            if not path.resolve().is_relative_to(root) or path.is_symlink():
+                raise OSError('invalid source path')
+            raw = path.read_bytes()
+        except OSError:
+            return {**result, 'reason': 'CN_RECOVERY_PIN_MISSING', 'missing_path': rel}
+        actual = hashlib.sha1(b'blob ' + str(len(raw)).encode() + b'\0' + raw).hexdigest()
+        if actual != expected:
+            # A newer source version is not a historical substitute. Full-history
+            # production checkout can recover the exact immutable historical bytes.
+            try:
+                historical = subprocess.run(['git', '-C', str(root), 'show', f'{CN_SOURCE_MAIN}:{rel}'],
+                    capture_output=True, timeout=10, check=False)
+                if historical.returncode == 0:
+                    raw = historical.stdout
+                    actual = hashlib.sha1(b'blob ' + str(len(raw)).encode() + b'\0' + raw).hexdigest()
+            except (OSError, subprocess.SubprocessError):
+                pass
+        if actual != expected:
+            return {**result, 'reason': 'CN_RECOVERY_PIN_MISMATCH', 'mismatched_path': rel}
+        verified[rel] = actual
+    return {**result, 'reason': 'SOURCE_BLOCKED_WITH_TRIGGER', 'source_blobs': verified,
+            'legacy_w31_method': 'actual-week-range coverage plus four binary calls, unweighted eight rows',
+            'legacy_w32_method': '70/30 containment and IoU; timezone and aggregate weighting unavailable',
+            'modern_w46_method': '70/30 containment and Jaccard, freeze-aware UTC windows; separate claim precision',
+            'blocker': 'W31 human audit is not an executable historical producer; DAY_1_2 versus 1-3d and whole-week actuals are not a machine-bound horizon join. W32 explicitly lacks legacy intraday timezone and aggregate weighting. Modern W46 producer cannot establish legacy family semantics.',
+            'trigger': 'Recover immutable original producer or frozen adjudication rules for every legacy horizon and state call, including actual source/timezone and weights; obtain independent scientific owner disposition before changing evaluator or readiness.'}
+
+
 def evaluate_sensor(sensor):
     evid = []
     missing = 0
@@ -128,6 +190,8 @@ def evaluate_sensor(sensor):
         evid.append({'path': rel, 'exists': exists, **git_last(rel)})
 
     binding, perf = entry_evaluator_binding(sensor)
+    if sensor.get('sensor_id') == 'CYCLE_NAVIGATOR_RESEARCH_FAMILY':
+        binding = cn_recovery_binding(sensor)
     result = {
         'sensor_id': sensor['sensor_id'],
         'family': sensor.get('family'),

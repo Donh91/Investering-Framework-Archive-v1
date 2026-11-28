@@ -1,0 +1,36 @@
+{
+  "authority": {
+    "automatic_promotion": false,
+    "automatic_repository_write": false,
+    "automatic_skill_activation": false,
+    "canonical_effect": false,
+    "portfolio_execution": false
+  },
+  "changed_paths": [
+    "scripts/api_agent/check_director_freshness.py",
+    "tests/api_agent/test_audit_director_freshness.py"
+  ],
+  "contract": "OPERATIONAL_EPISODE_v1",
+  "dominant_path_prefix": "scripts",
+  "episode_id": "OE-90d0e6eaf130010d",
+  "evidence_limits": [
+    "Merged commit proves accepted repository change, not causal effectiveness by itself.",
+    "No failed approach is inferred unless separately evidenced.",
+    "No chain-of-thought or raw prompt is stored."
+  ],
+  "failed_approaches": [],
+  "failure_signature": "r5-documented-no-call-skips-masquerading-analyzed-captures",
+  "operation_type": "FIX",
+  "outcome": "MERGED_TO_MAIN",
+  "resolution_summary": "* fix(R5): distinguish bound zero-call skips from analyzed capture IDs * fix(R5): require exact producer no-call receipt shape before reopening capture",
+  "reusable_pattern": null,
+  "source_blob_shas": {
+    "scripts/api_agent/check_director_freshness.py": "075d8ea06acb7deb4828f273d04e3af93b9b1e87",
+    "tests/api_agent/test_audit_director_freshness.py": "bc5106180fa098e14d7c5a43d0226ac4ef5742c3"
+  },
+  "source_commit_sha": "90d0e6eaf130010dd619a236d7322767d7460a9e",
+  "source_kind": "MERGED_MAIN_COMMIT",
+  "source_timestamp": "2026-11-27T13:00:07+01:00",
+  "task_class": "API_AGENT",
+  "task_summary": "fix(R5): prevent documented no-call skips from masquerading as analyzed captures (#2369)"
+}

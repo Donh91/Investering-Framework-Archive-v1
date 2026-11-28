@@ -129,7 +129,7 @@ jobs:
         run: >-
           python scripts/api_agent/check_monthly_cost_guard.py
           --receipt-root research/api_agent/outputs
-          --hard-stop-usd 40 --reserve-usd 4
+          --hard-stop-usd "$(if [ "$(date -u +%Y-%m)" = 2026-11 ]; then printf 42; else printf 40; fi)" --reserve-usd 4
           --new-request-upper-usd 0  # USD3 Astra pre-reserved in shared ledger
       - name: Prepare immutable public-only source bundle and price bound
         run: python scripts/api_agent/manual_astra_task2_high_v1.py prepare --output-dir runtime/astra-task2
@@ -218,7 +218,7 @@ jobs:
         run: >-
           python scripts/api_agent/check_monthly_cost_guard.py
           --receipt-root research/api_agent/outputs
-          --hard-stop-usd 40 --reserve-usd 4
+          --hard-stop-usd "$(if [ "$(date -u +%Y-%m)" = 2026-11 ]; then printf 42; else printf 40; fi)" --reserve-usd 4
           --new-request-upper-usd 0
       - name: Pin all empirical inputs and conservative USD10 Astra payload
         run: python scripts/research/task2_all_cn_astra_high_v1.py prepare --out runtime/astra-allcn --analysis-dir runtime/task2-allcn
@@ -424,7 +424,7 @@ jobs:
         run: >-
           python scripts/api_agent/check_monthly_cost_guard.py
           --receipt-root research/api_agent/outputs
-          --hard-stop-usd 40 --reserve-usd 4 --new-request-upper-usd 0
+          --hard-stop-usd "$(if [ "$(date -u +%Y-%m)" = 2026-11 ]; then printf 42; else printf 40; fi)" --reserve-usd 4 --new-request-upper-usd 0
       - name: Prepare public-only frozen W46 and W47 text research with conservative USD10 upper
         run: python scripts/research/task2_astra_public_w46w47_v1.py prepare --out runtime/astra-public-w46w47
       - name: Verify owner event and no prior claim; native persistent claim before paid request

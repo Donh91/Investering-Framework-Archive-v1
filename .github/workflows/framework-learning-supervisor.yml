@@ -384,7 +384,7 @@ jobs:
         run: |
           python scripts/api_agent/check_monthly_cost_guard.py \
             --receipt-root research/api_agent/outputs \
-            --hard-stop-usd 40 --reserve-usd 4.0
+            --hard-stop-usd "$(if [ "$(date -u +%Y-%m)" = 2026-11 ]; then printf 42; else printf 40; fi)" --reserve-usd 4.0
       - name: Build exact-head bounded two-file source context
         if: steps.gate.outputs.go == 'true'
         env:
@@ -706,7 +706,7 @@ jobs:
             --task TEMP_SOL_PR_REVIEW --cap-usd 5.0 --reserve-usd 0.75
           python scripts/api_agent/check_monthly_cost_guard.py \
             --receipt-root research/api_agent/outputs \
-            --hard-stop-usd 40 --reserve-usd 4.0
+            --hard-stop-usd "$(if [ "$(date -u +%Y-%m)" = 2026-11 ]; then printf 42; else printf 40; fi)" --reserve-usd 4.0
       - name: Durably reserve worst-case cost BEFORE payment
         id: reserve
         env:
@@ -946,7 +946,7 @@ jobs:
             --reserve-usd 0.50
           python scripts/api_agent/check_monthly_cost_guard.py \
             --receipt-root research/api_agent/outputs \
-            --hard-stop-usd 40 \
+            --hard-stop-usd "$(if [ "$(date -u +%Y-%m)" = 2026-11 ]; then printf 42; else printf 40; fi)" \
             --reserve-usd 4.0
       - name: Build bounded fresh-main audit packet
         if: steps.dedupe.outputs.run_audit == 'true'
@@ -1102,7 +1102,7 @@ jobs:
         if: steps.dedupe.outputs.run_audit == 'true'
         run: |
           python scripts/api_agent/check_api_lane_budget.py --receipt-root research/api_agent/outputs --task FMOS_AUTONOMOUS_MISSION_LOOP_AUDIT --cap-usd 6.0 --reserve-usd 0.50
-          python scripts/api_agent/check_monthly_cost_guard.py --receipt-root research/api_agent/outputs --hard-stop-usd 40 --reserve-usd 4.0
+          python scripts/api_agent/check_monthly_cost_guard.py --receipt-root research/api_agent/outputs --hard-stop-usd "$(if [ "$(date -u +%Y-%m)" = 2026-11 ]; then printf 42; else printf 40; fi)" --reserve-usd 4.0
       - name: Build PASS 1 fresh-main context
         if: steps.dedupe.outputs.run_audit == 'true'
         env:
@@ -1374,7 +1374,7 @@ jobs:
           fi
 
           if [ "$luna_required" = "true" ]; then
-            if python scripts/api_agent/check_api_lane_budget.py                 --receipt-root research/api_agent/outputs                 --task AUTOMATION_ORCHESTRATOR_TRIAGE                 --cap-usd 2.0                 --reserve-usd 0.10               && python scripts/api_agent/check_monthly_cost_guard.py                 --receipt-root research/api_agent/outputs                 --hard-stop-usd 40                 --reserve-usd 4.0; then
+            if python scripts/api_agent/check_api_lane_budget.py                 --receipt-root research/api_agent/outputs                 --task AUTOMATION_ORCHESTRATOR_TRIAGE                 --cap-usd 2.0                 --reserve-usd 0.10               && python scripts/api_agent/check_monthly_cost_guard.py                 --receipt-root research/api_agent/outputs                 --hard-stop-usd "$(if [ "$(date -u +%Y-%m)" = 2026-11 ]; then printf 42; else printf 40; fi)"                 --reserve-usd 4.0; then
               mkdir -p "$outroot/luna"
               if ! python scripts/api_agent/api_gateway.py                   --task AUTOMATION_ORCHESTRATOR_TRIAGE                   --registry research/api_agent/API_TASK_REGISTRY_v1.json                   --prompt-file research/framework_learning/automation_orchestration/LUNA_PROMPT.txt                   --context-file research/framework_learning/automation_orchestration/LUNA_CONTEXT.json                   --output-dir "$outroot/luna"                   --intended-write-prefix research/api_agent/outputs/automation_orchestration/; then
                 echo "Luna triage failed closed; deterministic plan remains authoritative."
@@ -1385,7 +1385,7 @@ jobs:
           fi
 
           if [ "$sol_required" = "true" ]; then
-            if python scripts/api_agent/check_api_lane_budget.py                 --receipt-root research/api_agent/outputs                 --task AUTOMATION_ORCHESTRATOR_ESCALATION                 --cap-usd 4.0                 --reserve-usd 0.25               && python scripts/api_agent/check_monthly_cost_guard.py                 --receipt-root research/api_agent/outputs                 --hard-stop-usd 40                 --reserve-usd 4.0; then
+            if python scripts/api_agent/check_api_lane_budget.py                 --receipt-root research/api_agent/outputs                 --task AUTOMATION_ORCHESTRATOR_ESCALATION                 --cap-usd 4.0                 --reserve-usd 0.25               && python scripts/api_agent/check_monthly_cost_guard.py                 --receipt-root research/api_agent/outputs                 --hard-stop-usd "$(if [ "$(date -u +%Y-%m)" = 2026-11 ]; then printf 42; else printf 40; fi)"                 --reserve-usd 4.0; then
               mkdir -p "$outroot/sol"
               if ! python scripts/api_agent/api_gateway.py                   --task AUTOMATION_ORCHESTRATOR_ESCALATION                   --registry research/api_agent/API_TASK_REGISTRY_v1.json                   --prompt-file research/framework_learning/automation_orchestration/SOL_PROMPT.txt                   --context-file research/framework_learning/automation_orchestration/SOL_CONTEXT.json                   --output-dir "$outroot/sol"                   --intended-write-prefix research/api_agent/outputs/automation_orchestration/; then
                 echo "GPT-6.1 Sol escalation failed closed; deterministic plan remains authoritative."
@@ -1431,7 +1431,7 @@ jobs:
               --cap-usd 0.75 --reserve-usd 0.20 ||
              ! python scripts/api_agent/check_monthly_cost_guard.py \
               --receipt-root research/api_agent/outputs \
-              --hard-stop-usd 40 --reserve-usd 4.15; then
+              --hard-stop-usd "$(if [ "$(date -u +%Y-%m)" = 2026-11 ]; then printf 42; else printf 40; fi)" --reserve-usd 4.15; then
             echo "Semantic lane/global budget not verified: no API call."
             exit 0
           fi

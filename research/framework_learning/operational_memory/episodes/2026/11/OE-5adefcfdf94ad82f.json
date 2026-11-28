@@ -1,0 +1,56 @@
+{
+  "authority": {
+    "automatic_promotion": false,
+    "automatic_repository_write": false,
+    "automatic_skill_activation": false,
+    "canonical_effect": false,
+    "portfolio_execution": false
+  },
+  "changed_paths": [
+    "00_FMOS/S1/BOOTSTRAP.txt",
+    "00_FMOS/S1/REVIEWED_MERGE_LANE.json",
+    "00_FMOS/S1/RUNTIME_CONTRACT.json",
+    "AGENTS.md",
+    "scripts/governance/s1_executor_v1.py",
+    "scripts/orchestration/framework_metronome_v1.py",
+    "tests/governance/test_s1_executor_liveness_v1.py",
+    "tests/governance/test_s1_executor_trigger_v1.py",
+    "tests/governance/test_s1_executor_v1.py",
+    "tests/governance/test_s1_fix6_adversarial.py",
+    "tests/governance/test_s1_invariants_v1.py",
+    "tests/governance/test_s1_reviewed_merge_lane_v1.py"
+  ],
+  "contract": "OPERATIONAL_EPISODE_v1",
+  "dominant_path_prefix": "tests",
+  "episode_id": "OE-5adefcfdf94ad82f",
+  "evidence_limits": [
+    "Merged commit proves accepted repository change, not causal effectiveness by itself.",
+    "No failed approach is inferred unless separately evidenced.",
+    "No chain-of-thought or raw prompt is stored."
+  ],
+  "failed_approaches": [],
+  "failure_signature": "s1-shadow-liveness-job-start-hold-native-403",
+  "operation_type": "FIX",
+  "outcome": "MERGED_TO_MAIN",
+  "resolution_summary": "* fix(s1): SHADOW liveness: job-start HOLD, publication-aware recovery (L1), L2/L4 tests Native blocker (run 45986221512 job 140462413113): SHADOW ended NOTHING_ACTIONABLE(skipped=hold_unreadable:start(403)). GET actions/variables needs a Variables permission; the job log's GITHUB_TOKEN Permissions block is Actions/Contents/Issues/Metadata/PullRequests: read, and a workflow cannot grant a GITHUB_TOKEN Variables. 403 is never read as \"not set\". - executor HOLD: the job-start value GitHub injects (vars.S1_EXECUTOR_HOLD in the job env, \"\" when unset) decides in every mode; a missing or non-string",
+  "reusable_pattern": null,
+  "source_blob_shas": {
+    "00_FMOS/S1/BOOTSTRAP.txt": "031b4fc261c453ce33e455c57796056adee37252",
+    "00_FMOS/S1/REVIEWED_MERGE_LANE.json": "62093ecc040b816b7b56ab4682615ca25d835dad",
+    "00_FMOS/S1/RUNTIME_CONTRACT.json": "484fd4c21542100dc6d196c8f3e60d3e8e4305f6",
+    "AGENTS.md": "44a4e105f8e4fb6314063dfbed5935be543e2bbf",
+    "scripts/governance/s1_executor_v1.py": "bddc1d928ad9c27f4939145e4628ffb0b2c11488",
+    "scripts/orchestration/framework_metronome_v1.py": "f64dbaa7c01523b295a6f27b0aea5562d29d5043",
+    "tests/governance/test_s1_executor_liveness_v1.py": "9319d3e0148ae40dfc4fa4e98e82f2d2f6fd0a23",
+    "tests/governance/test_s1_executor_trigger_v1.py": "9626d09cc002480a6baececc453db71f8fc28de2",
+    "tests/governance/test_s1_executor_v1.py": "b38ba93a165fea770ae7a012c185bca04f76dafe",
+    "tests/governance/test_s1_fix6_adversarial.py": "0b64eb74b5940cb161b8b1cc2b8a996d959d9bac",
+    "tests/governance/test_s1_invariants_v1.py": "634ec7f5bf2db308ff5343927f20850e53eea50d",
+    "tests/governance/test_s1_reviewed_merge_lane_v1.py": "c86d54cf55bcb2aefcd82583eba239aab489c0ac"
+  },
+  "source_commit_sha": "5adefcfdf94ad82f9f3bb5e1b7c5c152faf3fe5a",
+  "source_kind": "MERGED_MAIN_COMMIT",
+  "source_timestamp": "2026-11-27T13:57:09+01:00",
+  "task_class": "AUTOMATION_REMEDIATION",
+  "task_summary": "fix(s1): SHADOW liveness: job-start HOLD (native 403), publication-aware recovery L1, L2/L4 tests [HIGH_IMPACT, owner paste] (#2374)"
+}
